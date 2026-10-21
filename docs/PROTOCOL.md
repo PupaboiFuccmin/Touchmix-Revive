@@ -3,7 +3,7 @@
 Reverse-engineering notes for the QSC TouchMix-16 Wi-Fi control protocol, from
 PCAPdroid captures of the official TouchMix-8/16 Control Android app.
 
-**Last updated:** 2026-10-21
+**Last updated:** 2026-10-21 (2 captures)
 **Firmware seen:** config `Version="3.0.9551"`, product codename `MicroX16`
 
 Status legend: ✅ confirmed from captures · 🟡 strong guess · ❓ unknown
@@ -18,9 +18,9 @@ Status legend: ✅ confirmed from captures · 🟡 strong guess · ❓ unknown
 | Byte order | Little-endian throughout |
 | Mixer OS | Linux (file paths under `/usr/share/ds2i/`) |
 
-The app opened two connections in this capture. The first one (`38560`) ran a
-short session and was then replaced by the second (`38564`). Both followed the
-same handshake.
+In both captures the app opened a connection, then dropped it and reconnected
+about 10 s later. Both connections ran the same handshake, and commands sent on
+the first one took effect. The second connection is the one that persists.
 
 ## Message framing ✅
 
@@ -145,8 +145,8 @@ units) and text fields, but **don't commit that version**; see the security note
 
 | Block | First ID | Stride | Formula |
 |-------|----------|--------|---------|
-| Input channel main block (In 1–16) | In 1 fader `0x013A` | **76** (`0x4C`) | `0x013A + (ch-1)*76 + offset` |
-| Input channel send block (In 1–16) | In 1 AuxSend1 `0x11EB` | **42** (`0x2A`) | `0x11EB + (ch-1)*42 + offset` |
+| Input channel main block (In 1–16) | In 1 fader `0x013A` | **76** (`0x4C`) ✅ on wire (In 4 ↔ In 5) | `0x013A + (ch-1)*76 + offset` |
+| Input channel send block (In 1–16) | In 1 AuxSend1 `0x11EB` | **42** (`0x2A`) ✅ on wire (In 4 ↔ In 5) | `0x11EB + (ch-1)*42 + offset` |
 | Aux 1–6 bus | Aux 1 fader `0x0688` | **187** (`0xBB`) | `0x0688 + (aux-1)*187 + offset` |
 | Main | fader `0x0000` | — | |
 | FX 1/2 | fader `0x0B7A` / `0x0BE5` | 107 | |
@@ -200,8 +200,8 @@ probably the stereo aux mutes with sloppy labels.)
 |---------|-------------------|----------|
 | EQ frequency | `Hz = 20 * 1000^x` (log, 20 Hz–20 kHz) | ✅ 0.2125→86.6 Hz, 0.419→362 Hz, 0.657→1.87 kHz, 1.0→20 kHz; reset defaults 0.2007/0.4337/0.6667/0.8257 = 80/400/2k/6k Hz |
 | EQ gain | `dB = 30*x - 15` (±15 dB) | ✅ endpoints, 0.5 after reset |
-| Pan | 0 L / 0.5 C / 1 R | ✅ |
-| Fader | 0 = −∞, 0.75 ≈ 0 dB, 1.0 = max | 🟡 curve between points unknown |
+| Pan | 0 L / 0.5 C / 1 R, always a multiple of 0.005 (201 steps) | ✅ |
+| Fader | 0 = −∞ (the XML stores this as −55), 0.75 ≈ 0 dB, 1.0 = max | 🟡 curve between points unknown |
 | Trim, sends, delay | 0–1 | ❓ curves unknown |
 
 ## Capture log
@@ -233,15 +233,44 @@ Times are seconds from the start of the capture.
 | 635 | channel reset on TouchMix | M→A batch: fader 0, pan/trim/EQ gains 0.5, EQ freqs to 80/400/2k/6k |
 | 662–669 | In 5 fader max → min | `0x026A` |
 
+### 2026-10-21 00:45: In 4 / In 5 mute, pan, EQ1 gain (`PCAPdroid_21_Oct_00_45_50.pcap`)
+
+The app reconnected at 9.9 s (`39130` → `39134`), right after the first mute.
+
+| t (s) | Action | IDs seen |
+|------:|--------|----------|
+| 9.4 / 13.0 | In 4 mute on → off | `0x021F` 1/0, plus the AuxSend/AuxMute 1–6 side batch |
+| 27–43 | In 4 pan L → C → R → C | `0x0221` 0 → ~0.5 → 1 → 0.51 |
+| 57–74 | In 4 EQ1 gain min → max → 0 | `0x0255` 0 → 1 → ~0.49; `0x0254` freq drifts 0.18–0.21 |
+| 91.9 / 93.3 | In 5 unmute → mute | `0x026B` 0/1, plus side batch on `0x1293`–`0x129E` |
+| 96–106 | In 5 pan L → C → R → C | `0x026D` |
+| 109–123 | In 5 EQ1 gain max → min → 0 | `0x02A1`, `0x02A0` |
+
+Findings:
+
+* In 5 IDs are exactly In 4 + 76, and its send block is exactly In 4's + 42.
+  Both strides are now confirmed from wire data, not just from the XML.
+* Mute order, from the config snapshots: In 4 started **unmuted** (muted, then
+  unmuted). In 5 started **muted** (unmuted, then muted again).
+* EQ gain is set by dragging a point on the EQ graph, so the band's frequency
+  is sent along with it and drifts slightly. To send gain alone, write only
+  the gain ID.
+* The side-batch tags were `3136`/`8f24` this session versus `3136`/`9161`
+  last session, so the tag is not a fixed property of the parameter.
+
 ## Open questions
 
 1. **The `tag` field in 5.1 entries.** It's 0 for direct user actions. It's
    nonzero for derived or side-effect writes: delay feet/meters `9164`, the
    mute side batch `3136`/`9161`, and changes from the mixer's own screen
    `45ef`. It may be a source or session token. Try sending with tag 0 first.
-2. **Mute side batch.** Muting or unmuting In 4 also sent AuxSend1–6 and
-   AuxMute1–6 with value 0 and nonzero tags. Is this "mute follows to sends"
-   logic, or something else?
+2. **Mute side batch.** Every mute or unmute (seen on In 4 and In 5, 4 times)
+   also sends AuxSend1–6 and AuxMute1–6 with value 0 and nonzero tags. Odd
+   (send) IDs always carry tag `3136`. Even (mute) IDs carry a tag that
+   changes per session. The sends were not actually zeroed, so these entries
+   probably mean something other than "set to 0". Maybe "re-evaluate" or
+   "follow mute"? A test client could check whether a plain mute with no
+   batch works.
 3. **2.2 session payload** `0x00019CB4`: a session ID, uptime, or build number?
 4. **File-end trailer** (6 bytes): CRC32 plus something else?
 5. **Poll (6.1/7.1) request contents**: which meters each entry selects.
