@@ -10,6 +10,7 @@ from . import protocol as P
 from .params import ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm
 
 CONFIG_FILE = 'NH4-config.xml.dscomp'
+SETTINGS_SUFFIX = '.settings.dqx.dscomp'
 
 
 def default_client_name():
@@ -44,6 +45,7 @@ class TouchMix:
         self.config_text = {}   # index -> text attribute (names etc.)
         self.live = {}          # index -> normalized float last seen on the wire
         self.files = {}         # file name -> inflated bytes
+        self.access = None      # 'All', 'Main Mix', 'Aux 1', ... -> bool, from this client's settings file
         self.listeners = []     # fn(pid, value, raw, tag, source)
 
         self._sock = None
@@ -51,6 +53,7 @@ class TouchMix:
         self._pending = []
         self._send_lock = threading.Lock()
         self._ready = threading.Event()
+        self._access_known = threading.Event()
         self._closed = threading.Event()
         self._file_buf = {}
         self._file_name = None
@@ -98,6 +101,23 @@ class TouchMix:
         if not self._ready.wait(timeout):
             raise TouchMixError(self.error or 'mixer did not send its config within %.0fs' % timeout)
         return self
+
+    def wait_access(self, timeout=5.0):
+        """This client's access rights, from the per-client settings file the
+        mixer sends after the config. None if it did not arrive in time.
+
+        The mixer keeps a profile per client name and ignores writes outside
+        it. A new client starts with nothing allowed until someone grants it
+        access on the mixer (Wi-Fi device access)."""
+        self._access_known.wait(timeout)
+        return self.access
+
+    def can_write(self, timeout=5.0):
+        """True / False from the access rights, None if unknown."""
+        access = self.wait_access(timeout)
+        if access is None:
+            return None
+        return any(v for k, v in access.items() if k not in ('Locked', 'Security Settings'))
 
     @property
     def connected(self):
@@ -235,11 +255,29 @@ class TouchMix:
             if name == CONFIG_FILE:
                 self._load_config(raw)
                 self._ready.set()
+            elif name.endswith(SETTINGS_SUFFIX):
+                self._load_access(raw)
         elif self._file_name is not None:
             buf = self._file_buf[self._file_name]
             if off + len(data) > len(buf):
                 buf.extend(b'\0' * (off + len(data) - len(buf)))
             buf[off:off + len(data)] = data
+
+    def _load_access(self, xml_bytes):
+        try:
+            root = ET.fromstring(xml_bytes)
+        except ET.ParseError:
+            return
+        access = {}
+        for el in root.iter('Effect'):
+            if el.get('Name') != 'Access':
+                continue
+            for p in el.iter('Parameter'):
+                name = p.get('name')
+                if name and name != 'Device Type':
+                    access[name] = access.get(name, False) or p.get('value') not in ('0', None)
+        self.access = access
+        self._access_known.set()
 
     def _load_config(self, xml_bytes):
         root = ET.fromstring(xml_bytes)

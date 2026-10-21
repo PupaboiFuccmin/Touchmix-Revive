@@ -52,7 +52,7 @@ class ParamTable:
 def strip_path(target):
     """Map a short channel name to its path prefix in the table.
 
-    1..16 -> 'In N', st17/st19 -> 'Stereo In N', main, aux1..aux6,
+    1..16 -> 'In N', st17/st19 -> 'Stereo In 17/18' / 'Stereo In 19/20', main, aux1..aux6,
     aux7 (or aux7/8), aux9 (or aux9/10), fx1..fx4, dca1..dca8.
     """
     t = str(target).strip().lower().replace(' ', '')
@@ -61,7 +61,7 @@ def strip_path(target):
     if t in ('main', 'mainmix', 'lr'):
         return 'Main'
     if t.startswith('st') and t[2:].isdigit():
-        return 'Stereo In %d' % (17 if int(t[2:]) in (17, 18) else 19)
+        return 'Stereo In 17/18' if int(t[2:]) in (17, 18) else 'Stereo In 19/20'
     for prefix, label in (('aux', 'Aux'), ('fx', 'FX'), ('dca', 'DCA')):
         if t.startswith(prefix):
             n = t[len(prefix):].split('/')[0]
@@ -118,17 +118,39 @@ def norm_to_pan(x):
     return x * 200.0 - 100.0
 
 
-FADER_0DB = 0.75   # observed: app sends 0.75 for 0 dB
+# Fader law, from `map probe Fader` on In 1-16 (33 points, exact to 0.0001 dB):
+#   dB = 67 * x^0.69 - 55,  x = 0 is -inf (the config stores it as -55), x = 1 is +12 dB
+FADER_MIN_DB = -55.0
+FADER_MAX_DB = 12.0
+FADER_EXP = 0.69
+
+
+def norm_to_fader_db(x):
+    """Wire value -> dB. Returns FADER_MIN_DB (-55, meaning -inf) at 0."""
+    x = clamp01(x)
+    return FADER_MIN_DB + (FADER_MAX_DB - FADER_MIN_DB) * x ** FADER_EXP
+
+
+def fader_db_to_norm(db):
+    db = float(db)
+    if db <= FADER_MIN_DB:
+        return 0.0
+    if db >= FADER_MAX_DB:
+        return 1.0
+    return ((db - FADER_MIN_DB) / (FADER_MAX_DB - FADER_MIN_DB)) ** (1.0 / FADER_EXP)
+
+
+FADER_0DB = fader_db_to_norm(0.0)   # 0.7512; the app sends 0.75 (-0.06 dB)
 
 
 def fader_to_norm(value):
-    """Fader position. Accepts a 0..1 float, 'off' / '-inf', or '0db'.
-    Other dB values need the fader curve, which is not known yet."""
-    s = str(value).strip().lower()
-    if s in ('off', '-inf', 'inf'):
+    """Fader position. Accepts a 0..1 float, 'off' / '-inf', or dB as
+    '-10db', '+6dB', 'unity' (-55 dB and below is off, +12 dB is the top)."""
+    s = str(value).strip().lower().replace(' ', '')
+    if s in ('off', '-inf', 'inf', '-infdb'):
         return 0.0
-    if s in ('0db', '0 db', 'unity'):
+    if s == 'unity':
         return FADER_0DB
     if s.endswith('db'):
-        raise ValueError('only 0dB is known so far; give the fader as 0..1 (0.75 = 0 dB)')
+        return fader_db_to_norm(s[:-2])
     return clamp01(s)

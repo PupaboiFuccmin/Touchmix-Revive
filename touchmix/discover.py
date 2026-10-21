@@ -71,7 +71,8 @@ def probe(host, port=P.PORT, timeout=0.5, read_timeout=1.5):
 def discover(subnets=None, port=P.PORT, timeout=0.5, workers=128):
     """Scan subnets (default: the /24 around each local address)."""
     nets = [ipaddress.ip_network(n, strict=False) for n in subnets] if subnets else default_subnets()
-    hosts = [h for n in nets for h in n.hosts()]
+    # hosts() of a /32 or /31 is empty before Python 3.9, so take every address there
+    hosts = [h for n in nets for h in (n.hosts() if n.num_addresses > 2 else n)]
     found = []
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for result in pool.map(lambda h: probe(h, port, timeout), hosts):

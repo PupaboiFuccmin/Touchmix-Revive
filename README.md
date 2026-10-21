@@ -50,7 +50,7 @@ python3 -m touchmix monitor                  # print every change made on the mi
 python3 -m touchmix mute 4 on --verify       # --verify reconnects and checks the mixer stored it
 python3 -m touchmix mute 4 off
 python3 -m touchmix solo 4 on
-python3 -m touchmix fader 4 0db              # 0..1, 0db or off (other dB values: curve not mapped yet)
+python3 -m touchmix fader 4 -10db            # dB (-55..+12), off, or raw 0..1
 python3 -m touchmix pan 4 L50                # -100..100, L50, C, R
 python3 -m touchmix eq 4 1 gain -3           # EQ band 1..4 gain in dB (±15)
 python3 -m touchmix eq 4 1 freq 120          # EQ band frequency in Hz
@@ -76,12 +76,60 @@ with TouchMix(ip) as tm:
 ## First test checklist
 
 1. `discover` finds the mixer.
-2. `info` shows your channel names.
+2. `info` shows your channel names, and `Client: ... access: all`.
 3. `monitor`, then move a fader on the mixer: changes appear.
 4. `mute 4 on --verify` prints `CHANGED`, and channel 4 shows muted on the mixer.
 
-If step 4 fails, the app's extra mute side batch might be needed (see "Open
-questions" in `docs/PROTOCOL.md`). Run `monitor` and send me the output.
+**If `info` says `access: NONE`:** the mixer keeps an access profile for each
+connected device, and a new device starts with no rights. The mixer still
+sends it the full state, but ignores every change it sends back. On the
+mixer, open the Wi-Fi device access settings, find this PC's client name (the
+`Client:` line, default `Revive-<hostname>`), and allow All (or the mixes you
+need). This is needed only once per client name, so keep `--name` the same.
+
+If step 4 fails even with access, the app's extra mute side batch might be
+needed (see "Open questions" in `docs/PROTOCOL.md`). Run `monitor` and send me
+the output.
+
+## Mapping assistant
+
+Fills gaps in the parameter map without phone captures. There are two modes.
+
+**Probe** maps a curve with no hands. It writes a sweep of wire values, then
+reconnects and reads the mixer's own value (dB, Hz, ms) back from its config.
+It sweeps the same control on several channels at once, so each reconnect
+reads one point per channel. At the end it puts every control back where it
+was.
+
+```sh
+python3 -m touchmix map probe Fader --channels 1-16 --steps 33     # fader curve
+python3 -m touchmix map probe Trim --channels 1-16
+python3 -m touchmix map probe Thresh --section Gate --channels 1-8
+python3 -m touchmix map probe AuxSend1 --channels 1-16
+```
+
+> ⚠️ Probe moves **live** controls through their full range (faders to +10 dB).
+> Turn the amps down or unplug the outputs first.
+
+**Guided** prompts you to do one thing at a time on the mixer or in the app,
+and records every parameter that changes while you do it. Add `--readback` to
+also record the mixer's value in real units for each change. That costs a
+reconnect, a second or two, after each step.
+
+```sh
+python3 -m touchmix map list                      # built-in scripts
+python3 -m touchmix map run channel 9 --readback  # confirm strides on another channel
+python3 -m touchmix map run bus fx1
+python3 -m touchmix map run scenes
+python3 -m touchmix map run transport
+python3 -m touchmix map run free                  # you name each step yourself
+python3 -m touchmix map show mapping-channel-*.json
+```
+
+At each step, press Enter when done, `r` to redo, `s` to skip, `n <text>`
+to add a note, or `q` to save and quit. Each run writes a
+`mapping-*.json`. These files hold only IDs, names and values, never the raw
+config, so they are safe to share.
 
 ## Captures
 

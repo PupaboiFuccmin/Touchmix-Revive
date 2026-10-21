@@ -85,7 +85,7 @@ u8  data[len]
 |------|-----------------|----------|
 | `/usr/share/ds2i/tmp/NH4-config.xml.dscomp` | ~516 KB | **The full current mixer state, with every parameter's name and index** |
 | `/usr/share/ds2i/tmp/fileIndex.xml.dscomp` | ~243 KB | List of factory and user scenes and presets |
-| `/usr/share/ds2i/user/settings/<CLIENT>.settings.dqx.dscomp` | ~2 KB | Per-client access rights (which mixes this tablet may control) |
+| `/usr/share/ds2i/user/settings/<CLIENT>.settings.dqx.dscomp` | ~2 KB | Per-client access rights (see "Per-client access") |
 
 The app builds its initial UI from `NH4-config.xml`, where values are in
 engineering units (dB, Hz). After that, all changes arrive as 5.1 messages with
@@ -131,6 +131,28 @@ roughly every 80 ms, and each reply echoes `seq`. The replies are mostly zero
 with an occasional 1.0. That fits **meters** (no audio was connected during
 the capture). To confirm, capture again with a signal on a channel.
 
+## Per-client access ✅
+
+The mixer saves a profile for each client name it sees, at
+`/usr/share/ds2i/user/settings/<NAME IN CAPS>.settings.dqx`, and sends it
+after the config. Its `Access` effect has one flag per area, matching the
+`Auth > Access` parameters (`0x0DE0`–`0x0DF4`): `All`, `Security Settings`,
+`Main Mix`, `Aux 1`…`Aux 9/10`, `Record`, `User Buttons`, plus several
+`Locked` entries.
+
+**A new client gets every flag at 0.** It still receives the full config and
+all live changes, but the mixer **silently drops its 5.1 writes**. No error
+comes back. Confirmed 2026-10-21: a probe from `Revive-LAPTOP-4THKAI2Q`
+wrote In 4 fader values 0…1, and the config read back unchanged. Its profile
+showed all zeros. Access is granted on the mixer, in its Wi-Fi device access
+settings. After the grant, the same probe worked. The client library exposes the flags as `TouchMix.access` and
+`can_write()`.
+
+Not yet understood: a second connection from the same PC, opened while the
+first was still connected, got the hello but never received the config. The
+mixer may allow one session per IP, or something on its screen may have been
+waiting for input.
+
 ## Network settings (from the config)
 
 `Global > Control` has `Create Network` (1 = mixer makes its own access point),
@@ -170,7 +192,7 @@ units) and text fields, but **don't commit that version**; see the security note
 
 | Offset | In 4 ID | Name | Wire value |
 |-------:|---------|------|-----------|
-| +0 | `0x021E` | Fader | 0–1; **0.75 ≈ 0 dB** |
+| +0 | `0x021E` | Fader | 0–1; see scaling (0.7512 = 0 dB) |
 | +1 | `0x021F` | Mute | 0/1 |
 | +2 | `0x0220` | Phase (polarity) | 0/1 |
 | +3 | `0x0221` | Pan | 0 = L, 0.5 = C, 1 = R |
@@ -215,10 +237,21 @@ probably the stereo aux mutes with sloppy labels.)
 | EQ frequency | `Hz = 20 * 1000^x` (log, 20 Hz–20 kHz) | ✅ 0.2125→86.6 Hz, 0.419→362 Hz, 0.657→1.87 kHz, 1.0→20 kHz; reset defaults 0.2007/0.4337/0.6667/0.8257 = 80/400/2k/6k Hz |
 | EQ gain | `dB = 30*x - 15` (±15 dB) | ✅ endpoints, 0.5 after reset |
 | Pan | 0 L / 0.5 C / 1 R, always a multiple of 0.005 (201 steps) | ✅ |
-| Fader | 0 = −∞ (the XML stores this as −55), 0.75 ≈ 0 dB, 1.0 = max | 🟡 curve between points unknown |
+| Fader | `dB = 67 * x^0.69 - 55`; 0 = −∞ (the XML stores this as −55), 0.7512 = 0 dB (the app sends 0.75 = −0.06 dB), 1.0 = +12 dB | ✅ `map probe` on In 1–16, 33 points, exact to 0.0001 dB ([data](../mappings/mapping-probe-fader-20261021-183005.json)) |
 | Trim, sends, delay | 0–1 | ❓ curves unknown |
 
 ## Capture log
+
+### 2026-10-21 18:30: fader probe (`mappings/mapping-probe-fader-*.json`)
+
+`touchmix map probe Fader --channels 1-16 --steps 33` wrote 0…1 in steps of
+1/32 to the In 1–16 faders, and read the dB value back from the config after
+each reconnect. Every point fits `dB = 67 * x^0.69 - 55` to within 0.0001 dB,
+so this is the firmware's own law. The probe restored all 16 faders afterwards.
+This also confirms that **the config sent on connect reflects writes made by
+earlier clients**, so `--verify` and probe readback can be trusted.
+Other type-41 faders (Main, Aux, FX, DCA masters) probably share this curve,
+but that is not checked yet.
 
 ### 2026-10-20 23:39: In 4 walk-through (`PCAPdroid_20_Oct_23_39_13.pcap`)
 
@@ -293,9 +326,16 @@ Findings:
 
 ## Suggested next captures
 
+Most of these can now be done with `touchmix map` (see the README) instead of
+a phone capture:
+
 * One signal into a channel, with the app's meter screen open, to decode 6.1/7.1.
-* Fader at known positions (+10, 0, −10, −20, −40 dB) to fit the fader curve.
-* The same walk-through on a different channel (e.g. In 9) and on Aux 1 / FX 1,
-  to confirm strides from data and not only from the XML.
-* Scene recall, mute groups, DCAs and the FX parameters.
+  This still needs a capture, because the mapping assistant does not decode polls.
+* ~~Fader curve~~ done. Next curves: `map probe Trim`, `map probe AuxSend1`,
+  `map probe FXSend1`, `map probe "Delay Time"`, `map probe Thresh --section Gate`,
+  `map probe Thresh --section Comp`, `map probe Fader --channels aux1-6` (bus faders).
+* Strides on another channel and on Aux 1 / FX 1: `map run channel 9`,
+  `map run bus aux1`, `map run bus fx1`.
+* Scene recall, mute groups, user buttons, transport: `map run scenes`,
+  `map run mutes`, `map run transport`.
 * Try writing: a small client that does the hello exchange and sends one 5.1.
