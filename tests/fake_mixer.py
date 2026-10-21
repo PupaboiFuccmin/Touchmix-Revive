@@ -61,7 +61,7 @@ class FakeMixer:
     def __init__(self, name='Test Mixer', access=True):
         self.name = name
         self.access = access     # like the real mixer, writes are ignored without it
-        self.values = {542: -55.0, 543: 0, 545: 0, 618: -6.0}
+        self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0}
         self.received = []
         self.clients = []
         self.srv = socket.socket()
@@ -92,6 +92,8 @@ class FakeMixer:
             self.values[pid] = fader_db(value)
         elif pid == 543:
             self.values[pid] = int(value)
+        elif pid == 545:    # stored as text, to test probing a stepped/enum parameter
+            self.values[pid] = 'L' if value < 0.34 else 'C' if value < 0.67 else 'R'
         elif pid in self.values:
             self.values[pid] = round(value, 4)
 

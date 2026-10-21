@@ -8,7 +8,7 @@ import zlib
 
 from . import protocol as P
 from .params import (ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
-                     trim_to_norm, send_name, gate_thresh_to_norm)
+                     send_name, curve_for)
 
 CONFIG_FILE = 'NH4-config.xml.dscomp'
 SETTINGS_SUFFIX = '.settings.dqx.dscomp'
@@ -165,8 +165,18 @@ class TouchMix:
     def pan(self, channel, value):
         self.set(self.channel_param(channel, 'Pan'), pan_to_norm(value))
 
+    def set_value(self, channel, section, name, value, band=1):
+        """Set a control in real units, via the curve table in params.CURVES:
+        set_value(4, 'Comp', 'Thresh', -20), set_value(4, 'EQ', 'Q', 2, band=3)."""
+        par = self.params.find('%s > %s' % (strip_path(channel), section), name, band - 1)
+        curve = curve_for(par.path, par.name)
+        if curve is None:
+            raise KeyError('no curve mapped for %s yet; use set() with a 0..1 value' % par.full_name)
+        self.set(par.index, curve.to_norm(value))
+
     def trim(self, channel, db):
-        self.set(self.channel_param(channel, 'Trim'), trim_to_norm(db))
+        """dB: -15..+15 on mono inputs, 0..+12 on the stereo inputs."""
+        self.set_value(channel, 'Control', 'Trim', db)
 
     def send(self, channel, dest, value):
         """Send level from an input to an aux or FX ('aux1', 'fx2').
@@ -177,7 +187,7 @@ class TouchMix:
         self.set(self.channel_param(channel, 'Enable', 'Gate'), 1.0 if on else 0.0)
 
     def gate_threshold(self, channel, db):
-        self.set(self.channel_param(channel, 'Thresh', 'Gate'), gate_thresh_to_norm(db))
+        self.set_value(channel, 'Gate', 'Thresh', db)
 
     def eq_gain(self, channel, band, db):
         self.set(self.channel_param(channel, 'Gain', 'EQ', band - 1), eq_gain_to_norm(db))

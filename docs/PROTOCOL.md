@@ -232,17 +232,44 @@ probably the stereo aux mutes with sloppy labels.)
 
 ### Value scaling
 
-| Control | Normalized → real | Evidence |
-|---------|-------------------|----------|
-| EQ frequency | `Hz = 20 * 1000^x` (log, 20 Hz–20 kHz) | ✅ 0.2125→86.6 Hz, 0.419→362 Hz, 0.657→1.87 kHz, 1.0→20 kHz; reset defaults 0.2007/0.4337/0.6667/0.8257 = 80/400/2k/6k Hz |
-| EQ gain | `dB = 30*x - 15` (±15 dB) | ✅ endpoints, 0.5 after reset |
-| Pan | 0 L / 0.5 C / 1 R, always a multiple of 0.005 (201 steps) | ✅ |
-| Fader | `dB = 67 * x^0.69 - 55`; 0 = −∞ (the XML stores this as −55), 0.7512 = 0 dB (the app sends 0.75 = −0.06 dB), 1.0 = +12 dB | ✅ `map probe` on In 1–16, 33 points, exact to 0.0001 dB ([data](../mappings/mapping-probe-fader-20261021-183005.json)) |
-| Master faders: Main, Aux 1–6, FX 1–4, DCA 1–8 | same law as input faders | ✅ `map probe Fader --channels aux1-6` and `main,fx1-4,dca1-8`, 21 points each, exact |
-| Input → aux and FX sends | same law as input faders: −∞ … +12 dB | ✅ `map probe AuxSend1` and `map probe FXSend1` on In 1–16, 21 points each, exact |
-| Trim (digital gain) | `dB = 30*x - 15` (±15 dB, linear, like EQ gain) | ✅ `map probe Trim` on In 1–16, 21 points, exact |
-| Gate threshold | `dB = 60*x - 60` (−60 … 0 dB, linear) | ✅ `map probe Thresh --section Gate` on In 1–16, 21 points, exact |
-| Delay, comp, gate attack/release etc. | 0–1 | ❓ curves unknown |
+All of these are in `touchmix/params.py` as `CURVES`. Every point in
+`mappings/*.json` is checked against them by the tests. "lin a…b" means
+`a + (b-a)*x`, and "exp a…b" means `a * (b/a)^x`, which is even steps on a log
+scale. Each one is an exact fit to 21 or more read-back points on In 1–16
+unless noted. Units are the likely ones for each range: the config stores
+numbers only.
+
+| Control | Curve | Notes |
+|---------|-------|-------|
+| Fader, every master (Main, Aux 1–10, FX 1–4, DCA 1–8), aux and FX sends | `dB = 67 * x^0.69 - 55` | 0 = −∞ (the config stores −55), 0.7512 = 0 dB (the app sends 0.75 = −0.06 dB), 1 = +12 dB |
+| Trim, mono inputs | lin −15…+15 dB | |
+| Trim, stereo inputs 17/18, 19/20 | lin 0…+12 dB | **different from mono** |
+| Pan, Width (stereo), AuxBalance | lin −100…+100 | pan from the app is always a multiple of 0.005 |
+| Delay Time | lin 0…100 (ms) | |
+| EQ Freq | exp 20…20 000 Hz | also confirmed from the app captures |
+| EQ Gain | lin −15…+15 dB | from captures |
+| EQ Q | exp 0.4…4 | |
+| Lo-Cut Freq | exp 20…2 000 Hz | |
+| Hi-Cut Freq | exp 1 000…20 000 Hz | |
+| Gate Thresh | lin −60…0 dB | |
+| Gate Attack | exp 0.5…50 (ms) | |
+| Gate Release, Gate Hold | exp 10…2 000 (ms) | |
+| Gate Attenuation | lin 0…100 (dB) | |
+| Gate Ratio | lin 1…100 | linear, unlike comp ratio |
+| Comp Thresh | lin −60…0 dB | |
+| Comp Ratio | exp 1…20 | 0.5 = 4.47:1 |
+| Comp Makeup Gain | lin 0…20 dB | |
+| Comp Attack | exp 0.5…50 (ms) | |
+| Comp Release | exp 50…1 000 (ms) | |
+| Comp Knee | switch: 0 below 0.5, 1 from 0.5 up | probably hard/soft |
+| Comp Compression | lin 0…1 | the single Simple-mode knob |
+| De-Esser Amount | lin 0…10 | |
+| De-Esser Frequency Tune | exp 1 000…10 000 Hz | |
+| Mute, Solo, Phase, Enable flags | 0 / 1 | |
+
+Not mapped yet: processing on Main, aux and FX buses (EQ, comp, GEQ, the
+anti-feedback notches), FX parameters, enum parameters (Comp Mode, EQ and cut
+Type), and the stereo inputs' processing.
 
 ## Capture log
 
@@ -258,8 +285,16 @@ Follow-up probes the same evening: every master fader probed (Main, Aux 1–6,
 FX 1–4, DCA 1–8) and the In 1–16 → Aux 1 and FX 1 sends follow the exact same
 law, even though aux and FX sends have different type codes (110 and 111).
 Trim is linear ±15 dB, and gate threshold is linear −60 … 0 dB. Two repeat
-sweeps of the In 1–16 faders read back bit-identical values. The Aux 7–10
-masters are not checked yet.
+sweeps of the In 1–16 faders read back bit-identical values.
+
+### 2026-10-21 18:56: `map probe-all`
+
+All 23 remaining continuous controls in one batch, 21 points each, all
+restored. Every one fits a simple law exactly (see "Value scaling"): 10 are
+linear, 11 are exponential, the Aux 7/8 and 9/10 masters follow the fader law,
+and Comp Knee is a switch. Two results stand out: stereo-input trim is
+0…+12 dB, not ±15 dB, and gate ratio is linear while comp ratio is
+exponential.
 
 ### 2026-10-20 23:39: In 4 walk-through (`PCAPdroid_20_Oct_23_39_13.pcap`)
 
@@ -339,11 +374,10 @@ a phone capture:
 
 * One signal into a channel, with the app's meter screen open, to decode 6.1/7.1.
   This still needs a capture, because the mapping assistant does not decode polls.
-* ~~Fader, master, aux/FX send, trim, gate threshold curves~~ done. Next:
-  `map probe Thresh --section Comp`, `map probe Ratio --section Comp`,
-  `map probe "Makeup Gain" --section Comp`, `map probe "Delay Time"`,
-  `map probe Freq --section Lo-Cut`, `map probe Q --section EQ`,
-  `map probe Fader --channels aux7,aux9`.
+* ~~All input-channel curves~~ done (`map probe-all`). Still open: bus
+  processing (Main/Aux/FX EQ, comp, GEQ), FX parameters, and enum parameters
+  (Comp Mode, EQ and cut Type). Enums are not in the probe plan, because
+  switching a mode may reset other parameters. They need a guided run instead.
 * Strides on another channel and on Aux 1 / FX 1: `map run channel 9`,
   `map run bus aux1`, `map run bus fx1`.
 * Scene recall, mute groups, user buttons, transport: `map run scenes`,

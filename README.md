@@ -46,7 +46,7 @@ All other commands auto-discover too. To skip the scan, pass `--host` or set
 
 ```sh
 python3 -m touchmix info                     # name, firmware, channels, faders, mutes
-python3 -m touchmix monitor                  # print every change made on the mixer/app
+python3 -m touchmix monitor                  # print every change made on the mixer/app, in real units
 python3 -m touchmix mute 4 on --verify       # --verify reconnects and checks the mixer stored it
 python3 -m touchmix mute 4 off
 python3 -m touchmix solo 4 on
@@ -56,6 +56,9 @@ python3 -m touchmix trim 4 -3                 # input trim (digital gain) in dB,
 python3 -m touchmix send 4 aux1 -10db         # aux/FX send level: dB, off, or raw 0..1
 python3 -m touchmix send 4 fx1 -20db
 python3 -m touchmix gate 4 -40                # gate threshold in dB (-60..0), or on / off
+python3 -m touchmix param 4 Comp Thresh -20    # any mapped control in real units
+python3 -m touchmix param 4 EQ Q 2 --band 3
+python3 -m touchmix param 4 Control "Delay Time" 12
 python3 -m touchmix eq 4 1 gain -3           # EQ band 1..4 gain in dB (±15)
 python3 -m touchmix eq 4 1 freq 120          # EQ band frequency in Hz
 python3 -m touchmix find "aux 1 > control"   # search parameter names (offline)
@@ -112,7 +115,18 @@ python3 -m touchmix map probe Thresh --section Gate --channels 1-8
 python3 -m touchmix map probe AuxSend1 --channels 1-16
 ```
 
-> ⚠️ Probe moves **live** controls through their full range (faders to +10 dB).
+`map probe-all` runs every control that hasn't been mapped yet, in order:
+delay, cut filters, EQ, gate, comp, de-esser, aux balance, stereo width/trim,
+and the Aux 7–10 masters. It asks once, saves one JSON per control in
+`mappings/`, and finishes with a table that fits each curve as linear,
+exponential (Hz, ms) or the fader law. If one control fails, it says so and
+carries on with the rest. Use `--only comp,gate` to run part of the list.
+
+```sh
+python3 -m touchmix map probe-all
+```
+
+> ⚠️ Probe moves **live** controls through their full range (faders to +12 dB).
 > Turn the amps down or unplug the outputs first.
 
 **Guided** prompts you to do one thing at a time on the mixer or in the app,

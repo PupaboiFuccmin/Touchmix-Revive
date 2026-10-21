@@ -17,11 +17,14 @@ raw config, so they are safe to commit.
 """
 import datetime
 import json
+import math
+import os
+import re
 import threading
 import time
 
 from .client import TouchMix
-from .params import ParamTable, strip_path
+from .params import ParamTable, strip_path, norm_to_fader_db
 
 # IDs that change on their own, without anyone touching a control
 BACKGROUND = {0x00CE, 0x00D4}
@@ -425,6 +428,8 @@ def _restore(session, originals, curve, say, tries=3):
         back = []
         for pid, eng in left.items():
             w = interp_inverse(curve, eng)
+            if w is None:
+                w = next((cw for cw, ce in curve if ce == eng), None)
             if w is not None:
                 back.append((pid, w))
         if not back:
@@ -450,6 +455,130 @@ def curve_table(points):
     for p in points:
         seen.setdefault(p['wire'], p['eng'])
     return sorted(seen.items())
+
+
+# ---------------------------------------------------------------- batch
+
+INPUTS = '1-16'
+
+# Every continuous control not mapped yet, in run order: (section, param, band, channels).
+# Enums (Comp Mode, EQ/cut Type) are left out on purpose: switching a mode can
+# reset other parameters, which the restore would not undo.
+PROBE_PLAN = [
+    ('Control', 'Delay Time', 1, INPUTS),
+    ('Lo-Cut', 'Freq', 1, INPUTS),
+    ('Hi-Cut', 'Freq', 1, INPUTS),
+    ('EQ', 'Freq', 1, INPUTS),          # known law; checks the probe against it
+    ('EQ', 'Q', 1, INPUTS),
+    ('Gate', 'Attack', 1, INPUTS),
+    ('Gate', 'Release', 1, INPUTS),
+    ('Gate', 'Hold', 1, INPUTS),
+    ('Gate', 'Attenuation', 1, INPUTS),
+    ('Gate', 'Ratio', 1, INPUTS),
+    ('Comp', 'Thresh', 1, INPUTS),
+    ('Comp', 'Ratio', 1, INPUTS),
+    ('Comp', 'Makeup Gain', 1, INPUTS),
+    ('Comp', 'Attack', 1, INPUTS),
+    ('Comp', 'Release', 1, INPUTS),
+    ('Comp', 'Knee', 1, INPUTS),
+    ('Comp', 'Compression', 1, INPUTS),
+    ('De-Esser', 'Amount', 1, INPUTS),
+    ('De-Esser', 'Frequency Tune', 1, INPUTS),
+    ('Control', 'AuxBalance1', 1, INPUTS),
+    ('Control', 'Width', 1, 'st17,st19'),
+    ('Control', 'Trim', 1, 'st17,st19'),
+    ('Control', 'Fader', 1, 'aux7,aux9'),
+]
+
+
+def plan_name(section, param, band):
+    return '%s %s%s' % (section, param, ' %d' % band if band > 1 else '')
+
+
+def fit_curve(table):
+    """Describe a probed curve: [(wire, eng)] -> (kind, formula, max error).
+    Tries linear, exponential (log-scaled, e.g. Hz or ms) and the fader law."""
+    pts = [(w, e) for w, e in table if isinstance(e, float)]
+    if len(pts) < 3:
+        return 'text', 'non-numeric values: %s' % ', '.join(str(e) for _, e in table[:6]), None
+    distinct = len(set(e for _, e in pts))
+    if distinct == 1:
+        return 'constant', 'never changed (%s)' % pts[0][1], None
+    fits = []
+    n = len(pts)
+    xs, ys = [w for w, _ in pts], [e for _, e in pts]
+    mx, my = sum(xs) / n, sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    a = sum((x - mx) * (y - my) for x, y in pts) / sxx
+    b = my - a * mx
+    fits.append(('linear', 'eng = %.6g*x %+.6g' % (a, b), max(abs(a * x + b - y) for x, y in pts)))
+    if all(y > 0 for y in ys):
+        ly = [math.log(y) for y in ys]
+        mly = sum(ly) / n
+        k = sum((x - mx) * (l - mly) for x, l in zip(xs, ly)) / sxx
+        c = math.exp(mly - k * mx)
+        r = math.exp(k)
+        err = max(abs(c * r ** x - y) / y for x, y in pts)   # relative
+        fits.append(('exponential', 'eng = %.6g * %.6g^x' % (c, r), err * max(ys)))
+    fits.append(('fader law', 'dB = 67*x^0.69 - 55', max(abs(norm_to_fader_db(x) - y) for x, y in pts)))
+    kind, formula, err = min(fits, key=lambda f: f[2])
+    if distinct < len(pts) * 0.6:
+        kind += ', stepped (%d distinct values)' % distinct
+    return kind, formula, err
+
+
+def probe_all(session, plan, steps, outdir, save_fn, say=print, restore=True):
+    """Run every probe in plan on one session. A failing probe is reported and
+    skipped. Returns [(name, file or None, fit or error text)]."""
+    summary = []
+    values = sweep_values(steps)
+    for i, (section, param, band, channels) in enumerate(plan, 1):
+        name = plan_name(section, param, band)
+        say('\n=== %d/%d  %s on %s' % (i, len(plan), name, channels))
+        try:
+            chans = parse_channels(channels)
+            pids = [session.params.find('%s > %s' % (strip_path(c), section), param, band - 1).index
+                    for c in chans]
+            result = probe(session, pids, values, say=say, restore=restore)
+            slug = '%s-%s' % (section, param) + ('-%d' % band if band > 1 else '')
+            slug = ''.join(ch if ch.isalnum() else '-' for ch in slug.lower()).strip('-')
+            path = os.path.join(outdir, default_out('probe-' + slug))
+            save_fn(path, dict(section=section, param=param, band=band, channels=chans, **result))
+            fit = fit_curve(curve_table(result['points']))
+            if result.get('warning'):
+                fit = ('constant', result['warning'], None)
+            if restore and not result.get('restored'):
+                fit = (fit[0] + ', NOT RESTORED', fit[1], fit[2])
+            summary.append((name, path, fit))
+        except Exception as e:      # keep going: one odd parameter must not stop the batch
+            say('!! %s failed: %s' % (name, e))
+            summary.append((name, None, ('error', str(e), None)))
+            try:
+                session.reopen()
+            except Exception as e2:
+                say('!! could not reconnect: %s' % e2)
+                break
+    return summary
+
+
+def format_summary(summary):
+    lines = ['%-26s %-34s %-32s %s' % ('control', 'kind', 'formula', 'max err')]
+    for name, _, (kind, formula, err) in summary:
+        lines.append('%-26s %-34s %-32s %s' % (name, kind, formula, '' if err is None else '%.4g' % err))
+    return '\n'.join(lines)
+
+
+def parse_channels(text):
+    """'1-16', '1,3,5', 'aux1-6', '1-4,main'."""
+    out = []
+    for part in text.split(','):
+        part = part.strip()
+        m = re.fullmatch(r'([a-zA-Z]*)(\d+)-(\d+)', part)
+        if m:
+            out.extend('%s%d' % (m.group(1), n) for n in range(int(m.group(2)), int(m.group(3)) + 1))
+        elif part:
+            out.append(part)
+    return out
 
 
 # ---------------------------------------------------------------- output

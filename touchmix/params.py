@@ -99,15 +99,6 @@ def norm_to_eq_gain(x):
     return 30.0 * x - 15.0
 
 
-def trim_to_norm(db):
-    """Input trim (digital gain), linear +-15 dB: from `map probe Trim`."""
-    return clamp01((float(db) + 15.0) / 30.0)
-
-
-def norm_to_trim(x):
-    return 30.0 * x - 15.0
-
-
 def send_name(dest):
     """Send parameter name on an input: 'aux1' -> 'AuxSend1', aux 7 or 8 ->
     'AuxSend7/8', 9 or 10 -> 'AuxSend9/10', 'fx2' -> 'FXSend2'. A bare number is an aux."""
@@ -125,15 +116,6 @@ def send_name(dest):
         if not fx and n in (9, 10):
             return 'AuxSend9/10'
     raise ValueError('unknown send %r (use aux1-aux10 or fx1-fx4)' % dest)
-
-
-def gate_thresh_to_norm(db):
-    """Gate threshold, linear -60..0 dB: from `map probe Thresh --section Gate`."""
-    return clamp01((float(db) + 60.0) / 60.0)
-
-
-def norm_to_gate_thresh(x):
-    return 60.0 * x - 60.0
 
 
 def pan_to_norm(pan):
@@ -193,3 +175,125 @@ def fader_to_norm(value):
     if s.endswith('db'):
         return fader_db_to_norm(s[:-2])
     return clamp01(s)
+
+
+# ---------------------------------------------------------------- curve table
+# Every control mapped so far, by (section, name). All from `map probe` /
+# `map probe-all` readbacks (mappings/*.json), each an exact fit. Units are the
+# likely ones for the range; the config stores numbers only.
+
+class Curve:
+    """kind is 'linear' (lo + (hi-lo)*x), 'exp' (lo * (hi/lo)^x), 'fader' or 'switch'."""
+
+    def __init__(self, kind, lo=0.0, hi=1.0, unit=''):
+        self.kind, self.lo, self.hi, self.unit = kind, lo, hi, unit
+
+    def from_norm(self, x):
+        x = clamp01(x)
+        if self.kind == 'fader':
+            return norm_to_fader_db(x)
+        if self.kind == 'switch':
+            return 1.0 if x >= 0.5 else 0.0
+        if self.kind == 'exp':
+            return self.lo * (self.hi / self.lo) ** x
+        return self.lo + (self.hi - self.lo) * x
+
+    def to_norm(self, value):
+        """Real units -> wire value. Plain numbers are in the curve's unit (dB for faders)."""
+        s = str(value).strip().lower()
+        if self.kind == 'fader':
+            try:
+                return fader_db_to_norm(float(s))
+            except ValueError:
+                return fader_to_norm(s)     # '-10db', 'off', 'unity'
+        if self.kind == 'switch':
+            return 1.0 if s in ('on', '1', '1.0', 'true', 'yes') else 0.0
+        if self.unit and s.endswith(self.unit.lower()):
+            s = s[:-len(self.unit)]
+        v = float(s)
+        if self.kind == 'exp':
+            v = min(max(v, min(self.lo, self.hi)), max(self.lo, self.hi))
+            return clamp01(math.log(v / self.lo) / math.log(self.hi / self.lo))
+        return clamp01((v - self.lo) / (self.hi - self.lo))
+
+    def format(self, x):
+        v = self.from_norm(x)
+        if self.kind == 'fader' and v <= FADER_MIN_DB:
+            return '-inf dB'
+        if self.kind == 'switch':
+            return 'on' if v else 'off'
+        return '%.4g%s' % (v, ' ' + self.unit if self.unit else '')
+
+    def __repr__(self):
+        return '<Curve %s %g..%g %s>' % (self.kind, self.lo, self.hi, self.unit)
+
+
+FADER = Curve('fader', FADER_MIN_DB, FADER_MAX_DB, 'dB')
+SWITCH = Curve('switch')
+
+CURVES = {
+    ('Control', 'Fader'): FADER,
+    ('Control', 'Trim'): Curve('linear', -15, 15, 'dB'),
+    ('Control', 'Pan'): Curve('linear', -100, 100),
+    ('Control', 'Width'): Curve('linear', -100, 100),
+    ('Control', 'Delay Time'): Curve('linear', 0, 100, 'ms'),
+    ('Control', 'Mute'): SWITCH,
+    ('Control', 'Solo'): SWITCH,
+    ('Control', 'Phase'): SWITCH,
+    ('Control', 'Delay Enable'): SWITCH,
+    ('EQ', 'Freq'): Curve('exp', 20, 20000, 'Hz'),
+    ('EQ', 'Gain'): Curve('linear', -15, 15, 'dB'),
+    ('EQ', 'Q'): Curve('exp', 0.4, 4),
+    ('Lo-Cut', 'Freq'): Curve('exp', 20, 2000, 'Hz'),
+    ('Hi-Cut', 'Freq'): Curve('exp', 1000, 20000, 'Hz'),
+    ('Gate', 'Enable'): SWITCH,
+    ('Gate', 'Thresh'): Curve('linear', -60, 0, 'dB'),
+    ('Gate', 'Attack'): Curve('exp', 0.5, 50, 'ms'),
+    ('Gate', 'Release'): Curve('exp', 10, 2000, 'ms'),
+    ('Gate', 'Hold'): Curve('exp', 10, 2000, 'ms'),
+    ('Gate', 'Attenuation'): Curve('linear', 0, 100, 'dB'),
+    ('Gate', 'Ratio'): Curve('linear', 1, 100),
+    ('Comp', 'Enable'): SWITCH,
+    ('Comp', 'Thresh'): Curve('linear', -60, 0, 'dB'),
+    ('Comp', 'Ratio'): Curve('exp', 1, 20),
+    ('Comp', 'Makeup Gain'): Curve('linear', 0, 20, 'dB'),
+    ('Comp', 'Attack'): Curve('exp', 0.5, 50, 'ms'),
+    ('Comp', 'Release'): Curve('exp', 50, 1000, 'ms'),
+    ('Comp', 'Knee'): SWITCH,                          # 0 below 0.5, 1 from 0.5 up
+    ('Comp', 'Compression'): Curve('linear', 0, 1),    # the Simple-mode single knob
+    ('De-Esser', 'Amount'): Curve('linear', 0, 10),
+    ('De-Esser', 'Frequency Tune'): Curve('exp', 1000, 10000, 'Hz'),
+}
+
+# channel-type overrides, by path prefix
+STEREO_CURVES = {
+    ('Control', 'Trim'): Curve('linear', 0, 12, 'dB'),   # stereo inputs: 0..+12, not +-15
+}
+
+# name prefixes inside 'Control'
+PREFIX_CURVES = (
+    ('AuxSend', FADER),
+    ('FXSend', FADER),
+    ('AuxBalance', Curve('linear', -100, 100)),
+    ('AuxMute', SWITCH),
+)
+
+
+def curve_for(path, name):
+    """Curve for a parameter, e.g. curve_for('In 4 > Comp', 'Thresh'), or None if not mapped."""
+    channel, _, section = path.rpartition(' > ')
+    key = (section, name)
+    curve = None
+    if channel.startswith('Stereo In') and key in STEREO_CURVES:
+        curve = STEREO_CURVES[key]
+    elif key in CURVES:
+        curve = CURVES[key]
+    elif section == 'Control':
+        for prefix, c in PREFIX_CURVES:
+            if name.startswith(prefix):
+                curve = c
+                break
+    # processing curves were probed on inputs only; masters share just the fader law
+    if curve not in (None, FADER, SWITCH) and not channel.startswith(('In ', 'Stereo In')):
+        return None
+    return curve

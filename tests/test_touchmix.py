@@ -75,12 +75,41 @@ class Scaling(unittest.TestCase):
         self.assertEqual(S.fader_to_norm('+20db'), 1.0)
         self.assertEqual(S.fader_to_norm('0.6'), 0.6)
 
-    def test_trim(self):
-        # from `map probe Trim`: linear, -15 dB at 0, +15 dB at 1
-        for x, db in ((0.0, -15.0), (0.35, -4.5), (0.5, 0.0), (0.9, 12.0), (1.0, 15.0)):
-            self.assertAlmostEqual(S.norm_to_trim(x), db, places=6)
-            self.assertAlmostEqual(S.trim_to_norm(db), x, places=6)
-        self.assertEqual(S.trim_to_norm(40), 1.0)
+    def test_curves_match_every_probe(self):
+        """Every point in mappings/*.json must come out of params.curve_for."""
+        import glob
+        import json
+        files = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'mappings', '*.json'))
+        self.assertTrue(files)
+        table = S.ParamTable()
+        checked = 0
+        for f in files:
+            with open(f) as fh:
+                doc = json.load(fh)
+            if doc.get('kind') != 'probe' or doc.get('warning'):
+                continue
+            for p in doc['points']:
+                par = table[int(p['id'], 16)]
+                curve = S.curve_for(par.path, par.name)
+                self.assertIsNotNone(curve, '%s (%s)' % (par.full_name, f))
+                self.assertAlmostEqual(curve.from_norm(p['wire']), p['eng'], delta=0.01 + abs(p['eng']) * 1e-5,
+                                       msg='%s at %s (%s)' % (par.full_name, p['wire'], f))
+                if curve.kind not in ('switch',) and curve.from_norm(p['wire']) > S.FADER_MIN_DB:
+                    self.assertAlmostEqual(curve.to_norm(p['eng']), p['wire'], places=4,
+                                           msg='%s inverse at %s' % (par.full_name, p['eng']))
+                checked += 1
+        self.assertGreater(checked, 500)
+
+    def test_curve_lookup(self):
+        self.assertEqual(S.curve_for('Stereo In 17/18 > Control', 'Trim').hi, 12)
+        self.assertEqual(S.curve_for('In 4 > Control', 'Trim').hi, 15)
+        self.assertIs(S.curve_for('Aux 1 > Control', 'Fader'), S.FADER)
+        self.assertIsNone(S.curve_for('Main > Comp', 'Thresh'))     # only probed on inputs
+        self.assertIsNone(S.curve_for('In 4 > Control', 'Name'))
+        c = S.curve_for('In 4 > Control', 'Delay Time')
+        self.assertEqual((c.to_norm('25ms'), c.format(0.25)), (0.25, '25 ms'))
+        self.assertEqual(S.FADER.format(0), '-inf dB')
+        self.assertEqual(S.curve_for('In 4 > Comp', 'Knee').to_norm('on'), 1.0)
 
     def test_send_name(self):
         self.assertEqual(S.send_name('aux1'), 'AuxSend1')
@@ -93,12 +122,6 @@ class Scaling(unittest.TestCase):
         t = S.ParamTable()
         self.assertEqual(t.find('In 4 > Control', S.send_name(9)).index, 0x1277)
         self.assertEqual(t.find('In 4 > Control', S.send_name('fx1')).index, 0x127E)
-
-    def test_gate_thresh(self):
-        # from `map probe Thresh --section Gate`: linear, -60 dB at 0, 0 dB at 1
-        for x, db in ((0.0, -60.0), (0.25, -45.0), (0.85, -9.0), (1.0, 0.0)):
-            self.assertAlmostEqual(S.norm_to_gate_thresh(x), db, places=6)
-            self.assertAlmostEqual(S.gate_thresh_to_norm(db), x, places=6)
 
     def test_channel_names(self):
         self.assertEqual(S.strip_path(4), 'In 4')
@@ -194,6 +217,9 @@ class Client(unittest.TestCase):
             self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'send', '4', 'fx1', '0db']), 0)
             self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'gate', '4', '-40db']), 0)
             self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'gate', '4', 'on']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'param', '4', 'Comp', 'Thresh', '-20']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'param', '4', 'EQ', 'Q', '4', '--band', '3']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'trim', 'st17', '6']), 0)
         sent = {pid: v for t, p in self.mixer.received if t == P.PARAM_SET
                 for pid, _, _, v in P.decode_param_set(p)}
         self.assertAlmostEqual(sent[0x22C], 0.4, places=6)
@@ -201,6 +227,9 @@ class Client(unittest.TestCase):
         self.assertAlmostEqual(sent[0x127E], S.FADER_0DB, places=6)
         self.assertAlmostEqual(sent[0x242], 1 / 3.0, places=6)
         self.assertEqual(sent[0x241], 1.0)
+        self.assertAlmostEqual(sent[0x24A], 40 / 60.0, places=6)      # comp thresh -20 dB
+        self.assertAlmostEqual(sent[0x260], 1.0, places=6)            # EQ band 3 Q = 4
+        self.assertAlmostEqual(sent[0x5FE], 0.5, places=6)            # stereo trim 6 of 0..12 dB
 
     def test_cli_mute_verify(self):
         out = io.StringIO()
@@ -226,6 +255,27 @@ class MappingHelpers(unittest.TestCase):
     def test_parse_channels(self):
         self.assertEqual(parse_channels('1-3,main,aux2'), ['1', '2', '3', 'main', 'aux2'])
         self.assertEqual(parse_channels('aux1-3'), ['aux1', 'aux2', 'aux3'])
+
+    def test_fit_curve(self):
+        xs = [i / 20.0 for i in range(21)]
+        kind, _, err = M.fit_curve([(x, 60 * x - 60) for x in xs])
+        self.assertEqual(kind, 'linear')
+        self.assertLess(err, 1e-9)
+        kind, formula, err = M.fit_curve([(x, 20.0 * 1000 ** x) for x in xs])
+        self.assertEqual(kind, 'exponential')
+        self.assertIn('1000', formula)
+        kind, _, err = M.fit_curve([(x, S.norm_to_fader_db(x)) for x in xs])
+        self.assertEqual(kind, 'fader law')
+        kind, _, _ = M.fit_curve([(x, float(round(x * 3))) for x in xs])
+        self.assertIn('stepped', kind)
+        self.assertEqual(M.fit_curve([(x, 'Peak') for x in xs])[0], 'text')
+        self.assertEqual(M.fit_curve([(x, 1.0) for x in xs])[0], 'constant')
+
+    def test_probe_plan_resolves(self):
+        t = S.ParamTable()
+        for section, param, band, channels in M.PROBE_PLAN:
+            for c in M.parse_channels(channels):
+                t.find('%s > %s' % (S.strip_path(c), section), param, band - 1)
 
     def test_builtin_scripts_resolve(self):
         t = S.ParamTable()
@@ -319,6 +369,39 @@ class Mapping(unittest.TestCase):
         self.assertEqual(self.mixer.values[542], -55.0)
         self.assertAlmostEqual(self.mixer.values[618], -6.0, delta=0.05)
         self.assertNotIn('warning', res)
+
+    def test_probe_restores_text_parameter(self):
+        s = self.session()
+        try:
+            res = M.probe(s, [0x221], M.sweep_values(5), say=self.out.append)
+        finally:
+            s.close()
+        self.assertEqual([e for _, e in M.curve_table(res['points'])], ['L', 'L', 'C', 'R', 'R'])
+        self.assertTrue(res['restored'], self.out)
+        self.assertEqual(self.mixer.values[545], 'C')
+
+    def test_probe_all_keeps_going(self):
+        import tempfile
+        outdir = tempfile.mkdtemp()
+        saved = []
+
+        def save_fn(path, body):
+            saved.append(path)
+            M.save(path, 'probe', '127.0.0.1', 'Test Mixer', body)
+        plan = [('Control', 'Fader', 1, '4-5'), ('Nope', 'Missing', 1, '4'), ('Control', 'Pan', 1, '4')]
+        s = self.session()
+        try:
+            summary = M.probe_all(s, plan, 5, outdir, save_fn, say=self.out.append)
+        finally:
+            s.close()
+        kinds = [fit[0] for _, _, fit in summary]
+        self.assertNotIn('error', kinds[0])    # the fake fader curve is made up, so any numeric fit
+        self.assertEqual(kinds[1], 'error')
+        self.assertEqual(kinds[2], 'text')
+        self.assertEqual(len(saved), 2)
+        self.assertTrue(all(os.path.dirname(p) == outdir for p in saved))
+        self.assertIn('Control Fader', M.format_summary(summary))
+        self.assertEqual(self.mixer.values[545], 'C')
 
     def test_probe_warns_when_nothing_changes(self):
         s = self.session()

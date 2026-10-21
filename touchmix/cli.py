@@ -11,6 +11,8 @@ Examples:
   python -m touchmix send 4 aux1 -10db
   python -m touchmix send 4 fx1 -20db
   python -m touchmix gate 4 -40
+  python -m touchmix param 4 Comp Thresh -20
+  python -m touchmix param 4 EQ Q 2 --band 3
   python -m touchmix eq 4 1 gain -3
   python -m touchmix set "In 4 > Control > Mute" 1
   python -m touchmix find "aux 1 > control"
@@ -25,8 +27,9 @@ import time
 
 from .discover import discover, default_subnets
 from . import mapping as M
+from .mapping import parse_channels
 from .client import TouchMix, TouchMixError
-from .params import ParamTable, strip_path, send_name
+from .params import ParamTable, strip_path, send_name, curve_for
 
 
 def pick_host(args):
@@ -136,8 +139,10 @@ def cmd_monitor(args):
         if source == 'status' and not args.all:
             return
         par = tm.params.get(pid)
-        print('%s 0x%04x %-9.4f raw=%08x tag=%04x %s' % (
-            time.strftime('%H:%M:%S'), pid, value, raw, tag, par.full_name if par else '?'), flush=True)
+        curve = curve_for(par.path, par.name) if par else None
+        print('%s 0x%04x %-9.4f %-11s raw=%08x tag=%04x %s' % (
+            time.strftime('%H:%M:%S'), pid, value, curve.format(value) if curve else '',
+            raw, tag, par.full_name if par else '?'), flush=True)
 
     tm.connect()
     tm.wait_ready()
@@ -217,6 +222,17 @@ def cmd_gate(args):
     return apply_and_verify(args, lambda tm: tm.gate_threshold(args.channel, db), pid)
 
 
+def cmd_param(args):
+    table = ParamTable()
+    par = table.find('%s > %s' % (strip_path(args.channel), args.section), args.param, args.band - 1)
+    curve = curve_for(par.path, par.name)
+    if curve is None:
+        sys.exit('no curve mapped for %s yet; use "set" with a raw 0..1 value' % par.full_name)
+    norm = curve.to_norm(args.value)
+    print('%s = %s (wire %.6f)' % (par.full_name, curve.format(norm), norm))
+    return apply_and_verify(args, lambda tm: tm.set(par.index, norm), par.index)
+
+
 def cmd_eq(args):
     name = {'gain': 'Gain', 'freq': 'Freq'}[args.what]
     pid = ParamTable().find('%s > EQ' % strip_path(args.channel), name, args.band - 1).index
@@ -241,19 +257,6 @@ def cmd_find(args):
 
 
 # ---------------------------------------------------------------- mapping
-
-def parse_channels(text):
-    """'1-16', '1,3,5', 'aux1-6', '1-4,main'."""
-    out = []
-    for part in text.split(','):
-        part = part.strip()
-        m = re.fullmatch(r'([a-zA-Z]*)(\d+)-(\d+)', part)
-        if m:
-            out.extend('%s%d' % (m.group(1), n) for n in range(int(m.group(2)), int(m.group(3)) + 1))
-        elif part:
-            out.append(part)
-    return out
-
 
 def map_session(args, recorder=None):
     s = M.Session(pick_host(args), args.port, args.name, recorder)
@@ -324,6 +327,39 @@ def cmd_map_probe(args):
     print('\nSaved %s' % out)
 
 
+def cmd_map_probe_all(args):
+    plan = M.PROBE_PLAN
+    if args.only:
+        want = [w.strip().lower() for w in args.only.split(',')]
+        plan = [p for p in plan if any(w in M.plan_name(*p[:3]).lower() for w in want)]
+    if not plan:
+        sys.exit('nothing matches --only %r' % args.only)
+    if args.channels:
+        plan = [(sec, par, band, args.channels if ch == M.INPUTS else ch) for sec, par, band, ch in plan]
+    print('Probe batch: %d controls, %d values each, results in %s/' % (len(plan), args.steps, args.outdir))
+    for sec, par, band, ch in plan:
+        print('  %-26s %s' % (M.plan_name(sec, par, band), ch))
+    print('These are LIVE controls on every listed channel. Turn the amps down.')
+    if not args.yes and input('Type yes to go ahead > ').strip().lower() != 'yes':
+        return 1
+    os.makedirs(args.outdir, exist_ok=True)
+    s = map_session(args)
+    if warn_no_access(s.tm):
+        s.close()
+        return 1
+    mixer = s.tm.mixer_name
+    save_fn = lambda path, body: M.save(path, 'probe', s.host, mixer, body)
+    try:
+        summary = M.probe_all(s, plan, args.steps, args.outdir, save_fn, restore=not args.no_restore)
+    finally:
+        s.close()
+    print('\n' + M.format_summary(summary))
+    bad = [n for n, _, (kind, _, _) in summary if kind == 'error' or 'NOT RESTORED' in kind]
+    if bad:
+        print('\n!! check these: %s' % ', '.join(bad))
+    return 2 if bad else 0
+
+
 def cmd_map_show(args):
     import json
     with open(args.file) as f:
@@ -372,6 +408,11 @@ def main(argv=None):
     ctl('send', 'aux/FX send level: -10db, 0db, off (or raw 0..1)', cmd_send,
         ('dest', dict(help='aux1-aux10 or fx1-fx4')), ('value', dict()))
     ctl('gate', 'gate on/off, or threshold in dB (-60..0)', cmd_gate, ('value', dict()))
+    ctl('param', 'any mapped control in real units: param 4 Comp Thresh -20', cmd_param,
+        ('section', dict(help='Control, EQ, Lo-Cut, Hi-Cut, Gate, Comp, De-Esser')),
+        ('param', dict(help='name in that section, e.g. Thresh, Ratio, "Delay Time"')),
+        ('value', dict(help='in the control\'s units (dB, Hz, ms, ratio); on/off for switches')),
+        ('--band', dict(type=int, default=1, help='which one, for EQ bands (default 1)')))
     ctl('eq', 'EQ band gain (dB) or freq (Hz)', cmd_eq,
         ('band', dict(type=int, choices=[1, 2, 3, 4])), ('what', dict(choices=['gain', 'freq'])),
         ('value', dict(type=float)))
@@ -408,6 +449,14 @@ def main(argv=None):
     pr.add_argument('--no-restore', action='store_true', help='leave the controls where the sweep ends')
     pr.add_argument('--out', help='output JSON')
     pr.set_defaults(fn=cmd_map_probe)
+    pa = msub.add_parser('probe-all', help='run every remaining curve probe in order (see mapping.PROBE_PLAN)')
+    pa.add_argument('--only', help='comma-separated filters on the control name, e.g. "comp,gate attack"')
+    pa.add_argument('--channels', help='input channels to sweep (default 1-16)')
+    pa.add_argument('--steps', type=int, default=21, help='values from 0 to 1 per control (default 21)')
+    pa.add_argument('--outdir', default='mappings', help='where to save the JSON files (default mappings)')
+    pa.add_argument('--yes', action='store_true', help='do not ask for confirmation')
+    pa.add_argument('--no-restore', action='store_true', help=argparse.SUPPRESS)
+    pa.set_defaults(fn=cmd_map_probe_all)
     sh = msub.add_parser('show', help='print a saved mapping file')
     sh.add_argument('file')
     sh.set_defaults(fn=cmd_map_show)
