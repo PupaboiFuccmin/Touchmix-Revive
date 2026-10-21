@@ -99,6 +99,43 @@ def norm_to_eq_gain(x):
     return 30.0 * x - 15.0
 
 
+def trim_to_norm(db):
+    """Input trim (digital gain), linear +-15 dB: from `map probe Trim`."""
+    return clamp01((float(db) + 15.0) / 30.0)
+
+
+def norm_to_trim(x):
+    return 30.0 * x - 15.0
+
+
+def send_name(dest):
+    """Send parameter name on an input: 'aux1' -> 'AuxSend1', aux 7 or 8 ->
+    'AuxSend7/8', 9 or 10 -> 'AuxSend9/10', 'fx2' -> 'FXSend2'. A bare number is an aux."""
+    t = str(dest).strip().lower().replace(' ', '')
+    fx = t.startswith('fx')
+    n = (t[2:] if fx else t.replace('aux', '')).split('/')[0]
+    if n.isdigit():
+        n = int(n)
+        if fx and 1 <= n <= 4:
+            return 'FXSend%d' % n
+        if not fx and 1 <= n <= 6:
+            return 'AuxSend%d' % n
+        if not fx and n in (7, 8):
+            return 'AuxSend7/8'
+        if not fx and n in (9, 10):
+            return 'AuxSend9/10'
+    raise ValueError('unknown send %r (use aux1-aux10 or fx1-fx4)' % dest)
+
+
+def gate_thresh_to_norm(db):
+    """Gate threshold, linear -60..0 dB: from `map probe Thresh --section Gate`."""
+    return clamp01((float(db) + 60.0) / 60.0)
+
+
+def norm_to_gate_thresh(x):
+    return 60.0 * x - 60.0
+
+
 def pan_to_norm(pan):
     """pan: -100 (hard left) .. 0 (centre) .. +100 (hard right).
     Also accepts 'L', 'C', 'R', 'L30', 'R25'."""
@@ -120,6 +157,8 @@ def norm_to_pan(x):
 
 # Fader law, from `map probe Fader` on In 1-16 (33 points, exact to 0.0001 dB):
 #   dB = 67 * x^0.69 - 55,  x = 0 is -inf (the config stores it as -55), x = 1 is +12 dB
+# Every master probed (Main, Aux 1-6, FX 1-4, DCA 1-8) and the input aux and FX
+# sends follow the same law.
 FADER_MIN_DB = -55.0
 FADER_MAX_DB = 12.0
 FADER_EXP = 0.69

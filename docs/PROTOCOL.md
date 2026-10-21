@@ -238,7 +238,11 @@ probably the stereo aux mutes with sloppy labels.)
 | EQ gain | `dB = 30*x - 15` (±15 dB) | ✅ endpoints, 0.5 after reset |
 | Pan | 0 L / 0.5 C / 1 R, always a multiple of 0.005 (201 steps) | ✅ |
 | Fader | `dB = 67 * x^0.69 - 55`; 0 = −∞ (the XML stores this as −55), 0.7512 = 0 dB (the app sends 0.75 = −0.06 dB), 1.0 = +12 dB | ✅ `map probe` on In 1–16, 33 points, exact to 0.0001 dB ([data](../mappings/mapping-probe-fader-20261021-183005.json)) |
-| Trim, sends, delay | 0–1 | ❓ curves unknown |
+| Master faders: Main, Aux 1–6, FX 1–4, DCA 1–8 | same law as input faders | ✅ `map probe Fader --channels aux1-6` and `main,fx1-4,dca1-8`, 21 points each, exact |
+| Input → aux and FX sends | same law as input faders: −∞ … +12 dB | ✅ `map probe AuxSend1` and `map probe FXSend1` on In 1–16, 21 points each, exact |
+| Trim (digital gain) | `dB = 30*x - 15` (±15 dB, linear, like EQ gain) | ✅ `map probe Trim` on In 1–16, 21 points, exact |
+| Gate threshold | `dB = 60*x - 60` (−60 … 0 dB, linear) | ✅ `map probe Thresh --section Gate` on In 1–16, 21 points, exact |
+| Delay, comp, gate attack/release etc. | 0–1 | ❓ curves unknown |
 
 ## Capture log
 
@@ -250,8 +254,12 @@ each reconnect. Every point fits `dB = 67 * x^0.69 - 55` to within 0.0001 dB,
 so this is the firmware's own law. The probe restored all 16 faders afterwards.
 This also confirms that **the config sent on connect reflects writes made by
 earlier clients**, so `--verify` and probe readback can be trusted.
-Other type-41 faders (Main, Aux, FX, DCA masters) probably share this curve,
-but that is not checked yet.
+Follow-up probes the same evening: every master fader probed (Main, Aux 1–6,
+FX 1–4, DCA 1–8) and the In 1–16 → Aux 1 and FX 1 sends follow the exact same
+law, even though aux and FX sends have different type codes (110 and 111).
+Trim is linear ±15 dB, and gate threshold is linear −60 … 0 dB. Two repeat
+sweeps of the In 1–16 faders read back bit-identical values. The Aux 7–10
+masters are not checked yet.
 
 ### 2026-10-20 23:39: In 4 walk-through (`PCAPdroid_20_Oct_23_39_13.pcap`)
 
@@ -331,9 +339,11 @@ a phone capture:
 
 * One signal into a channel, with the app's meter screen open, to decode 6.1/7.1.
   This still needs a capture, because the mapping assistant does not decode polls.
-* ~~Fader curve~~ done. Next curves: `map probe Trim`, `map probe AuxSend1`,
-  `map probe FXSend1`, `map probe "Delay Time"`, `map probe Thresh --section Gate`,
-  `map probe Thresh --section Comp`, `map probe Fader --channels aux1-6` (bus faders).
+* ~~Fader, master, aux/FX send, trim, gate threshold curves~~ done. Next:
+  `map probe Thresh --section Comp`, `map probe Ratio --section Comp`,
+  `map probe "Makeup Gain" --section Comp`, `map probe "Delay Time"`,
+  `map probe Freq --section Lo-Cut`, `map probe Q --section EQ`,
+  `map probe Fader --channels aux7,aux9`.
 * Strides on another channel and on Aux 1 / FX 1: `map run channel 9`,
   `map run bus aux1`, `map run bus fx1`.
 * Scene recall, mute groups, user buttons, transport: `map run scenes`,

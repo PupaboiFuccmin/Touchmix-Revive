@@ -52,6 +52,10 @@ python3 -m touchmix mute 4 off
 python3 -m touchmix solo 4 on
 python3 -m touchmix fader 4 -10db            # dB (-55..+12), off, or raw 0..1
 python3 -m touchmix pan 4 L50                # -100..100, L50, C, R
+python3 -m touchmix trim 4 -3                 # input trim (digital gain) in dB, ±15
+python3 -m touchmix send 4 aux1 -10db         # aux/FX send level: dB, off, or raw 0..1
+python3 -m touchmix send 4 fx1 -20db
+python3 -m touchmix gate 4 -40                # gate threshold in dB (-60..0), or on / off
 python3 -m touchmix eq 4 1 gain -3           # EQ band 1..4 gain in dB (±15)
 python3 -m touchmix eq 4 1 freq 120          # EQ band frequency in Hz
 python3 -m touchmix find "aux 1 > control"   # search parameter names (offline)

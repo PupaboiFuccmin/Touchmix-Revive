@@ -7,7 +7,8 @@ import xml.etree.ElementTree as ET
 import zlib
 
 from . import protocol as P
-from .params import ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm
+from .params import (ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
+                     trim_to_norm, send_name, gate_thresh_to_norm)
 
 CONFIG_FILE = 'NH4-config.xml.dscomp'
 SETTINGS_SUFFIX = '.settings.dqx.dscomp'
@@ -163,6 +164,20 @@ class TouchMix:
 
     def pan(self, channel, value):
         self.set(self.channel_param(channel, 'Pan'), pan_to_norm(value))
+
+    def trim(self, channel, db):
+        self.set(self.channel_param(channel, 'Trim'), trim_to_norm(db))
+
+    def send(self, channel, dest, value):
+        """Send level from an input to an aux or FX ('aux1', 'fx2').
+        Same values as fader(): '-10db', 'off', or 0..1."""
+        self.set(self.channel_param(channel, send_name(dest)), fader_to_norm(value))
+
+    def gate(self, channel, on=True):
+        self.set(self.channel_param(channel, 'Enable', 'Gate'), 1.0 if on else 0.0)
+
+    def gate_threshold(self, channel, db):
+        self.set(self.channel_param(channel, 'Thresh', 'Gate'), gate_thresh_to_norm(db))
 
     def eq_gain(self, channel, band, db):
         self.set(self.channel_param(channel, 'Gain', 'EQ', band - 1), eq_gain_to_norm(db))

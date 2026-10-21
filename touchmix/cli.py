@@ -7,6 +7,10 @@ Examples:
   python -m touchmix mute 4 on --verify
   python -m touchmix fader 4 -10db
   python -m touchmix pan 4 L50
+  python -m touchmix trim 4 -3
+  python -m touchmix send 4 aux1 -10db
+  python -m touchmix send 4 fx1 -20db
+  python -m touchmix gate 4 -40
   python -m touchmix eq 4 1 gain -3
   python -m touchmix set "In 4 > Control > Mute" 1
   python -m touchmix find "aux 1 > control"
@@ -22,7 +26,7 @@ import time
 from .discover import discover, default_subnets
 from . import mapping as M
 from .client import TouchMix, TouchMixError
-from .params import ParamTable, strip_path
+from .params import ParamTable, strip_path, send_name
 
 
 def pick_host(args):
@@ -191,6 +195,28 @@ def cmd_pan(args):
     return apply_and_verify(args, lambda tm: tm.pan(args.channel, args.value), pid)
 
 
+def cmd_trim(args):
+    pid = ParamTable().find('%s > Control' % strip_path(args.channel), 'Trim').index
+    return apply_and_verify(args, lambda tm: tm.trim(args.channel, args.value), pid)
+
+
+def cmd_send(args):
+    pid = ParamTable().find('%s > Control' % strip_path(args.channel), send_name(args.dest)).index
+    return apply_and_verify(args, lambda tm: tm.send(args.channel, args.dest, args.value), pid)
+
+
+def cmd_gate(args):
+    """gate 4 on|off, or gate 4 -40 for the threshold in dB."""
+    path = '%s > Gate' % strip_path(args.channel)
+    v = args.value.strip().lower()
+    if v in ('on', 'off'):
+        pid = ParamTable().find(path, 'Enable').index
+        return apply_and_verify(args, lambda tm: tm.gate(args.channel, v == 'on'), pid)
+    db = float(v.replace('db', ''))
+    pid = ParamTable().find(path, 'Thresh').index
+    return apply_and_verify(args, lambda tm: tm.gate_threshold(args.channel, db), pid)
+
+
 def cmd_eq(args):
     name = {'gain': 'Gain', 'freq': 'Freq'}[args.what]
     pid = ParamTable().find('%s > EQ' % strip_path(args.channel), name, args.band - 1).index
@@ -342,6 +368,10 @@ def main(argv=None):
     ctl('solo', 'cue on/off', cmd_solo, ('state', dict(type=on_off)))
     ctl('fader', 'fader: -10db, +6db, 0db, off (or raw 0..1)', cmd_fader, ('value', dict()))
     ctl('pan', 'pan: -100..100, L50, C, R', cmd_pan, ('value', dict()))
+    ctl('trim', 'input trim (digital gain) in dB, -15..+15', cmd_trim, ('value', dict(type=float)))
+    ctl('send', 'aux/FX send level: -10db, 0db, off (or raw 0..1)', cmd_send,
+        ('dest', dict(help='aux1-aux10 or fx1-fx4')), ('value', dict()))
+    ctl('gate', 'gate on/off, or threshold in dB (-60..0)', cmd_gate, ('value', dict()))
     ctl('eq', 'EQ band gain (dB) or freq (Hz)', cmd_eq,
         ('band', dict(type=int, choices=[1, 2, 3, 4])), ('what', dict(choices=['gain', 'freq'])),
         ('value', dict(type=float)))

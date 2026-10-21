@@ -75,6 +75,31 @@ class Scaling(unittest.TestCase):
         self.assertEqual(S.fader_to_norm('+20db'), 1.0)
         self.assertEqual(S.fader_to_norm('0.6'), 0.6)
 
+    def test_trim(self):
+        # from `map probe Trim`: linear, -15 dB at 0, +15 dB at 1
+        for x, db in ((0.0, -15.0), (0.35, -4.5), (0.5, 0.0), (0.9, 12.0), (1.0, 15.0)):
+            self.assertAlmostEqual(S.norm_to_trim(x), db, places=6)
+            self.assertAlmostEqual(S.trim_to_norm(db), x, places=6)
+        self.assertEqual(S.trim_to_norm(40), 1.0)
+
+    def test_send_name(self):
+        self.assertEqual(S.send_name('aux1'), 'AuxSend1')
+        self.assertEqual(S.send_name(6), 'AuxSend6')
+        self.assertEqual(S.send_name('aux8'), 'AuxSend7/8')
+        self.assertEqual(S.send_name('aux9/10'), 'AuxSend9/10')
+        self.assertEqual(S.send_name('FX 3'), 'FXSend3')
+        self.assertRaises(ValueError, S.send_name, 'aux11')
+        self.assertRaises(ValueError, S.send_name, 'fx5')
+        t = S.ParamTable()
+        self.assertEqual(t.find('In 4 > Control', S.send_name(9)).index, 0x1277)
+        self.assertEqual(t.find('In 4 > Control', S.send_name('fx1')).index, 0x127E)
+
+    def test_gate_thresh(self):
+        # from `map probe Thresh --section Gate`: linear, -60 dB at 0, 0 dB at 1
+        for x, db in ((0.0, -60.0), (0.25, -45.0), (0.85, -9.0), (1.0, 0.0)):
+            self.assertAlmostEqual(S.norm_to_gate_thresh(x), db, places=6)
+            self.assertAlmostEqual(S.gate_thresh_to_norm(db), x, places=6)
+
     def test_channel_names(self):
         self.assertEqual(S.strip_path(4), 'In 4')
         self.assertEqual(S.strip_path('aux8'), 'Aux 7/8')
@@ -160,6 +185,22 @@ class Client(unittest.TestCase):
             sent = [v for t, p in self.mixer.received if t == P.PARAM_SET
                     for pid, _, _, v in P.decode_param_set(p) if pid == 0x21E]
             self.assertAlmostEqual(sent[-1], wire, places=6)
+
+    def test_cli_trim_and_send(self):
+        port = str(self.mixer.port)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'trim', '4', '-3']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'send', '4', 'aux2', '-10db']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'send', '4', 'fx1', '0db']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'gate', '4', '-40db']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'gate', '4', 'on']), 0)
+        sent = {pid: v for t, p in self.mixer.received if t == P.PARAM_SET
+                for pid, _, _, v in P.decode_param_set(p)}
+        self.assertAlmostEqual(sent[0x22C], 0.4, places=6)
+        self.assertAlmostEqual(sent[0x126B], S.fader_db_to_norm(-10), places=6)
+        self.assertAlmostEqual(sent[0x127E], S.FADER_0DB, places=6)
+        self.assertAlmostEqual(sent[0x242], 1 / 3.0, places=6)
+        self.assertEqual(sent[0x241], 1.0)
 
     def test_cli_mute_verify(self):
         out = io.StringIO()
