@@ -258,7 +258,7 @@ def main(argv):
     if cmd == 'summary':
         cmd_summary(path)
     elif cmd == 'params':
-        default = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'docs', 'params.csv')
+        default = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'touchmix', 'data', 'params.csv')
         cmd_params(path, argv[argv.index('-d') + 1] if '-d' in argv else default)
     elif cmd == 'files' and len(argv) > 3:
         cmd_files(path, argv[3])

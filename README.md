@@ -1,20 +1,102 @@
 # Touchmix-Revive
 
-Reverse engineering the QSC TouchMix-16 Wi-Fi control protocol so the mixer can
-be controlled by third-party software.
+Control a QSC TouchMix-16 from a PC over the network, by reverse engineering
+the protocol the official TouchMix Control app uses.
 
+* [`touchmix/`](touchmix): Python client library and command-line tool
 * [`docs/PROTOCOL.md`](docs/PROTOCOL.md): wire format, message types, parameter layout, capture log
-* [`docs/params.csv`](docs/params.csv): all 5,694 parameter IDs with names, from the mixer's own config
-* [`tools/tmcap.py`](tools/tmcap.py): decoder for PCAPdroid captures (Python 3, standard library only)
+* [`touchmix/data/params.csv`](touchmix/data/params.csv): all 5,694 parameter IDs with names, from the mixer's own config
+* [`tools/tmcap.py`](tools/tmcap.py): decoder for PCAPdroid captures
 
-## Quick start
+Everything is Python 3.8+ standard library. There is nothing to install. On
+Windows, use `py` in place of `python3`.
+
+> ⚠️ **This is experimental.** It sends real commands to a live mixer. Test with
+> the amps off or the volume down until you trust it.
+
+## 1. Put the mixer on your network
+
+Out of the box the TouchMix creates its own Wi-Fi network (mixer at
+192.168.1.1). To reach it from your PC without joining that network, have the
+mixer **join your existing Wi-Fi** instead. On the mixer, open the network /
+Wi-Fi settings, switch from creating a network to joining one, pick your
+router's network and enter its password. The mixer's config has settings for
+exactly this (`Create Network`, `Infra SSID`, `Infra PW`, `IP Assign Mode`,
+`Static IP`). The menu labels on screen may differ slightly. Use DHCP unless
+you want a fixed address.
+
+Your PC can then be on Wi-Fi or Ethernet, as long as it is connected to the
+same router.
+
+## 2. Find it
 
 ```sh
-python3 tools/tmcap.py summary capture.pcap          # flows and message counts
+python3 -m touchmix discover
+```
+
+This tries port 42217 on every address in your PC's local /24 subnet(s). A
+TouchMix greets every new connection with its name, so the scan just reads
+that greeting and hangs up. It never logs in. If your network is larger than a
+/24, or the mixer is on another subnet, add `--subnet 192.168.0.0/22`.
+
+All other commands auto-discover too. To skip the scan, pass `--host` or set
+`TOUCHMIX_HOST=192.168.x.y`.
+
+## 3. Control it
+
+```sh
+python3 -m touchmix info                     # name, firmware, channels, faders, mutes
+python3 -m touchmix monitor                  # print every change made on the mixer/app
+python3 -m touchmix mute 4 on --verify       # --verify reconnects and checks the mixer stored it
+python3 -m touchmix mute 4 off
+python3 -m touchmix solo 4 on
+python3 -m touchmix fader 4 0db              # 0..1, 0db or off (other dB values: curve not mapped yet)
+python3 -m touchmix pan 4 L50                # -100..100, L50, C, R
+python3 -m touchmix eq 4 1 gain -3           # EQ band 1..4 gain in dB (±15)
+python3 -m touchmix eq 4 1 freq 120          # EQ band frequency in Hz
+python3 -m touchmix find "aux 1 > control"   # search parameter names (offline)
+python3 -m touchmix set "In 4 > Control > Phase" 1
+```
+
+Channels: `1`–`16`, `st17`, `st19`, `main`, `aux1`–`aux10`, `fx1`–`fx4`, `dca1`–`dca8`.
+
+From Python:
+
+```python
+from touchmix import TouchMix, discover
+
+ip, name, _ = discover()[0]
+with TouchMix(ip) as tm:
+    tm.wait_ready()                      # mixer has sent its full state
+    print(tm.config_value('In 4 > Control > Fader'))
+    tm.on_change(lambda pid, value, raw, tag, src: print(hex(pid), value))
+    tm.mute(4, True)
+```
+
+## First test checklist
+
+1. `discover` finds the mixer.
+2. `info` shows your channel names.
+3. `monitor`, then move a fader on the mixer: changes appear.
+4. `mute 4 on --verify` prints `CHANGED`, and channel 4 shows muted on the mixer.
+
+If step 4 fails, the app's extra mute side batch might be needed (see "Open
+questions" in `docs/PROTOCOL.md`). Run `monitor` and send me the output.
+
+## Captures
+
+```sh
+python3 tools/tmcap.py summary capture.pcap
 python3 tools/tmcap.py params  capture.pcap          # every parameter change, with names
 python3 tools/tmcap.py files   capture.pcap out/     # extract and inflate the .dscomp XML files
-python3 tools/tmcap.py dict    out/<conn>-NH4-config.xml docs/params.csv
 ```
 
 Captures are not committed (see `.gitignore`). They include your network
-details and the mixer's full scene.
+details and the mixer's full config, **including its Wi-Fi password in plain
+text**.
+
+## Tests
+
+```sh
+python3 -m unittest discover -s tests
+```

@@ -56,6 +56,10 @@ u16 total_len       name_len + len(suffix)
 char name[name_len] + suffix       (no terminator)
 ```
 
+The **mixer sends its hello first**, as soon as the TCP connection opens. The
+client answers with its own. `touchmix discover` relies on this: it reads the
+greeting and disconnects without logging in.
+
 * Mixer: name `QSC JD HOME` (the mixer's configured name) + suffix `MicroX16`.
 * App: name `Lenovo-Tab-P11-Plus` + suffix `MicroX16-AndroidTablet`.
 
@@ -127,10 +131,20 @@ roughly every 80 ms, and each reply echoes `seq`. The replies are mostly zero
 with an occasional 1.0. That fits **meters** (no audio was connected during
 the capture). To confirm, capture again with a signal on a channel.
 
+## Network settings (from the config)
+
+`Global > Control` has `Create Network` (1 = mixer makes its own access point),
+`Create AP`, `Infra SSID` / `Infra PW` (join an existing Wi-Fi), `IP Assign
+Mode`, `Static IP` / `Static GW` / `Static NM`, `Current IP`, and `Net
+Security`. `Global > Misc Input` has `Network connected`, `Network name` and
+`Wired Net Status`. How the official app discovers a mixer on a shared network
+has not been captured yet. (All captures so far were made on the mixer's own
+access point.)
+
 ## Parameter IDs ✅
 
 **The parameter ID on the wire is the `Index` attribute in `NH4-config.xml`.**
-[`params.csv`](params.csv) lists all 5,694 parameters: index, path, name and
+[`params.csv`](../touchmix/data/params.csv) lists all 5,694 parameters: index, path, name and
 type code. Rebuild it from any capture with `tools/tmcap.py files` followed by
 `tools/tmcap.py dict`. Add `--values` to include the current values (engineering
 units) and text fields, but **don't commit that version**; see the security note.
