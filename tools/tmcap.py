@@ -16,12 +16,13 @@ See docs/PROTOCOL.md for the wire format.
 import collections
 import csv
 import os
+import re
 import struct
 import sys
 import xml.etree.ElementTree as ET
 import zlib
 
-MIXER_PORT = 42217
+MIXER_PORT = 42217     # the port in the first captures; it changes when the mixer reboots
 
 MSG_NAMES = {
     1: 'hello',
@@ -31,7 +32,10 @@ MSG_NAMES = {
     5: 'param-set',
     6: 'poll-req',
     7: 'poll-resp',
+    9: 'text',
 }
+KNOWN = {(1, 3), (2, 2), (3, 4), (4, 2), (5, 1), (6, 1), (7, 1), (9, 1)}
+HELLO = struct.pack('<HH', 1, 3)       # type 1.3, the first message on every connection
 
 
 # ---------------------------------------------------------------- pcap / tcp
@@ -104,16 +108,36 @@ def tcp_streams(path):
 
 # ---------------------------------------------------------------- messages
 
+def mixer_ports(streams):
+    """{(ip, port)} of the mixer, found by its hello: it greets first on every
+    connection, and its hello ends in a bare product code ('...MicroX16'),
+    where the app's ends in '-AndroidTablet'. Falls back to MIXER_PORT."""
+    found = set()
+    for key, chunks in streams.items():
+        head = chunks[0][2] if chunks else b''
+        if len(head) < 6 or not head.startswith(HELLO):
+            continue
+        ln = struct.unpack('<H', head[4:6])[0]
+        if re.search(rb'MicroX\d+$', head[6:ln]):
+            found.add((key[0], key[1]))
+    if not found:
+        found = {(k[0], k[1]) for k in streams if k[1] == MIXER_PORT}
+    return found
+
+
 def messages(path):
     """Return [(t, dir, conn, type, sub, payload)] sorted by time.
 
     Every message is: u16 type, u16 subtype, u16 total length (incl. header), LE.
     """
     out = []
-    for key, chunks in tcp_streams(path).items():
-        if MIXER_PORT not in (key[1], key[3]):
+    streams = tcp_streams(path)
+    ports = mixer_ports(streams)
+    for key, chunks in streams.items():
+        mixer_side = (key[0], key[1]) in ports
+        if not mixer_side and (key[2], key[3]) not in ports:
             continue
-        direction = 'M>A' if key[1] == MIXER_PORT else 'A>M'
+        direction = 'M>A' if mixer_side else 'A>M'
         conn = key[3] if direction == 'M>A' else key[1]
         buf = b''
         for t, _, data in chunks:
@@ -175,8 +199,9 @@ def cmd_summary(path):
     print('messages:')
     for k in sorted(counts):
         conn, d, ty, sub = k
-        print('  conn %-5d %s  %d.%d %-10s x%-6d sizes %s' % (
-            conn, d, ty, sub, MSG_NAMES.get(ty, '?'), counts[k], dict(sizes[k].most_common(4))))
+        print('  conn %-5d %s  %d.%d %-10s x%-6d sizes %s%s' % (
+            conn, d, ty, sub, MSG_NAMES.get(ty, '?'), counts[k], dict(sizes[k].most_common(4)),
+            '   <-- NEW message type' if (ty, sub) not in KNOWN else ''))
     if ms:
         print('duration %.1fs' % (ms[-1][0] - ms[0][0]))
 
