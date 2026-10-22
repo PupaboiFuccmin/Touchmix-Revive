@@ -25,6 +25,7 @@ Examples:
 import argparse
 import os
 import re
+import struct
 import sys
 import time
 
@@ -160,6 +161,27 @@ def cmd_monitor(args):
         print('%s 0x%04x %-9.4f %-11s raw=%08x tag=%04x %s' % (
             time.strftime('%H:%M:%S'), pid, value, curve.format(value) if curve else '',
             raw, tag, par.full_name if par else '?'), flush=True)
+
+    known = (P.PARAM_SET, P.STATUS, P.POLL_RESP, P.FILE)
+    last_poll = {}
+
+    @tm.on_message
+    def raw(msg_type, payload):
+        stamp = time.strftime('%H:%M:%S')
+        if args.raw and msg_type not in known:
+            print('%s MSG %d.%d len=%d %s' % ((stamp,) + msg_type + (len(payload), payload[:64].hex())), flush=True)
+        elif args.raw and msg_type == P.FILE:
+            off, data, _ = P.decode_file_chunk(payload)
+            if off in (P.FILE_START, P.FILE_END):
+                print('%s FILE %s %s' % (stamp, 'start' if off == P.FILE_START else 'end',
+                                         data.decode('ascii', 'replace')), flush=True)
+        elif args.polls and msg_type == P.POLL_RESP:
+            body = payload[4:]                       # drop the sequence number
+            prev = last_poll.get(len(body))
+            last_poll[len(body)] = body
+            if prev is not None and prev != body:
+                floats = [struct.unpack('<f', body[i:i + 4])[0] for i in range(4, len(body) - 3, 4)]
+                print('%s POLL len=%d %s' % (stamp, len(body), ' '.join('%.3g' % f for f in floats)), flush=True)
 
     tm.connect()
     tm.wait_ready()
@@ -498,6 +520,8 @@ def main(argv=None):
     sub.add_parser('info', help='show mixer name, firmware and channel overview').set_defaults(fn=cmd_info)
     m = sub.add_parser('monitor', help='print every change the mixer reports')
     m.add_argument('--all', action='store_true', help='include status pushes (Wi-Fi strength etc.)')
+    m.add_argument('--raw', action='store_true', help='also print unknown message types and file transfers')
+    m.add_argument('--polls', action='store_true', help='also print poll replies (meters?) whenever they change')
     m.set_defaults(fn=cmd_monitor)
 
     def ctl(name, helptext, fn, *extra):

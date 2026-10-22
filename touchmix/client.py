@@ -52,6 +52,7 @@ class TouchMix:
         self.files = {}         # file name -> inflated bytes
         self.access = None      # 'All', 'Main Mix', 'Aux 1', ... -> bool, from this client's settings file
         self.listeners = []     # fn(pid, value, raw, tag, source)
+        self.message_listeners = []   # fn(msg_type, payload), every message as received
 
         self._sock = None
         self._reader = P.Reader()
@@ -229,6 +230,12 @@ class TouchMix:
         self.listeners.append(fn)
         return fn
 
+    def on_message(self, fn):
+        """fn(msg_type, payload) for every message the mixer sends, including
+        polls, files and types the client does not know. For research."""
+        self.message_listeners.append(fn)
+        return fn
+
     # ------------------------------------------------------------ internals
 
     def _send(self, data):
@@ -276,6 +283,11 @@ class TouchMix:
                 print('listener error:', e)
 
     def _handle(self, msg_type, payload):
+        for fn in self.message_listeners:
+            try:
+                fn(msg_type, payload)
+            except Exception as e:
+                print('message listener error:', e)
         if msg_type == P.PARAM_SET:
             for pid, tag, raw, value in P.decode_param_set(payload):
                 self.live[pid] = value
