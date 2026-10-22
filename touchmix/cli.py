@@ -667,19 +667,36 @@ def cmd_map_tour(args):
     unknown = [s for s in wanted if s not in M.TOUR]
     if unknown:
         sys.exit('unknown section %s (choose from %s)' % (', '.join(unknown), ', '.join(M.TOUR)))
-    steps = [(sec, s) for sec in wanted for s in M.TOUR[sec]]
+    steps = [(sec, tuple(s) + (None,) * (3 - len(s))) for sec in wanted for s in M.TOUR[sec]]
     path = args.out or 'tour-%s-%s.log' % ('-'.join(wanted) if args.sections else 'all', time.strftime('%Y%m%d-%H%M%S'))
-    tm = TouchMix(pick_host(args), port=args.port, name=args.name)
+    host = pick_host(args)
+    polls = 'meters' in wanted
+    tm = TouchMix(host, port=args.port, name=args.name)
     out = make_writer(path, echo=False)
-    attach_logger(tm, out, status=True, raw=True, polls='meters' in wanted)
+    attach_logger(tm, out, status=True, raw=True, polls=polls)
     tm.connect()
     tm.wait_ready()
+
+    def read_back(watch, tag):
+        """Reconnect (the mixer only sends its state on connect) and log the watched values."""
+        nonlocal tm
+        port = tm.port
+        tm.close()
+        time.sleep(0.3)
+        tm = TouchMix(host, port=port, name=args.name)
+        tm.connect()
+        tm.wait_ready()
+        attach_logger(tm, out, status=True, raw=True, polls=polls)
+        for param in watch:
+            pid = tm.resolve(param)
+            out('%s READ %s 0x%04x %s value=%s text=%r' % (time.strftime('%H:%M:%S'), tag, pid, param,
+                                                         tm.config.get(pid), tm.config_text.get(pid, '')))
     out('%s CONNECTED %s' % (time.strftime('%H:%M:%S'), tm.mixer_name))
     print(M.TOUR_INTRO)
     print('Logging to %s. Ctrl+C stops at any point (what you did so far is saved).\n' % path)
     section = None
     try:
-        for i, (sec, (prompt, repeat)) in enumerate(steps, 1):
+        for i, (sec, (prompt, repeat, watch)) in enumerate(steps, 1):
             if sec != section:
                 section = sec
                 print('\n== %s ==' % sec)
@@ -696,10 +713,14 @@ def cmd_map_tour(args):
                         break
                     n += 1
                     out('%s LABEL %d.%d %s' % (time.strftime('%H:%M:%S'), i, n, label))
+                    if watch:
+                        read_back(watch, '%d.%d' % (i, n))
             else:
                 note = input('     Enter when done (or type a note first) > ').strip()
                 if note:
                     out('%s LABEL %d %s' % (time.strftime('%H:%M:%S'), i, note))
+                if watch:
+                    read_back(watch, str(i))
             time.sleep(0.3)             # let the last messages for this step arrive
             out('%s END %d' % (time.strftime('%H:%M:%S'), i))
             if not tm.connected:

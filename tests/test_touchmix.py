@@ -430,6 +430,9 @@ class Client(unittest.TestCase):
         kinds = [l.split()[1] for l in log.splitlines()]
         markers = [k for k in kinds if k in ('CONNECTED', 'SECTION', 'STEP', 'END')]
         self.assertEqual(markers, ['CONNECTED', 'SECTION'] + ['STEP', 'END'] * 3)
+        # each answer in the fx section is followed by a read-back of FX 1's processor
+        self.assertEqual(log.count(' READ '), 8)          # 4 answers x 2 watched settings
+        self.assertIn('READ 2.2 0x0b96 FX 1 > Editor > FX type', log)
         self.assertIn('LABEL 1 Lush Reverb', log)
         self.assertLess(log.index('In 4 > Control > Mute'), log.index('LABEL 2.1 Hall'))
         self.assertIn('LABEL 2.2 Plate', log)

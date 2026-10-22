@@ -170,8 +170,9 @@ def script_mutes(table, target=None):
 
 # ---------------------------------------------------------------- tour
 # Steps for `map tour`: done on the mixer's own screen while the PC logs what the
-# mixer reports. (prompt, repeat): repeat steps cycle through a setting's options
-# and ask for each label. Screen paths are from the TouchMix-8/16 user guide.
+# mixer reports. (prompt, repeat[, watch]): repeat steps cycle through a
+# setting's options and ask for each label; watch lists parameters to read back
+# from the mixer after each answer (a reconnect), for settings it doesn't report. Screen paths are from the TouchMix-8/16 user guide.
 # Channel 16 is used throughout, so leave it unused. Nothing here deletes
 # anything or powers the mixer down. Saving a channel preset froze the mixer's
 # screen once (2026-10-21), so the tour no longer does it.
@@ -190,6 +191,9 @@ Getting to channel 16 (used a lot below):
   (EQ, Gate, Comp, FX, Aux, Setup ...)."""
 
 CH16 = 'Channel 16 (HOME > Inputs 9-16 > touch channel 16\'s name button)'
+
+# read back after each answer, because the mixer may not report these changes
+FX_WATCH = ['FX 1 > Editor > FX type', 'FX 1 > Control > Preset']
 
 TOUR = collections.OrderedDict([
     ('scenes', [
@@ -241,11 +245,13 @@ TOUR = collections.OrderedDict([
          '     (or "In 16") > Enter.', False),
     ]),
     ('fx', [
-        ('Press HOME > touch the "FX Masters" bank > touch FX 1\'s name button > Effect tab.\n'
-         '     Note the processor name shown (e.g. "Lush Reverb"), type it here, press Enter.', False),
-        ('Same screen: touch the processor name to open the list, touch the next processor,\n'
-         '     and type its name. Repeat for every processor in the list.', True),
-        ('Same screen: put FX 1 back to the processor it had at the start.', False),
+        ('Press HOME > touch the "FX Masters" bank > touch FX 1.\n'
+         '     A window opens listing the effect processors. Type the one that is\n'
+         '     selected now (e.g. "Mono Delay"), press Enter. Change nothing yet.', False, FX_WATCH),
+        ('In that window, touch a different processor. Type its name, press Enter.\n'
+         '     (The PC then reads FX 1 back, which takes a couple of seconds.)\n'
+         '     Repeat for every processor in the list, one at a time.', True, FX_WATCH),
+        ('Put FX 1 back to the processor it had at the start.', False, FX_WATCH),
     ]),
     ('buttons', [
         ('Press MENU > touch "User Buttons" > touch "User Button 1" so it turns blue.', False),
