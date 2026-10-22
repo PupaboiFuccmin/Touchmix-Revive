@@ -143,11 +143,13 @@ def mdns_browse(timeout=1.5, service=SERVICE):
     return found
 
 
-def lookup_port(host, timeout=1.5):
-    """The control port the mixer at `host` advertises, or None."""
-    for ip, port, _, _ in mdns_browse(timeout):
-        if ip == host:
-            return port
+def lookup_port(host, timeout=1.0, tries=3):
+    """The control port the mixer at `host` advertises, or None. mDNS runs over
+    UDP and an answer is sometimes lost, so ask a few times."""
+    for _ in range(tries):
+        for ip, port, _, _ in mdns_browse(timeout):
+            if ip == host:
+                return port
     return None
 
 

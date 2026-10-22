@@ -157,12 +157,16 @@ def cmd_monitor(args):
         if source == 'status' and not args.all:
             return
         par = tm.params.get(pid)
+        if source == 'text':
+            print('%s 0x%04x text %r  %s' % (time.strftime('%H:%M:%S'), pid, tm.config_text.get(pid),
+                                             par.full_name if par else '?'), flush=True)
+            return
         curve = curve_for(par.path, par.name) if par else None
         print('%s 0x%04x %-9.4f %-11s raw=%08x tag=%04x %s' % (
             time.strftime('%H:%M:%S'), pid, value, curve.format(value) if curve else '',
             raw, tag, par.full_name if par else '?'), flush=True)
 
-    known = (P.PARAM_SET, P.STATUS, P.POLL_RESP, P.FILE)
+    known = (P.PARAM_SET, P.STATUS, P.POLL_RESP, P.FILE, P.TEXT)
     last_poll = {}
 
     @tm.on_message
@@ -334,6 +338,46 @@ def cmd_record(args):
             record_status(check)
         finally:
             check.close()
+
+
+def mp3_status(tm, wait=1.0):
+    p = tm.params
+    val = lambda path, name: tm.config.get(p.find(path, name).index)
+    title_pid = p.find('Global > Control', 'Current Song').index
+    time.sleep(wait)        # titles arrive as 9.1 messages shortly after connect
+    mode = val('Global > Transport', 'Multi-track Enable') in ('0', '0.0')
+    index = int(float(val('Global > Control', 'Mp3 playlist') or 0))
+    print('Mode:       %s' % ('MP3 playback' if mode else 'multitrack'))
+    print('Song:       %d  %s' % (index + 1, tm.config_text.get(title_pid, '')))
+    print('Transport:  %s' % transport_name(val('Global > Transport', 'Transport') or 0))
+
+
+MP3_LOAD_TIME = 1.0
+
+
+def cmd_mp3(args):
+    """mp3 status | mode on|off | play | stop | next | previous | top | select N"""
+    tm = open_mixer(args)
+    try:
+        if args.action == 'status':
+            mp3_status(tm)
+            return
+        warn_no_access(tm)
+        if args.action == 'mode':
+            tm.mp3_mode(on_off(args.value or 'on'))
+        elif args.action == 'select' or (args.action == 'play' and args.value):
+            if not args.value or not args.value.isdigit() or int(args.value) < 1:
+                sys.exit('mp3 %s needs a song number, 1 = first' % args.action)
+            tm.mp3_select(int(args.value) - 1)
+            if args.action == 'play':
+                time.sleep(MP3_LOAD_TIME)   # selecting stops the player; a play sent at once is lost
+                tm.transport('play')
+        else:
+            tm.transport({'top': 'rtz'}.get(args.action, args.action))
+        print('mp3 %s %s' % (args.action, args.value or ''))
+        time.sleep(0.5)
+    finally:
+        tm.close()
 
 
 def cmd_find(args):
@@ -558,10 +602,15 @@ def main(argv=None):
     s.set_defaults(fn=cmd_set)
 
     rec = sub.add_parser('record', help='USB recorder: status, arm/disarm tracks, start/stop/play/rtz')
-    rec.add_argument('action', choices=['status', 'arm', 'disarm', 'start', 'stop', 'play', 'rtz'])
+    rec.add_argument('action', choices=['status', 'arm', 'disarm', 'start', 'stop', 'play', 'rtz', 'next', 'previous'])
     rec.add_argument('channels', nargs='*', help='for arm/disarm: 1-16, st17, st19, 2trk, ranges like 1-8, or all')
     rec.add_argument('--verify', action='store_true', help='reconnect and show the recorder status afterwards')
     rec.set_defaults(fn=cmd_record)
+
+    mp = sub.add_parser('mp3', help='USB MP3 player: status, mode on/off, play, stop, next, previous, top, select N')
+    mp.add_argument('action', choices=['status', 'mode', 'play', 'stop', 'next', 'previous', 'top', 'select'])
+    mp.add_argument('value', nargs='?', help='mode: on/off; select or play: song number, 1 = first')
+    mp.set_defaults(fn=cmd_mp3)
 
     f = sub.add_parser('find', help='search parameter names (offline)')
     f.add_argument('text')

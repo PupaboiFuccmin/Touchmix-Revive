@@ -11,6 +11,7 @@ STATUS = (4, 2)
 PARAM_SET = (5, 1)
 POLL_REQ = (6, 1)
 POLL_RESP = (7, 1)
+TEXT = (9, 1)        # a text parameter's value, e.g. the current MP3 title
 
 PRODUCT = 'MicroX16'
 FILE_START = 0xFFFFFFFF
@@ -64,6 +65,12 @@ def decode_param_set(payload):
     for i in range(count):
         pid, tag, raw = struct.unpack('<HHI', payload[6 + 8 * i:14 + 8 * i])
         yield pid, tag, raw, struct.unpack('<f', struct.pack('<I', raw))[0]
+
+
+def decode_text(payload):
+    """Type 9.1: u16 id, u16 (0 so far), u16 length, then the text."""
+    pid, _, ln = struct.unpack('<HHH', payload[:6])
+    return pid, payload[6:6 + ln].decode('utf-8', errors='replace')
 
 
 def decode_status(payload):

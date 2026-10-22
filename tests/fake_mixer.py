@@ -61,6 +61,7 @@ class FakeMixer:
     def __init__(self, name='Test Mixer', access=True, config_name='NH4-config.xml.dscomp'):
         self.name = name
         self.config_name = config_name
+        self.status_before_hello = False   # the real mixer does this while playing MP3s
         self.access = access     # like the real mixer, writes are ignored without it
         self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0}
         self.received = []
@@ -81,7 +82,9 @@ class FakeMixer:
 
     def push(self, pid, value, tag=0):
         """Send a 5.1 change to every connected client, as if a control moved on the mixer."""
-        msg = P.frame(P.PARAM_SET, struct.pack('<IHHHf', 1, 8, pid, tag, value))
+        self.push_frame(P.frame(P.PARAM_SET, struct.pack('<IHHHf', 1, 8, pid, tag, value)))
+
+    def push_frame(self, msg):
         for c in list(self.clients):
             try:
                 c.sendall(msg)
@@ -133,6 +136,8 @@ class FakeMixer:
 
     def _serve(self, c):
         try:
+            if self.status_before_hello:
+                c.sendall(P.frame(P.STATUS, struct.pack('<Hf', 0xBC, 0.0)))
             c.sendall(self._hello())
             reader = P.Reader()
             greeted = False

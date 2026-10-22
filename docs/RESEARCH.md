@@ -19,9 +19,9 @@ write them. Only the recorder has been tried (see below).
 |------|--------------------------------|-----------|--------------|
 | Power | `Global > Misc Input > Powerdown` (`0x00C5`) | 0 | remote shutdown? |
 | Scenes and presets | `Global > FileMan`: Type, Location, Number, Category, Subcategory, Channel, Name, Session, Recall, Save, Save As, Delete, **Copy To User**, **Copy To External**, Omit Levels / Outputs / Routing / Tuning, With Name, With Phantom | Name "studio", Session "Default" | scene and preset recall and storage driven entirely by parameters (see below) |
-| MP3 player | `Global > Control`: Mp3 playlist, Current Song, Mp3 playback Mode; `Global > Misc Input > Playback` | "No songs available" | USB music playback |
+| MP3 player | `Global > Control`: Mp3 playlist, Current Song, Mp3 playback Mode; `Global > Misc Input > Playback` | | **works**, see below |
 | Recording | `Global > Transport`: Transport, Song Position, Multi-track Enable, Song length, Set/Goto Locate, Busy; `2-Trk Rec > Control`: 2-Track Record Source, 2-Track Arm | Multi-track Enable 1 | **works**, see below |
-| Diagnostics | `Global > Misc Input > Test screen`, `Global > Control`: Free Mem, Demo Enabled, Upgrade Display, Ignored Version; `Contacted Server`, `USB present` | Free Mem 128000 | status, service modes |
+| Diagnostics | `Global > Misc Input > Test screen` (switches on and off from the PC; stored as n × 1024), `Global > Control`: Free Mem, Demo Enabled, Upgrade Display, Ignored Version; `Contacted Server`, `USB present` | Free Mem 128000 | status, service modes |
 | Screen | Brightness, Language, GUI Options, Pan Overlay Hide Show, Global Simple Mode, Simple Mode 0–15 | | front-panel settings |
 | Analyzer | `Rta Local > Control`: Enable, Source Type, Source Inst, Used by device, Confidence; `Rta Local > Zoom`; `Global > Misc Output > RTA3 source` | Enable 1 | choose what the RTA shows |
 | Test signals | `Global > Misc Output`: Pink Enable, Pink Source Type/Inst/Select, Pink Level, Dry Level; `Talkback > Control`: SigGen Enable, SigGen Fader, FuncGen type, FuncGen freq | Pink off | pink noise and test tones (loud!) |
@@ -44,8 +44,8 @@ replayed from the PC on 2026-10-21. The mixer reported each change back.
 | Return to zero | Transport = 5/7 | 0 once done |
 | Locate | `Goto Locate`, `Locate` (0–1, apparently a fraction of the song) | |
 
-Transport is an integer state sent as n/7. 3, 4, 6 and 7 are not seen yet
-(pause, fast-forward, rewind?). Arming a track makes the mixer itself set
+Transport is an integer state sent as n/7: 0 stop, 1 play, 2 record, 3 next,
+4 previous, 5 return to zero / top of list. 6 and 7 are not seen yet. Arming a track makes the mixer itself set
 that channel's `Tracking` to 2; the app does not send it. "Arm all" in the
 app arms In 1–16, both stereo inputs and the 2-track recorder.
 
@@ -62,6 +62,45 @@ python -m touchmix record disarm all
 
 Not yet tried: locate, the unknown transport states, file names
 (`Global > FileMan > Session` reads "Default"), and the MP3 player.
+
+## USB MP3 player: working ✅
+
+Logged with `monitor --raw --polls` while using the player on the mixer, then
+replayed from the PC on 2026-10-21. The player was the first feature here
+whose state did not come through as plain parameter changes: song titles
+arrive as a new message type, 9.1 (see PROTOCOL.md).
+
+| Action | Write | Notes |
+|--------|-------|-------|
+| MP3 mode on | `Global > Transport > Multi-track Enable` = 0 and `Global > Misc Input > Playback` = 0 | the mixer reports both when the mode is switched |
+| MP3 mode off | Multi-track Enable = 1, Playback = 1/1024 | |
+| Select song N | `Global > Control > Mp3 playlist` = (N-1)/1024 | selecting **stops** the player; a play sent right after it is lost, so wait about 1 s |
+| Play / stop | `Global > Transport > Transport` = 1/7 / 0 | the same parameter as the recorder |
+| Next / previous | Transport = 3/7 / 4/7 | the mixer stops after changing song |
+| Top of list | Transport = 5/7 | the recorder's return to zero |
+
+What the mixer reports while playing:
+
+* `Current Song` (`0x0118`): the title, as a 9.1 text message.
+* `Song length` (`0x00BB`): a u32 sample count (2,884,656 = 65.4 s at 44.1 kHz).
+* `Song Position` (`0x00B9`): the fraction played, about once a second.
+* `Time display` (`0x00BC`): elapsed samples as a u32, about 5 times a second.
+* One poll reply shape (42 bytes) changes only while a song plays. These are
+  probably the meters, and the best lead yet for decoding them.
+
+Requirements found along the way: the drive is best formatted on the mixer
+(Recording screen, Format USB); MP3s go in the root; the recorder's mode must
+be MP3 Playback; and the mixer's sample rate must match the files' (QSC's
+TouchMix-30 Pro manual).
+
+```sh
+python -m touchmix mp3 status
+python -m touchmix mp3 mode on
+python -m touchmix mp3 play 2         # select song 2 and play it
+python -m touchmix mp3 next
+python -m touchmix mp3 stop
+python -m touchmix mp3 mode off
+```
 
 ## Option labels in the config
 

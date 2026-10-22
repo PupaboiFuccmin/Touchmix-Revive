@@ -169,10 +169,21 @@ def fader_db_to_norm(db):
 FADER_0DB = fader_db_to_norm(0.0)   # 0.7512; the app sends 0.75 (-0.06 dB)
 
 
-# Recorder transport (Global > Transport > Transport): an integer state sent
-# as n/7, from `map run transport` (2026-10-21). 3, 4, 6 and 7 are unknown.
-TRANSPORT_STATES = {'stop': 0, 'play': 1, 'record': 2, 'rtz': 5}
+# Recorder / MP3 transport (Global > Transport > Transport): an integer state
+# sent as n/7, from `map run transport` and an MP3 player log (2026-10-21).
+# 'rtz' is return to zero for the recorder and top of list for the MP3 player.
+# 6 and 7 are unknown.
+TRANSPORT_STATES = {'stop': 0, 'play': 1, 'record': 2, 'next': 3, 'previous': 4, 'rtz': 5}
 TRANSPORT_STEPS = 7
+
+
+# Integer parameters (playlist index, Playback, Test screen, aux Pre/Post) are
+# sent as n/1024, and the config shows wire * 1024.
+INT_SCALE = 1024
+
+
+def int_to_norm(n):
+    return int(n) / float(INT_SCALE)
 
 
 def transport_to_norm(state):

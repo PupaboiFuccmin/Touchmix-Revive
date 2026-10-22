@@ -1,0 +1,230 @@
+22:48:48 MSG 2.2 len=6 b49c01000000
+22:48:48 0x0696 0.0000                raw=00000000 tag=0000 Aux 1 > Control > Link
+22:48:48 0x0699 1.0000                raw=3f800000 tag=0000 Aux 1 > Comp > Mode
+22:48:48 0x0751 0.0000                raw=00000000 tag=0000 Aux 2 > Control > Link
+22:48:48 0x0754 1.0000                raw=3f800000 tag=0000 Aux 2 > Comp > Mode
+22:48:48 0x080c 0.0000                raw=00000000 tag=0000 Aux 3 > Control > Link
+22:48:48 0x080f 1.0000                raw=3f800000 tag=0000 Aux 3 > Comp > Mode
+22:48:48 0x08c7 0.0000                raw=00000000 tag=0000 Aux 4 > Control > Link
+22:48:48 0x08ca 1.0000                raw=3f800000 tag=0000 Aux 4 > Comp > Mode
+22:48:48 0x0982 0.0000                raw=00000000 tag=0000 Aux 5 > Control > Link
+22:48:48 0x0985 1.0000                raw=3f800000 tag=0000 Aux 5 > Comp > Mode
+22:48:48 0x0a3d 0.0000                raw=00000000 tag=0000 Aux 6 > Control > Link
+22:48:48 0x0a40 1.0000                raw=3f800000 tag=0000 Aux 6 > Comp > Mode
+22:48:48 0x000e 1.0000                raw=3f800000 tag=0000 Main > Comp > Mode
+22:48:48 0x0afb 1.0000                raw=3f800000 tag=0000 Aux 7/8 > Comp > Mode
+22:48:48 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
+22:48:49 FILE start NH4-config.xml.dscomp
+22:48:49 FILE end /usr/share/ds2i/tmp/NH4-config.xml.dscomp
+Connected to QSC JD HOME. Change something on the mixer (Ctrl+C to stop).
+22:48:49 FILE start fileIndex.xml.dscomp
+22:48:49 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+22:48:49 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+22:48:49 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+22:49:03 0x00d2 0.0000                raw=00000000 tag=0000 Global > Misc Input > Playback
+22:49:03 0x00ba 0.0000                raw=00000000 tag=0000 Global > Transport > Multi-track Enable
+22:49:19 MSG 9.1 len=24 18010000120045524e2046554c4c20534f4e472028747729
+22:49:19 0x0118 0.0000                raw=00000000 tag=0000 Global > Control > Current Song
+22:49:19 0x0117 0.0000                raw=00000000 tag=0000 Global > Control > Mp3 playlist
+22:49:19 MSG 9.1 len=24 18010000120045524e2046554c4c20534f4e472028747729
+22:49:19 0x0118 0.0000                raw=00000000 tag=0000 Global > Control > Current Song
+22:49:19 0x0117 0.0000                raw=00000000 tag=0000 Global > Control > Mp3 playlist
+22:49:20 0x00b9 0.0908                raw=3db9ee4e tag=0000 Global > Transport > Song Position (edit)
+22:49:20 0x00bb 0.0000                raw=002c0430 tag=0000 Global > Transport > Song length
+22:49:20 0x00bc 0.0000                raw=00000000 tag=0000 Global > Transport > Time display
+22:49:20 0x00b8 0.1429                raw=3e124925 tag=0000 Global > Transport > Transport
+22:49:20 0x00bc 0.0000                raw=00002300 tag=0000 Global > Transport > Time display
+22:49:20 POLL len=42 -4.64e-18 2.26e-41 0 0 0 0 0 0 0
+22:49:20 0x00bc 0.0000                raw=00004700 tag=0000 Global > Transport > Time display
+22:49:20 POLL len=42 1.03e+06 2.26e-41 0 0 0 0 0 0 0
+22:49:20 0x00bc 0.0000                raw=00006a00 tag=0000 Global > Transport > Time display
+22:49:20 POLL len=42 -1.55e-12 2.26e-41 0 0 0 0 0 0 0
+22:49:20 POLL len=42 -1.92e-25 2.26e-41 0 0 0 0 0 0 0
+22:49:20 POLL len=42 -5.38e+04 2.26e-41 0 0 0 0 0 0 0
+22:49:20 0x00bc 0.0000                raw=00008d00 tag=0000 Global > Transport > Time display
+22:49:20 POLL len=42 1.63e+03 2.26e-41 0 0 0 0 0 0 0
+22:49:21 0x00b9 0.1064                raw=3dd9eb42 tag=0000 Global > Transport > Song Position (edit)
+22:49:21 0x00bc 0.0000                raw=0000af00 tag=0000 Global > Transport > Time display
+22:49:21 POLL len=42 1.05e+19 2.27e-41 0 0 0 0 0 0 0
+22:49:21 POLL len=42 9.27e-23 2.26e-41 0 0 0 0 0 0 0
+22:49:21 0x00bc 0.0000                raw=0000d200 tag=0000 Global > Transport > Time display
+22:49:21 POLL len=42 -0.00776 2.26e-41 0 0 0 0 0 0 0
+22:49:21 POLL len=42 -0.000386 2.26e-41 0 0 0 0 0 0 0
+22:49:21 0x00bc 0.0000                raw=0000f500 tag=0000 Global > Transport > Time display
+22:49:21 POLL len=42 -53.6 2.27e-41 0 0 0 0 0 0 0
+22:49:21 POLL len=42 -2.02e-24 2.27e-41 0 0 0 0 0 0 0
+22:49:21 0x00bc 0.0000                raw=00011800 tag=0000 Global > Transport > Time display
+22:49:21 POLL len=42 -0.000825 2.26e-41 0 0 0 0 0 0 0
+22:49:21 0x00bc 0.0000                raw=00013b00 tag=0000 Global > Transport > Time display
+22:49:21 POLL len=42 7.82e+27 2.27e-41 0 0 0 0 0 0 0
+22:49:21 POLL len=42 -9.83e+20 2.27e-41 0 0 0 0 0 0 0
+22:49:22 POLL len=42 -2.25e+37 2.27e-41 0 0 0 0 0 0 0
+22:49:22 0x00b9 0.1220                raw=3df9e837 tag=0000 Global > Transport > Song Position (edit)
+22:49:22 0x00bc 0.0000                raw=00015f00 tag=0000 Global > Transport > Time display
+22:49:22 POLL len=42 8.46e+22 2.27e-41 0 0 0 0 0 0 0
+22:49:22 0x00bc 0.0000                raw=00018200 tag=0000 Global > Transport > Time display
+22:49:22 POLL len=42 -1.53e+10 2.27e-41 0 0 0 0 0 0 0
+22:49:22 POLL len=42 6.32e-31 2.27e-41 0 0 0 0 0 0 0
+22:49:22 0x00bc 0.0000                raw=0001a500 tag=0000 Global > Transport > Time display
+22:49:22 POLL len=42 7.51e+27 2.26e-41 0 0 0 0 0 0 0
+22:49:22 POLL len=42 1.46e-07 2.26e-41 0 0 0 0 0 0 0
+22:49:22 0x00bc 0.0000                raw=0001c800 tag=0000 Global > Transport > Time display
+22:49:22 POLL len=42 9.65e-37 2.27e-41 0 0 0 0 0 0 0
+22:49:22 POLL len=42 5.71e+06 2.27e-41 0 0 0 0 0 0 0
+22:49:22 0x00bc 0.0000                raw=0001eb00 tag=0000 Global > Transport > Time display
+22:49:22 POLL len=42 1.12e-26 2.27e-41 0 0 0 0 0 0 0
+22:49:23 0x00b9 0.1376                raw=3e0cf296 tag=0000 Global > Transport > Song Position (edit)
+22:49:23 0x00bc 0.0000                raw=00020f00 tag=0000 Global > Transport > Time display
+22:49:23 POLL len=42 -9.97e-25 2.26e-41 0 0 0 0 0 0 0
+22:49:23 POLL len=42 -3.97e+20 2.26e-41 0 0 0 0 0 0 0
+22:49:23 POLL len=42 1.12e-09 2.26e-41 0 0 0 0 0 0 0
+22:49:23 0x00bc 0.0000                raw=00023200 tag=0000 Global > Transport > Time display
+22:49:23 POLL len=42 9.52e+10 2.26e-41 0 0 0 0 0 0 0
+22:49:23 0x00bc 0.0000                raw=00025500 tag=0000 Global > Transport > Time display
+22:49:23 POLL len=42 4.7e+22 2.27e-41 0 0 0 0 0 0 0
+22:49:23 POLL len=42 9.39e-09 2.26e-41 0 0 0 0 0 0 0
+22:49:23 POLL len=42 -6.46e-33 2.27e-41 0 0 0 0 0 0 0
+22:49:23 0x00bc 0.0000                raw=00027700 tag=0000 Global > Transport > Time display
+22:49:23 POLL len=42 7.21e+34 2.26e-41 0 0 0 0 0 0 0
+22:49:23 0x00bc 0.0000                raw=00029a00 tag=0000 Global > Transport > Time display
+22:49:23 POLL len=42 2.81e+29 2.27e-41 0 0 0 0 0 0 0
+22:49:23 POLL len=42 -1.21e+08 2.27e-41 0 0 0 0 0 0 0
+22:49:24 0x00b9 0.1531                raw=3e1cc289 tag=0000 Global > Transport > Song Position (edit)
+22:49:24 0x00bc 0.0000                raw=0002bd00 tag=0000 Global > Transport > Time display
+22:49:24 POLL len=42 1.29e-25 2.27e-41 0 0 0 0 0 0 0
+22:49:24 POLL len=42 2.59e-31 2.27e-41 0 0 0 0 0 0 0
+22:49:24 0x00bc 0.0000                raw=0002e000 tag=0000 Global > Transport > Time display
+22:49:24 POLL len=42 -1.54e-33 2.27e-41 0 0 0 0 0 0 0
+22:49:24 POLL len=42 -2.28e-10 2.27e-41 0 0 0 0 0 0 0
+22:49:24 0x00bc 0.0000                raw=00030300 tag=0000 Global > Transport > Time display
+22:49:24 0x00bc 0.0000                raw=00032600 tag=0000 Global > Transport > Time display
+22:49:24 POLL len=42 5.38e-24 2.27e-41 0 0 0 0 0 0 0
+22:49:24 POLL len=42 2.2e-05 2.27e-41 0 0 0 0 0 0 0
+22:49:24 POLL len=42 -9.06e+19 2.27e-41 0 0 0 0 0 0 0
+22:49:24 0x00bc 0.0000                raw=00034a00 tag=0000 Global > Transport > Time display
+22:49:25 POLL len=42 -6.23e-22 2.26e-41 0 0 0 0 0 0 0
+22:49:25 0x00b9 0.1687                raw=3e2cc103 tag=0000 Global > Transport > Song Position (edit)
+22:49:25 0x00bc 0.0000                raw=00036d00 tag=0000 Global > Transport > Time display
+22:49:25 POLL len=42 4.33e+37 2.27e-41 0 0 0 0 0 0 0
+22:49:25 POLL len=42 -2.27e-37 2.27e-41 0 0 0 0 0 0 0
+22:49:25 0x00bc 0.0000                raw=00039000 tag=0000 Global > Transport > Time display
+22:49:25 POLL len=42 -6.76e-31 2.27e-41 0 0 0 0 0 0 0
+22:49:25 POLL len=42 nan 2.27e-41 0 0 0 0 0 0 0
+22:49:25 0x00bc 0.0000                raw=0003b300 tag=0000 Global > Transport > Time display
+22:49:25 POLL len=42 -8.9e+25 2.27e-41 0 0 0 0 0 0 0
+22:49:25 POLL len=42 1e+15 2.27e-41 0 0 0 0 0 0 0
+22:49:25 0x00bc 0.0000                raw=0003d600 tag=0000 Global > Transport > Time display
+22:49:25 POLL len=42 -2.53e+37 2.26e-41 0 0 0 0 0 0 0
+22:49:25 POLL len=42 2.45e-20 2.26e-41 0 0 0 0 0 0 0
+22:49:25 0x00bc 0.0000                raw=0003fa00 tag=0000 Global > Transport > Time display
+22:49:25 POLL len=42 5.67e-36 2.27e-41 0 0 0 0 0 0 0
+22:49:26 POLL len=42 1.01e+03 2.27e-41 0 0 0 0 0 0 0
+22:49:26 0x00b9 0.1843                raw=3e3cbf7e tag=0000 Global > Transport > Song Position (edit)
+22:49:26 0x00bc 0.0000                raw=00041d00 tag=0000 Global > Transport > Time display
+22:49:26 POLL len=42 8.07e+06 2.27e-41 0 0 0 0 0 0 0
+22:49:26 0x00bc 0.0000                raw=00044000 tag=0000 Global > Transport > Time display
+22:49:26 POLL len=42 -2.46e-27 2.26e-41 0 0 0 0 0 0 0
+22:49:26 POLL len=42 1.7e+33 2.26e-41 0 0 0 0 0 0 0
+22:49:26 POLL len=42 2.28e+10 2.26e-41 0 0 0 0 0 0 0
+22:49:26 0x00bc 0.0000                raw=00046300 tag=0000 Global > Transport > Time display
+22:49:26 POLL len=42 -1.18e+23 2.26e-41 0 0 0 0 0 0 0
+22:49:26 0x00bc 0.0000                raw=00048700 tag=0000 Global > Transport > Time display
+22:49:26 POLL len=42 -8.27 2.27e-41 0 0 0 0 0 0 0
+22:49:26 POLL len=42 -2.4e+14 2.27e-41 0 0 0 0 0 0 0
+22:49:26 0x00bc 0.0000                raw=0004aa00 tag=0000 Global > Transport > Time display
+22:49:26 POLL len=42 8.5e+20 2.27e-41 0 0 0 0 0 0 0
+22:49:27 POLL len=42 3.59e+16 2.27e-41 0 0 0 0 0 0 0
+22:49:27 0x00b9 0.1999                raw=3e4cbdf8 tag=0000 Global > Transport > Song Position (edit)
+22:49:27 0x00bc 0.0000                raw=0004cd00 tag=0000 Global > Transport > Time display
+22:49:27 POLL len=42 -5.7e+36 2.27e-41 0 0 0 0 0 0 0
+22:49:27 POLL len=42 -1.38e-18 2.26e-41 0 0 0 0 0 0 0
+22:49:27 0x00bc 0.0000                raw=0004ef00 tag=0000 Global > Transport > Time display
+22:49:27 POLL len=42 -3.93e-12 2.27e-41 0 0 0 0 0 0 0
+22:49:27 0x00bc 0.0000                raw=00051200 tag=0000 Global > Transport > Time display
+22:49:27 POLL len=42 2.36e+15 2.27e-41 0 0 0 0 0 0 0
+22:49:27 POLL len=42 -4.14e-22 2.27e-41 0 0 0 0 0 0 0
+22:49:27 POLL len=42 3.97e-35 2.27e-41 0 0 0 0 0 0 0
+22:49:27 0x00bc 0.0000                raw=00053500 tag=0000 Global > Transport > Time display
+22:49:27 POLL len=42 1.08e+23 2.26e-41 0 0 0 0 0 0 0
+22:49:27 0x00bc 0.0000                raw=00055800 tag=0000 Global > Transport > Time display
+22:49:27 POLL len=42 -3.59e-10 2.27e-41 0 0 0 0 0 0 0
+22:49:28 POLL len=42 -3.64e+28 2.27e-41 0 0 0 0 0 0 0
+22:49:28 0x00b9 0.2154                raw=3e5c8deb tag=0000 Global > Transport > Song Position (edit)
+22:49:28 0x00bc 0.0000                raw=00057b00 tag=0000 Global > Transport > Time display
+22:49:28 POLL len=42 1.01e-07 2.26e-41 0 0 0 0 0 0 0
+22:49:28 POLL len=42 -3.44e+12 2.26e-41 0 0 0 0 0 0 0
+22:49:28 0x00bc 0.0000                raw=00059f00 tag=0000 Global > Transport > Time display
+22:49:28 POLL len=42 7.47e+28 2.27e-41 0 0 0 0 0 0 0
+22:49:28 POLL len=42 -8.84e-06 2.27e-41 0 0 0 0 0 0 0
+22:49:28 0x00bc 0.0000                raw=0005c200 tag=0000 Global > Transport > Time display
+22:49:28 POLL len=42 -2.46e+04 2.27e-41 0 0 0 0 0 0 0
+22:49:28 POLL len=42 1.27e+06 2.27e-41 0 0 0 0 0 0 0
+22:49:28 0x00bc 0.0000                raw=0005e500 tag=0000 Global > Transport > Time display
+22:49:28 POLL len=42 -5.83e-08 2.27e-41 0 0 0 0 0 0 0
+22:49:28 POLL len=42 5.75e+12 2.27e-41 0 0 0 0 0 0 0
+22:49:28 0x00bc 0.0000                raw=00060800 tag=0000 Global > Transport > Time display
+22:49:28 POLL len=42 -6.92e+31 2.27e-41 0 0 0 0 0 0 0
+22:49:29 0x00b9 0.2310                raw=3e6c8c65 tag=0000 Global > Transport > Song Position (edit)
+22:49:29 0x00bc 0.0000                raw=00062b00 tag=0000 Global > Transport > Time display
+22:49:29 POLL len=42 2.04e-23 2.27e-41 0 0 0 0 0 0 0
+22:49:29 POLL len=42 1.48e+09 2.27e-41 0 0 0 0 0 0 0
+22:49:29 POLL len=42 -5.95e+16 2.27e-41 0 0 0 0 0 0 0
+22:49:29 0x00bc 0.0000                raw=00064f00 tag=0000 Global > Transport > Time display
+22:49:29 POLL len=42 4.01e+14 2.27e-41 0 0 0 0 0 0 0
+22:49:29 0x00bc 0.0000                raw=00067200 tag=0000 Global > Transport > Time display
+22:49:29 POLL len=42 0.0285 2.27e-41 0 0 0 0 0 0 0
+22:49:29 0x00bc 0.0000                raw=00069500 tag=0000 Global > Transport > Time display
+22:49:29 POLL len=42 -1.66e+25 2.26e-41 0 0 0 0 0 0 0
+22:49:29 POLL len=42 15.5 2.26e-41 0 0 0 0 0 0 0
+22:49:29 0x00bc 0.0000                raw=0006b800 tag=0000 Global > Transport > Time display
+22:49:29 POLL len=42 -1.58e+21 2.27e-41 0 0 0 0 0 0 0
+22:49:30 POLL len=42 -2.44e+38 2.27e-41 0 0 0 0 0 0 0
+22:49:30 0x00b9 0.2466                raw=3e7c8ae0 tag=0000 Global > Transport > Song Position (edit)
+22:49:30 0x00bc 0.0000                raw=0006db00 tag=0000 Global > Transport > Time display
+22:49:30 POLL len=42 -89.6 2.27e-41 0 0 0 0 0 0 0
+22:49:30 0x00bc 0.0000                raw=0006ff00 tag=0000 Global > Transport > Time display
+22:49:30 POLL len=42 -1.93e+13 2.27e-41 0 0 0 0 0 0 0
+22:49:30 POLL len=42 1.97e-36 2.27e-41 0 0 0 0 0 0 0
+22:49:30 POLL len=42 -1.19e-16 2.27e-41 0 0 0 0 0 0 0
+22:49:30 0x00bc 0.0000                raw=00072200 tag=0000 Global > Transport > Time display
+22:49:30 POLL len=42 4.82e-17 2.27e-41 0 0 0 0 0 0 0
+22:49:30 POLL len=42 -6.53e-37 2.27e-41 0 0 0 0 0 0 0
+22:49:30 0x00bc 0.0000                raw=00074500 tag=0000 Global > Transport > Time display
+22:49:30 0x00b8 0.4286                raw=3edb6db7 tag=0000 Global > Transport > Transport
+22:49:30 0x00b9 0.2576                raw=3e83e7cf tag=0000 Global > Transport > Song Position (edit)
+22:49:30 0x00bc 0.0000                raw=00075700 tag=0000 Global > Transport > Time display
+22:49:30 MSG 9.1 len=23 1801000011006a61636b696e67636173652844454d4f29
+22:49:30 0x0118 0.0000                raw=00000000 tag=0000 Global > Control > Current Song
+22:49:30 0x0117 0.0010                raw=3a800000 tag=0000 Global > Control > Mp3 playlist
+22:49:30 0x00bc 0.0000                raw=00000000 tag=0000 Global > Transport > Time display
+22:49:30 0x00b9 0.0000                raw=00000000 tag=0000 Global > Transport > Song Position (edit)
+22:49:30 0x00bb 0.0000                raw=0046c05a tag=0000 Global > Transport > Song length
+22:49:30 0x00b8 0.0000                raw=00000000 tag=0000 Global > Transport > Transport
+22:49:30 POLL len=42 -2.03e-32 2.27e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 -5.64e-24 2.27e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 0.0255 2.27e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 -1.74e+18 2.26e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 nan 2.26e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 -0.0104 2.26e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 -2.98e+38 2.26e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 0.112 2.25e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 8.29e-39 2.25e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 2.14e+04 2.24e-41 0 0 0 0 0 0 0
+22:49:31 POLL len=42 3.18e-27 2.24e-41 0 0 0 0 0 0 0
+22:49:32 POLL len=42 -1.84e-30 2.23e-41 0 0 0 0 0 0 0
+22:49:32 POLL len=42 9.15e-09 2.21e-41 0 0 0 0 0 0 0
+22:49:32 POLL len=42 3.21e+33 2.2e-41 0 0 0 0 0 0 0
+22:49:32 POLL len=42 0 0 0 0 0 0 0 0 0
+22:49:38 MSG 9.1 len=24 18010000120045524e2046554c4c20534f4e472028747729
+22:49:38 0x0118 0.0000                raw=00000000 tag=0000 Global > Control > Current Song
+22:49:38 0x0117 0.0000                raw=00000000 tag=0000 Global > Control > Mp3 playlist
+22:49:38 0x00bb 0.0000                raw=002c0430 tag=0000 Global > Transport > Song length
+22:49:38 0x00b8 0.0000                raw=00000000 tag=0000 Global > Transport > Transport
+22:49:38 0x00b8 0.5714                raw=3f124925 tag=0000 Global > Transport > Transport
+22:49:43 MSG 9.1 len=24 18010000120045524e2046554c4c20534f4e472028747729
+22:49:43 0x0118 0.0000                raw=00000000 tag=0000 Global > Control > Current Song
+22:49:43 0x0117 0.0000                raw=00000000 tag=0000 Global > Control > Mp3 playlist
+22:49:43 0x00b8 0.0000                raw=00000000 tag=0000 Global > Transport > Transport
+22:49:43 0x00b8 0.7143                raw=3f36db6e tag=0000 Global > Transport > Transport
+22:49:55 0x00d2 0.0010                raw=3a800000 tag=0000 Global > Misc Input > Playback
+22:49:55 0x00ba 1.0000                raw=3f800000 tag=0000 Global > Transport > Multi-track Enable

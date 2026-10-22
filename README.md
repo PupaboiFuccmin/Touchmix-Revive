@@ -121,6 +121,9 @@ python3 -m touchmix param main "Anti FB" Freq 2500 --band 2
 python3 -m touchmix record status              # USB recorder: drive, transport, armed tracks
 python3 -m touchmix record arm 1-8 st17        # or disarm; 'all' for every track, 2trk for 2-track
 python3 -m touchmix record start               # start / stop / play / rtz (return to zero)
+python3 -m touchmix mp3 status                 # USB MP3 player: mode, song, transport
+python3 -m touchmix mp3 mode on                # MP3 playback mode (off = back to multitrack)
+python3 -m touchmix mp3 play 2                 # play song 2; also stop, next, previous, top
 python3 -m touchmix find "aux 1 > comp"        # search parameter names (offline)
 python3 -m touchmix set "In 4 > Control > Phase" 1   # any parameter, raw 0..1 value
 ```
@@ -172,7 +175,7 @@ which covers everything you need to run a mix:
 **Not mapped yet:** the effect engines' own settings (reverb time, delay time
 and so on), mode switches such as compressor mode and EQ band type, scene
 recall, user buttons, the wizards, and the meters and RTA. The USB recorder
-works (arm, record, play, stop) but locate is untested. [`docs/MAPPING.md`](docs/MAPPING.md) explains how to map more.
+(arm, record, play, stop) and the MP3 player work; locate is untested. [`docs/MAPPING.md`](docs/MAPPING.md) explains how to map more.
 
 ## Troubleshooting
 

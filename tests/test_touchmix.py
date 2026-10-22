@@ -39,6 +39,11 @@ class Protocol(unittest.TestCase):
         msgs = r.feed(data[10:])
         self.assertEqual([m[0] for m in msgs], [P.HELLO, P.PARAM_SET])
 
+    def test_decode_text(self):
+        # 9.1 from the mixer when the MP3 player selected a song (2026-10-21)
+        payload = bytes.fromhex('180100001200') + b'ERN FULL SONG (tw)'
+        self.assertEqual(P.decode_text(payload), (0x0118, 'ERN FULL SONG (tw)'))
+
     def test_decode_param_set(self):
         (pid, tag, raw, value), = P.decode_param_set(APP_PAN_LEFT[6:])
         self.assertEqual((pid, tag, value), (0x221, 0, 0.0))
@@ -229,6 +234,14 @@ class Client(unittest.TestCase):
         self.assertIn(P.POLL_REQ, [t for t, _ in self.mixer.received])
         self.assertEqual(self.mixer.mute, 1)
 
+    def test_status_before_hello(self):
+        self.mixer.status_before_hello = True
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            self.assertEqual(tm.mixer_name, 'Test Mixer')
+            time.sleep(0.2)
+            self.assertIn(0xBC, tm.live)        # the early status is still handled
+
     def test_config_name_varies(self):
         self.mixer.config_name = 'NH8-config.xml.dscomp'
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
@@ -313,7 +326,39 @@ class Client(unittest.TestCase):
         self.assertAlmostEqual(S.transport_to_norm('play'), 0.142857, places=6)
         self.assertAlmostEqual(S.transport_to_norm('rtz'), 0.714286, places=6)
         self.assertEqual(S.transport_name('2.0'), 'record')
-        self.assertEqual(S.transport_name(3), '3')
+        self.assertEqual(S.transport_name(3), 'next')
+        self.assertEqual(S.transport_name(6), '6')
+
+    def test_text_messages_update_config_text(self):
+        seen = []
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            tm.on_change(lambda pid, v, raw, tag, src: seen.append((pid, src)))
+            self.mixer.push_frame(P.frame(P.TEXT, bytes.fromhex('180100001100') + b'jackingcase(DEMO)'))
+            time.sleep(0.3)
+            self.assertEqual(tm.config_text[0x0118], 'jackingcase(DEMO)')
+        self.assertIn((0x0118, 'text'), seen)
+
+    def test_cli_mp3(self):
+        port = str(self.mixer.port)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            for args in (['mode', 'on'], ['select', '2'], ['next'], ['top'], ['mode', 'off']):
+                self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'mp3'] + args), 0)
+        writes = [(pid, v) for t, p in self.mixer.received if t == P.PARAM_SET
+                  for pid, _, _, v in P.decode_param_set(p)]
+        # values the mixer reported in the MP3 player log
+        self.assertEqual(writes[:2], [(0x00BA, 0.0), (0x00D2, 0.0)])               # MP3 mode
+        self.assertIn((0x0117, 1 / 1024.0), writes)                               # song 2
+        self.assertAlmostEqual(dict((p, v) for p, v in writes[3:4])[0x00B8], 3 / 7.0, places=6)   # next
+        self.assertEqual(writes[-2:], [(0x00BA, 1.0), (0x00D2, 1 / 1024.0)])      # back to multitrack
+
+    def test_cli_mp3_play_number(self):
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'mp3', 'play', '2']), 0)
+        writes = [(pid, v) for t, p in self.mixer.received if t == P.PARAM_SET
+                  for pid, _, _, v in P.decode_param_set(p)]
+        self.assertEqual(writes[0], (0x0117, 1 / 1024.0))          # select song 2 ...
+        self.assertAlmostEqual(writes[1][1], 1 / 7.0, places=6)    # ... then play
 
     def test_cli_mute_verify(self):
         out = io.StringIO()

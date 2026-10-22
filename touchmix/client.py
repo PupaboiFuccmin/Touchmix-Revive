@@ -8,7 +8,7 @@ import zlib
 
 from . import protocol as P
 from .params import (ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
-                     send_name, curve_for, transport_to_norm)
+                     send_name, curve_for, transport_to_norm, int_to_norm)
 
 # The number varies: NH4 on some connections, NH8 on others (seen 2026-10-21)
 CONFIG_FILE = re.compile(r'NH\d+-config\.xml\.dscomp$')
@@ -76,10 +76,16 @@ class TouchMix:
             self.port = lookup_port(self.host) or P.PORT
         self._sock = socket.create_connection((self.host, self.port), timeout=self.timeout)
         self._sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        # the mixer greets first
+        # the mixer greets first, though while it is busy (MP3 playing) a few
+        # status pushes can come ahead of the hello; keep those for the reader
+        early = []
         msg = self._read_one()
-        if msg[0] != P.HELLO:
-            raise TouchMixError('expected hello from mixer, got type %d.%d' % msg[0])
+        while msg[0] != P.HELLO:
+            if msg[0] not in (P.STATUS, P.PARAM_SET, P.TEXT) or len(early) > 50:
+                raise TouchMixError('expected hello from mixer, got type %d.%d' % msg[0])
+            early.append(msg)
+            msg = self._read_one()
+        self._pending[:0] = early
         self.mixer_name, self.mixer_suffix = P.decode_hello(msg[1])
         if not self.mixer_suffix.startswith('MicroX'):
             raise TouchMixError('unexpected device %r%r' % (self.mixer_name, self.mixer_suffix))
@@ -210,8 +216,19 @@ class TouchMix:
         self.set(pid, 1.0 if on else 0.0)
 
     def transport(self, state):
-        """'record', 'play', 'stop' or 'rtz' (return to zero)."""
+        """'record', 'play', 'stop', 'next', 'previous' or 'rtz' (return to
+        zero; top of list in MP3 mode)."""
         self.set('Global > Transport > Transport', transport_to_norm(state))
+
+    def mp3_mode(self, on=True):
+        """Switch the USB player between MP3 playback and multitrack recording.
+        These are the two values the mixer reported when the mode was switched."""
+        self.set_many([('Global > Transport > Multi-track Enable', 0.0 if on else 1.0),
+                       ('Global > Misc Input > Playback', int_to_norm(0 if on else 1))])
+
+    def mp3_select(self, index):
+        """Select song `index` (0 = first) in the MP3 list."""
+        self.set('Global > Control > Mp3 playlist', int_to_norm(index))
 
     def eq_gain(self, channel, band, db):
         self.set(self.channel_param(channel, 'Gain', 'EQ', band - 1), eq_gain_to_norm(db))
@@ -296,6 +313,10 @@ class TouchMix:
             pid, raw, value = P.decode_status(payload)
             self.live[pid] = value
             self._notify(pid, value, raw, 0, 'status')
+        elif msg_type == P.TEXT:
+            pid, text = P.decode_text(payload)
+            self.config_text[pid] = text
+            self._notify(pid, 0.0, 0, 0, 'text')
         elif msg_type == P.FILE:
             self._handle_file(payload)
 

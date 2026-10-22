@@ -70,6 +70,7 @@ u8  payload[length-6]
 | 5.1 | param-set | both | **parameter changes**: what you send to control the mixer |
 | 6.1 | poll-req | A→M | periodic request, sequence-numbered |
 | 7.1 | poll-resp | M→A | reply to 6.1 with the same sequence number |
+| 9.1 | text | M→A | a text parameter's new value, e.g. the MP3 title |
 
 ### 1.3 hello ✅
 
@@ -150,6 +151,26 @@ repeat count:
 * **Keep messages small.** One message with 196 entries (every GEQ slider on
   Main and Aux 1–6) made the mixer stop answering and reboot. Messages of 16
   entries have never caused trouble. The client splits larger writes.
+
+### 9.1 text ✅
+
+```
+u16 param_id
+u16 0               (always 0 so far)
+u16 len
+char text[len]      (no terminator)
+```
+
+Seen when the MP3 player changes song: `18 01 00 00 12 00` + `ERN FULL SONG
+(tw)`, i.e. `0x0118 Global > Control > Current Song`. Text parameters
+(names, IP addresses, Demo Enabled) probably change this way too. Whether a
+client can send 9.1 to set one is untested.
+
+### Integer parameters ✅
+
+Some parameters hold small integers (the MP3 playlist index, `Playback`,
+`Test screen`, aux `Pre/Post`). On the wire they are n/1024, and the config
+shows the wire value × 1024. `Transport` is the exception: n/7.
 
 ### 6.1 / 7.1 poll 🟡
 

@@ -58,7 +58,17 @@ tm.eq_freq(4, 2, 250)         # channel, band, Hz
 
 ```python
 tm.arm(1)                     # or tm.arm(1, False); 'st17', 'st19', '2trk'
-tm.transport('record')        # 'play', 'stop', 'rtz' (return to zero)
+tm.transport('record')        # 'play', 'stop', 'next', 'previous', 'rtz' (return to zero)
+```
+
+**The MP3 player** (MP3s in the root of a drive formatted by the mixer):
+
+```python
+tm.mp3_mode(True)             # MP3 playback; False = back to multitrack
+tm.mp3_select(1)              # second song (0 = first); this stops the player
+time.sleep(1)                 # let it load, or the next play is lost
+tm.transport('play')
+title = tm.config_text[0x0118]   # 'Global > Control > Current Song', kept up to date
 ```
 
 **Any mapped control, in real units:**
