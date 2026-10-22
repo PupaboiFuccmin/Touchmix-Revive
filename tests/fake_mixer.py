@@ -1,17 +1,17 @@
 """A tiny stand-in for a TouchMix-16, for tests.
 
-Greets with a hello, sends a session message and a zlib'd NH4-config.xml in
+Greets with a hello, sends a session message and a zlib'd NH<n>-config.xml in
 1012-byte chunks like the real mixer, answers polls, and applies param-set
 messages to its config so a later connection sees the change. Faders store a
-made-up dB curve, so probes have something nonlinear to read back.
+dB value by the real fader law, like the mixer's config.
 """
-import math
 import socket
 import struct
 import threading
 import zlib
 
 from touchmix import protocol as P
+from touchmix.params import norm_to_fader_db
 
 CONFIG = '''<?xml version="1.0" encoding="UTF-8"?>
 <Config Version="3.0.9551" Name="UI">
@@ -53,13 +53,14 @@ FADERS = (542, 618)
 
 
 def fader_db(x):
-    """Not the real curve: just monotonic and nonlinear, 0.75 = 0 dB."""
-    return -55.0 if x <= 0 else max(-55.0, round(40 * math.log10(x / 0.75), 1))
+    """The mixer's fader law (as float32, like the config)."""
+    return struct.unpack('<f', struct.pack('<f', norm_to_fader_db(x)))[0]
 
 
 class FakeMixer:
-    def __init__(self, name='Test Mixer', access=True):
+    def __init__(self, name='Test Mixer', access=True, config_name='NH4-config.xml.dscomp'):
         self.name = name
+        self.config_name = config_name
         self.access = access     # like the real mixer, writes are ignored without it
         self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0}
         self.received = []
@@ -113,7 +114,7 @@ class FakeMixer:
     def _config_file(self):
         # padding makes the file span several chunks
         xml = CONFIG.format(v=self.values, padding='<!-- %s -->' % ('x' * 3000))
-        return self._file('NH4-config.xml.dscomp', xml, 'tmp')
+        return self._file(self.config_name, xml, 'tmp')
 
     def _settings_file(self, client):
         xml = SETTINGS.format(all=int(self.access))

@@ -6,7 +6,7 @@ Two ways in:
 * guided: prompts you to do one thing at a time on the mixer (or the app) and
   records every parameter change that arrives while you do it. With readback,
   it reconnects after each step and also records the mixer's own engineering
-  value (dB, Hz, ...) for each changed ID, from NH4-config.xml.
+  value (dB, Hz, ...) for each changed ID, from NH<n>-config.xml.
 * probe: writes a sweep of wire values to a parameter itself, reconnects, and
   reads the engineering values back. That maps a whole curve with no hands.
   The same control on several channels is swept in parallel, so one reconnect
@@ -24,7 +24,11 @@ import threading
 import time
 
 from .client import TouchMix
-from .params import ParamTable, strip_path, norm_to_fader_db
+from .params import ParamTable, strip_path, norm_to_fader_db, curve_for
+
+# Most parameters written per message and per probe round. 196 GEQ sliders in
+# one message made the mixer reboot (2026-10-21); 16 at a time never caused trouble.
+MAX_BATCH = 16
 
 # IDs that change on their own, without anyone touching a control
 BACKGROUND = {0x00CE, 0x00D4}
@@ -384,27 +388,41 @@ def interp_inverse(points, eng):
     return None
 
 
-def probe(session, pids, values, say=print, restore=True):
+def send_chunked(tm, changes, size=MAX_BATCH):
+    """set_many in messages of at most `size` entries, with a short gap between."""
+    changes = list(changes)
+    for i in range(0, len(changes), size):
+        if i:
+            time.sleep(0.05)
+        tm.set_many(changes[i:i + size])
+
+
+def probe(session, pids, values, say=print, restore=True, checkpoint=None, max_batch=MAX_BATCH):
     """Sweep `values` across `pids` and read the mixer's engineering values back.
 
-    Each round gives every pid a different value from the list, so with N pids
-    it needs ceil(len(values) / N) reconnects. Restores the original values at
-    the end when the curve allows it."""
+    Each round writes up to max_batch pids, each with a different value from
+    the list, then reconnects to read them back. With more pids than values the
+    values repeat across pids, so every pid is still written once.
+    checkpoint(originals) is called before anything is written, so the caller
+    can save a restore point. Restores the original values at the end."""
     tm = session.tm
     originals = {pid: _num(tm.config.get(pid)) for pid in pids}
+    if checkpoint:
+        checkpoint(originals)
     points = []                      # (pid, wire, eng)
-    todo = list(values)
-    rnd = 0
-    while todo:
-        rnd += 1
-        batch = [(pid, todo.pop(0)) for pid in pids if todo]
+    total = max(len(values), len(pids))
+    size = min(len(pids), max_batch)
+    for rnd, start in enumerate(range(0, total, size), 1):
+        batch = [(pids[k % len(pids)], values[k % len(values)])
+                 for k in range(start, min(total, start + size))]
         tm.set_many(batch)
-        say('round %d: sent %s' % (rnd, ', '.join('%.4f' % v for _, v in batch)))
+        say('round %d: sent %d values' % (rnd, len(batch)))
         tm = session.reopen()
         for pid, v in batch:
             eng = _num(tm.config.get(pid))
             points.append((pid, v, eng))
-            say('    0x%04x  %.4f -> %s' % (pid, v, eng))
+            if len(batch) <= 32:
+                say('    0x%04x  %.4f -> %s' % (pid, v, eng))
 
     distinct = set(e for _, _, e in points)
     result = dict(points=[dict(id='0x%04x' % p, wire=w, eng=e) for p, w, e in points],
@@ -414,32 +432,48 @@ def probe(session, pids, values, say=print, restore=True):
         say('!! ' + result['warning'])
 
     if restore:
-        result['restored'] = _restore(session, originals, [(w, e) for _, w, e in points], say)
+        result['restored'] = restore_values(session, originals, [(w, e) for _, w, e in points], say,
+                                            max_batch=max_batch)
     return result
 
 
-def _restore(session, originals, curve, say, tries=3):
-    """Put each pid back to its original engineering value by inverting the
-    measured curve. Each pass adds the points it lands on, so a curve that is
-    not linear between sweep points converges in a pass or two."""
+def _close_enough(now, want):
+    if now == want:
+        return True
+    return isinstance(now, float) and isinstance(want, float) and abs(now - want) <= max(0.05, abs(want) * 1e-3)
+
+
+def restore_values(session, originals, curve=(), say=print, tries=3, max_batch=MAX_BATCH):
+    """Put each pid back to its original engineering value. The first guess
+    comes from params.curve_for when the curve is known, else from inverting
+    the measured points in `curve`; each pass adds the points it lands on, so a
+    curve that is not linear between sweep points converges in a pass or two."""
     curve = list(curve)
     left = dict(originals)
-    for _ in range(tries):
+    known = {}
+    for pid in left:
+        par = session.params.get(pid)
+        known[pid] = curve_for(par.path, par.name) if par else None
+    for attempt in range(tries):
         back = []
         for pid, eng in left.items():
-            w = interp_inverse(curve, eng)
+            w = None
+            if attempt == 0 and known[pid] is not None and isinstance(eng, float):
+                w = known[pid].to_norm(eng)
+            if w is None:
+                w = interp_inverse(curve, eng)
             if w is None:
                 w = next((cw for cw, ce in curve if ce == eng), None)
             if w is not None:
                 back.append((pid, w))
         if not back:
             break
-        session.tm.set_many(back)
+        send_chunked(session.tm, back, max_batch)
         tm = session.reopen()
         for pid, w in back:
             now = _num(tm.config.get(pid))
             curve.append((w, now))
-            if now == left[pid] or (isinstance(now, float) and abs(now - left[pid]) < 0.05):
+            if _close_enough(now, left[pid]):
                 del left[pid]
         if not left:
             say('restored original values')
@@ -460,10 +494,17 @@ def curve_table(points):
 # ---------------------------------------------------------------- batch
 
 INPUTS = '1-16'
+BUSES = 'main,aux1-6,aux7,aux9'
+GEQ_BUSES = 'main,aux1-6'          # Aux 7/8 and 9/10 have no GEQ or anti-feedback
+STEREO = 'st17,st19'
+FX = 'fx1-4'
 
-# Every continuous control not mapped yet, in run order: (section, param, band, channels).
+# Plans run by `map probe-all`, in order: (section, param, band, channels[, steps]).
+# param '*' means every numbered band in the section (the GEQ sliders).
 # Enums (Comp Mode, EQ/cut Type) are left out on purpose: switching a mode can
 # reset other parameters, which the restore would not undo.
+
+# Input channel processing (all mapped: see the curve tables in params.py)
 PROBE_PLAN = [
     ('Control', 'Delay Time', 1, INPUTS),
     ('Lo-Cut', 'Freq', 1, INPUTS),
@@ -490,9 +531,77 @@ PROBE_PLAN = [
     ('Control', 'Fader', 1, 'aux7,aux9'),
 ]
 
+# Bus, FX return, stereo input, 2-track and talkback processing
+BUS_PLAN = [
+    ('Control', 'Gain', 1, BUSES),
+    ('Control', 'Delay Time', 1, BUSES),
+    ('EQ', 'Freq', 1, BUSES), ('EQ', 'Gain', 1, BUSES), ('EQ', 'Q', 1, BUSES),
+    ('EQ', 'Freq', 6, BUSES), ('EQ', 'Gain', 6, BUSES), ('EQ', 'Q', 6, BUSES),
+    ('Lo-Cut', 'Freq', 1, BUSES),
+    ('Hi-Cut', 'Freq', 1, BUSES),
+    ('Comp', 'Thresh', 1, BUSES), ('Comp', 'Ratio', 1, BUSES), ('Comp', 'Attack', 1, BUSES),
+    ('Comp', 'Release', 1, BUSES), ('Comp', 'Compression', 1, BUSES),
+    ('GEQ', '*', 1, GEQ_BUSES),
+    ('Anti FB', 'Freq', 1, GEQ_BUSES), ('Anti FB', 'Gain', 1, GEQ_BUSES), ('Anti FB', 'Q', 1, GEQ_BUSES),
+    ('Anti FB', 'Depth', 1, GEQ_BUSES), ('Anti FB', 'Width', 1, GEQ_BUSES),
+    ('EQ', 'Freq', 1, FX), ('EQ', 'Gain', 1, FX), ('EQ', 'Q', 1, FX), ('EQ', 'Freq', 2, FX),
+    ('HPF', 'Freq', 1, FX),
+    ('Control', 'Width', 1, FX), ('Control', 'AuxBalance1', 1, FX),
+    ('EQ', 'Freq', 1, STEREO), ('EQ', 'Gain', 1, STEREO), ('EQ', 'Q', 1, STEREO),
+    ('Lo-Cut', 'Freq', 1, STEREO), ('Hi-Cut', 'Freq', 1, STEREO),
+    ('Gate', 'Thresh', 1, STEREO), ('Gate', 'Attack', 1, STEREO), ('Gate', 'Release', 1, STEREO),
+    ('Comp', 'Thresh', 1, STEREO), ('Comp', 'Ratio', 1, STEREO), ('Comp', 'Makeup Gain', 1, STEREO),
+    ('Comp', 'Attack', 1, STEREO), ('Comp', 'Release', 1, STEREO),
+    ('Control', 'Digital Trim', 1, 'pb'),
+    ('EQ', 'Freq', 1, 'pb'), ('EQ', 'Gain', 1, 'pb'), ('EQ', 'Q', 1, 'pb'),
+    ('HPF', 'Freq', 1, 'pb'),
+    ('Control', 'TB Fader', 1, 'talkback'),
+]
 
-def plan_name(section, param, band):
-    return '%s %s%s' % (section, param, ' %d' % band if band > 1 else '')
+# On/off flags: 5 steps, to see where they switch. Not probed on purpose:
+# Phantom (48 V on whatever is plugged in), Link and Is stereo (linking copies
+# settings between channels), SigGen, and the headphone/monitor levels.
+FLAG_STEPS = 5
+FLAG_PLAN = [(s, p, 1, ch, FLAG_STEPS) for s, p, ch in [
+    ('Control', 'DCA Asn1', INPUTS), ('Control', 'Mute Asn1', INPUTS), ('Control', 'AuxMute1', INPUTS),
+    ('Control', 'Channel Safe', INPUTS), ('Control', 'Arm', INPUTS), ('Control', 'Rec Pre/Post', INPUTS),
+    ('EQ', 'FxEnbl', INPUTS), ('EQ', 'BndEnbl', INPUTS),
+    ('Lo-Cut', 'FxEnbl', INPUTS), ('Lo-Cut', 'BndEnbl', INPUTS), ('Hi-Cut', 'BndEnbl', INPUTS),
+    ('Gate', 'Enable', INPUTS), ('Comp', 'Enable', INPUTS), ('Comp', 'Auto', INPUTS),
+    ('De-Esser', 'Enable', INPUTS),
+    ('Control', 'DCA Asn1', BUSES), ('Control', 'Mute Asn1', BUSES), ('Control', 'Channel Safe', BUSES),
+    ('Control', 'Pre/Post', 'aux1-6,aux7,aux9'),
+    ('EQ', 'FxEnbl', BUSES), ('Comp', 'Enable', BUSES), ('GEQ', 'FxEnbl', GEQ_BUSES),
+    ('Anti FB', 'FxEnbl', GEQ_BUSES),
+    ('Control', 'Mute', 'main,aux1-6,fx1-4,dca1-8'),
+]]
+
+PLANS = {'inputs': PROBE_PLAN, 'buses': BUS_PLAN, 'flags': FLAG_PLAN}
+
+
+def plan_items(plan):
+    """Normalize plan entries to (section, param, band, channels, steps or None)."""
+    return [tuple(item) + (None,) * (5 - len(item)) for item in plan]
+
+
+def plan_pids(params, section, param, band, channels):
+    """Parameter indexes for a plan entry."""
+    pids = []
+    for c in parse_channels(channels):
+        path = '%s > %s' % (strip_path(c), section)
+        if param == '*':
+            found = [p.index for p in params.by_index.values()
+                     if p.path == path and p.name.strip()[:1].isdigit()]
+            if not found:
+                raise KeyError('no numbered bands in %s' % path)
+            pids.extend(found)
+        else:
+            pids.append(params.find(path, param, band - 1).index)
+    return pids
+
+
+def plan_name(section, param, band, *_):
+    return '%s %s%s' % (section, 'bands' if param == '*' else param, ' %d' % band if band > 1 else '')
 
 
 def fit_curve(table):
@@ -504,6 +613,12 @@ def fit_curve(table):
     distinct = len(set(e for _, e in pts))
     if distinct == 1:
         return 'constant', 'never changed (%s)' % pts[0][1], None
+    if set(e for _, e in pts) == {0.0, 1.0}:
+        on = min(w for w, e in pts if e == 1.0)
+        off = max(w for w, e in pts if e == 0.0)
+        if off < on:
+            return 'switch', 'off up to %g, on from %g' % (off, on), 0.0
+        return 'switch?', 'not monotonic', None
     fits = []
     n = len(pts)
     xs, ys = [w for w, _ in pts], [e for _, e in pts]
@@ -520,6 +635,16 @@ def fit_curve(table):
         r = math.exp(k)
         err = max(abs(c * r ** x - y) / y for x, y in pts)   # relative
         fits.append(('exponential', 'eng = %.6g * %.6g^x' % (c, r), err * max(ys)))
+    ends = dict(pts)
+    # only for curves starting at 0 (or below), where a plain exponential cannot fit
+    if 0.0 in ends and 0.5 in ends and 1.0 in ends and ends[0.0] <= 0 and ends[0.5] != ends[0.0]:
+        lo, mid, hi = ends[0.0], ends[0.5], ends[1.0]
+        u = (hi - lo) / (mid - lo) - 1          # r^0.5
+        if u > 0 and u != 1:
+            r = u * u
+            f = lambda x: lo + (hi - lo) * (r ** x - 1) / (r - 1)
+            fits.append(('exponential + offset', 'eng = %g + %g*(%.6g^x - 1)/%.6g' % (lo, hi - lo, r, r - 1),
+                         max(abs(f(x) - y) for x, y in pts)))
     fits.append(('fader law', 'dB = 67*x^0.69 - 55', max(abs(norm_to_fader_db(x) - y) for x, y in pts)))
     kind, formula, err = min(fits, key=lambda f: f[2])
     if distinct < len(pts) * 0.6:
@@ -527,20 +652,30 @@ def fit_curve(table):
     return kind, formula, err
 
 
-def probe_all(session, plan, steps, outdir, save_fn, say=print, restore=True):
+RESTORE_POINT = 'restore-point.json'
+
+
+def save_restore_point(path, host, mixer, label, originals):
+    """Originals of the probe about to run, for `map restore` after a crash."""
+    save(path, 'restore', host, mixer, dict(label=label, originals={'0x%04x' % p: e for p, e in originals.items()}))
+
+
+def probe_all(session, plan, steps, outdir, save_fn, say=print, restore=True, checkpoint=None):
     """Run every probe in plan on one session. A failing probe is reported and
-    skipped. Returns [(name, file or None, fit or error text)]."""
+    skipped. checkpoint(name, originals) runs before each probe writes.
+    Returns [(name, file or None, fit or error text)]."""
     summary = []
-    values = sweep_values(steps)
-    for i, (section, param, band, channels) in enumerate(plan, 1):
+    plan = plan_items(plan)
+    for i, (section, param, band, channels, item_steps) in enumerate(plan, 1):
         name = plan_name(section, param, band)
         say('\n=== %d/%d  %s on %s' % (i, len(plan), name, channels))
         try:
             chans = parse_channels(channels)
-            pids = [session.params.find('%s > %s' % (strip_path(c), section), param, band - 1).index
-                    for c in chans]
-            result = probe(session, pids, values, say=say, restore=restore)
-            slug = '%s-%s' % (section, param) + ('-%d' % band if band > 1 else '')
+            pids = plan_pids(session.params, section, param, band, channels)
+            cp = (lambda originals, name=name: checkpoint(name, originals)) if checkpoint else None
+            result = probe(session, pids, sweep_values(item_steps or steps), say=say, restore=restore,
+                           checkpoint=cp)
+            slug = '%s-%s' % (section, 'bands' if param == '*' else param) + ('-%d' % band if band > 1 else '')
             slug = ''.join(ch if ch.isalnum() else '-' for ch in slug.lower()).strip('-')
             path = os.path.join(outdir, default_out('probe-' + slug))
             save_fn(path, dict(section=section, param=param, band=band, channels=chans, **result))

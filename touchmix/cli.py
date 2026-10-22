@@ -25,7 +25,8 @@ import re
 import sys
 import time
 
-from .discover import discover, default_subnets
+from .discover import discover, default_subnets, lookup_port, mdns_browse
+from . import protocol as P
 from . import mapping as M
 from .mapping import parse_channels
 from .client import TouchMix, TouchMixError
@@ -33,21 +34,29 @@ from .params import ParamTable, strip_path, send_name, curve_for
 
 
 def pick_host(args):
-    if args.host:
-        return args.host
-    if os.environ.get('TOUCHMIX_HOST'):
-        return os.environ['TOUCHMIX_HOST']
+    """Work out the mixer's address, and set args.port. The control port is not
+    fixed (it changes when the mixer reboots), so unless --port or host:port
+    says otherwise it comes from the mixer's mDNS advertisement."""
+    host = args.host or os.environ.get('TOUCHMIX_HOST')
+    if host:
+        if ':' in host:
+            host, _, port = host.rpartition(':')
+            args.port = args.port or int(port)
+        if not args.port:
+            args.port = lookup_port(host) or P.PORT
+        return host
     print('No --host given; searching the local network...', file=sys.stderr)
     found = discover(args.subnet, port=args.port)
     if not found:
         sys.exit('No mixer found. Check it is on the same network, or pass --host / --subnet.')
     if len(found) > 1:
-        for ip, name, _ in found:
-            print('  %-15s %s' % (ip, name), file=sys.stderr)
+        for m in found:
+            print('  %-15s port %-6d %s' % (m.ip, m.port, m.name), file=sys.stderr)
         sys.exit('Several mixers found; pick one with --host.')
-    ip, name, _ = found[0]
-    print('Found %s at %s' % (name, ip), file=sys.stderr)
-    return ip
+    m = found[0]
+    print('Found %s at %s port %d' % (m.name, m.ip, m.port), file=sys.stderr)
+    args.port = m.port
+    return m.ip
 
 
 def open_mixer(args):
@@ -100,11 +109,16 @@ def fmt_db(v):
 # ---------------------------------------------------------------- commands
 
 def cmd_discover(args):
-    nets = args.subnet or [str(n) for n in default_subnets()]
-    print('Scanning %s for TouchMix on port 42217...' % ', '.join(map(str, nets)))
-    found = discover(nets, port=args.port)
-    for ip, name, suffix in found:
-        print('  %-15s %-24s (%s)' % (ip, name, suffix))
+    found = []
+    if not args.subnet:
+        print('Asking the network (mDNS) for TouchMix mixers...')
+        found = discover(mdns=True, subnets=None, port=args.port) if mdns_browse() else []
+    if not found:
+        nets = args.subnet or [str(n) for n in default_subnets()]
+        print('Scanning %s on port %d...' % (', '.join(map(str, nets)), args.port or P.PORT))
+        found = discover(nets, port=args.port)
+    for m in found:
+        print('  %-15s port %-6d %-24s (%s)' % (m.ip, m.port, m.name, m.suffix))
     if not found:
         print('  none found')
         return 1
@@ -314,10 +328,14 @@ def cmd_map_probe(args):
     if warn_no_access(s.tm):
         s.close()
         return 1
+    rp = M.RESTORE_POINT
+    checkpoint = lambda originals: M.save_restore_point(rp, s.host, s.tm.mixer_name, args.param, originals)
     try:
-        result = M.probe(s, pids, values, restore=not args.no_restore)
+        result = M.probe(s, pids, values, restore=not args.no_restore, checkpoint=checkpoint)
     finally:
         s.close()
+    if result.get('restored'):
+        os.remove(rp)
     print('\n  wire      value')
     for w, e in M.curve_table(result['points']):
         print('  %.4f    %s' % (w, e))
@@ -328,17 +346,25 @@ def cmd_map_probe(args):
 
 
 def cmd_map_probe_all(args):
-    plan = M.PROBE_PLAN
+    names = [n.strip() for n in args.plan.split(',')]
+    unknown = [n for n in names if n not in M.PLANS]
+    if unknown:
+        sys.exit('unknown plan %s (choose from %s)' % (', '.join(unknown), ', '.join(M.PLANS)))
+    plan = M.plan_items([item for n in names for item in M.PLANS[n]])
     if args.only:
         want = [w.strip().lower() for w in args.only.split(',')]
         plan = [p for p in plan if any(w in M.plan_name(*p[:3]).lower() for w in want)]
     if not plan:
         sys.exit('nothing matches --only %r' % args.only)
     if args.channels:
-        plan = [(sec, par, band, args.channels if ch == M.INPUTS else ch) for sec, par, band, ch in plan]
-    print('Probe batch: %d controls, %d values each, results in %s/' % (len(plan), args.steps, args.outdir))
-    for sec, par, band, ch in plan:
-        print('  %-26s %s' % (M.plan_name(sec, par, band), ch))
+        plan = [(sec, par, band, args.channels if ch == M.INPUTS else ch, st) for sec, par, band, ch, st in plan]
+    if args.start > 1:
+        plan = plan[args.start - 1:]
+        if not plan:
+            sys.exit('--start %d is past the end of the plan' % args.start)
+    print('Probe batch (%s): %d controls, results in %s/' % (args.plan, len(plan), args.outdir))
+    for i, (sec, par, band, ch, st) in enumerate(plan, args.start):
+        print('  %3d. %-26s %-24s %d values' % (i, M.plan_name(sec, par, band), ch, st or args.steps))
     print('These are LIVE controls on every listed channel. Turn the amps down.')
     if not args.yes and input('Type yes to go ahead > ').strip().lower() != 'yes':
         return 1
@@ -349,15 +375,47 @@ def cmd_map_probe_all(args):
         return 1
     mixer = s.tm.mixer_name
     save_fn = lambda path, body: M.save(path, 'probe', s.host, mixer, body)
+    rp = os.path.join(args.outdir, M.RESTORE_POINT)
+    checkpoint = lambda name, originals: M.save_restore_point(rp, s.host, mixer, name, originals)
     try:
-        summary = M.probe_all(s, plan, args.steps, args.outdir, save_fn, restore=not args.no_restore)
+        summary = M.probe_all(s, plan, args.steps, args.outdir, save_fn, restore=not args.no_restore,
+                              checkpoint=checkpoint)
     finally:
         s.close()
+    if summary and summary[-1][2][0] != 'error' and 'NOT RESTORED' not in summary[-1][2][0]:
+        os.remove(rp)       # the last probe restored cleanly; earlier ones were checked as they ran
     print('\n' + M.format_summary(summary))
     bad = [n for n, _, (kind, _, _) in summary if kind == 'error' or 'NOT RESTORED' in kind]
     if bad:
         print('\n!! check these: %s' % ', '.join(bad))
     return 2 if bad else 0
+
+
+def cmd_map_restore(args):
+    """Put back the originals saved in a restore point (or any probe file)."""
+    import json
+    with open(args.file) as f:
+        doc = json.load(f)
+    originals = {int(k, 16): v for k, v in doc['originals'].items()}
+    curve = [(p['wire'], p['eng']) for p in doc.get('points', [])]
+    table = ParamTable()
+    print('Restoring %d parameter(s) from %s (%s):' % (len(originals), args.file, doc.get('label') or doc.get('param')))
+    for pid, eng in list(originals.items())[:10]:
+        par = table.get(pid)
+        print('  0x%04x %-40s -> %s' % (pid, par.full_name if par else '?', eng))
+    if len(originals) > 10:
+        print('  ... and %d more' % (len(originals) - 10))
+    if not args.yes and input('Type yes to go ahead > ').strip().lower() != 'yes':
+        return 1
+    s = map_session(args)
+    if warn_no_access(s.tm):
+        s.close()
+        return 1
+    try:
+        ok = M.restore_values(s, originals, curve)
+    finally:
+        s.close()
+    return 0 if ok else 2
 
 
 def cmd_map_show(args):
@@ -380,9 +438,9 @@ def cmd_map_show(args):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='touchmix', description='Control a QSC TouchMix-16 over the network.')
-    ap.add_argument('--host', help='mixer IP (default: $TOUCHMIX_HOST, else auto-discover)')
+    ap.add_argument('--host', help='mixer IP or IP:port (default: $TOUCHMIX_HOST, else auto-discover)')
     ap.add_argument('--subnet', action='append', help='subnet to scan, e.g. 192.168.0.0/24 (repeatable)')
-    ap.add_argument('--port', type=int, default=42217, help=argparse.SUPPRESS)
+    ap.add_argument('--port', type=int, help='control port (default: what the mixer advertises over mDNS, else 42217)')
     ap.add_argument('--name', help='client name shown to the mixer (default: Revive-<hostname>)')
     sub = ap.add_subparsers(dest='cmd', required=True)
 
@@ -450,13 +508,21 @@ def main(argv=None):
     pr.add_argument('--out', help='output JSON')
     pr.set_defaults(fn=cmd_map_probe)
     pa = msub.add_parser('probe-all', help='run every remaining curve probe in order (see mapping.PROBE_PLAN)')
+    pa.add_argument('--plan', default='inputs',
+                    help='which plan(s): %s, comma-separated (default inputs)' % ', '.join(M.PLANS))
     pa.add_argument('--only', help='comma-separated filters on the control name, e.g. "comp,gate attack"')
     pa.add_argument('--channels', help='input channels to sweep (default 1-16)')
     pa.add_argument('--steps', type=int, default=21, help='values from 0 to 1 per control (default 21)')
     pa.add_argument('--outdir', default='mappings', help='where to save the JSON files (default mappings)')
+    pa.add_argument('--start', type=int, default=1, help='start at this step of the listed plan (to resume)')
     pa.add_argument('--yes', action='store_true', help='do not ask for confirmation')
     pa.add_argument('--no-restore', action='store_true', help=argparse.SUPPRESS)
     pa.set_defaults(fn=cmd_map_probe_all)
+    rs = msub.add_parser('restore', help='put back the values saved in a restore point after a crash')
+    rs.add_argument('file', nargs='?', default=os.path.join('mappings', M.RESTORE_POINT),
+                    help='restore point or probe file (default mappings/%s)' % M.RESTORE_POINT)
+    rs.add_argument('--yes', action='store_true', help='do not ask for confirmation')
+    rs.set_defaults(fn=cmd_map_restore)
     sh = msub.add_parser('show', help='print a saved mapping file')
     sh.add_argument('file')
     sh.set_defaults(fn=cmd_map_show)

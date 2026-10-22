@@ -83,11 +83,14 @@ u8  data[len]
 
 | File | Size (inflated) | Contents |
 |------|-----------------|----------|
-| `/usr/share/ds2i/tmp/NH4-config.xml.dscomp` | ~516 KB | **The full current mixer state, with every parameter's name and index** |
+| `/usr/share/ds2i/tmp/NH<n>-config.xml.dscomp` | ~516 KB | **The full current mixer state, with every parameter's name and index** |
 | `/usr/share/ds2i/tmp/fileIndex.xml.dscomp` | ~243 KB | List of factory and user scenes and presets |
 | `/usr/share/ds2i/user/settings/<CLIENT>.settings.dqx.dscomp` | ~2 KB | Per-client access rights (see "Per-client access") |
 
-The app builds its initial UI from `NH4-config.xml`, where values are in
+The number in the config's name varies: `NH4` in the first captures and
+runs, `NH8` on later connections the same evening. Match `NH<n>-config`.
+
+The app builds its initial UI from `NH<n>-config.xml`, where values are in
 engineering units (dB, Hz). After that, all changes arrive as 5.1 messages with
 normalized floats.
 

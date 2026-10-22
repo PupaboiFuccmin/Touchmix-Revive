@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from touchmix import TouchMix, discover, mapping as M, protocol as P, params as S  # noqa: E402
 from touchmix.cli import main, parse_channels  # noqa: E402
-from fake_mixer import FakeMixer, fader_db  # noqa: E402
+from fake_mixer import FakeMixer  # noqa: E402
 
 # bytes captured from the official Android app (docs/PROTOCOL.md)
 APP_HELLO = bytes.fromhex(
@@ -104,7 +104,15 @@ class Scaling(unittest.TestCase):
         self.assertEqual(S.curve_for('Stereo In 17/18 > Control', 'Trim').hi, 12)
         self.assertEqual(S.curve_for('In 4 > Control', 'Trim').hi, 15)
         self.assertIs(S.curve_for('Aux 1 > Control', 'Fader'), S.FADER)
-        self.assertIsNone(S.curve_for('Main > Comp', 'Thresh'))     # only probed on inputs
+        self.assertIsNone(S.curve_for('Main > Comp', 'Mode'))       # enums are not mapped
+        self.assertIsNone(S.curve_for('FX 1 > D-Reverb', 'Rev Time'))
+        self.assertIsNone(S.curve_for('DCA 1 > Control', 'Trim'))
+        self.assertEqual(S.curve_for('Main > Comp', 'Ratio').hi, 100)    # buses differ from inputs
+        self.assertEqual(S.curve_for('In 4 > Comp', 'Ratio').hi, 20)
+        self.assertIs(S.curve_for('Aux 3 > GEQ', '1000 '), S.EQ_GAIN)
+        self.assertIs(S.curve_for('In 4 > Control', 'AuxSend9/10'), S.FADER)
+        self.assertIs(S.curve_for('Talkback > Control', 'TB Fader'), S.FADER)
+        self.assertAlmostEqual(S.curve_for('Main > Comp', 'Attack').to_norm(2.2727), 0.5, places=4)
         self.assertIsNone(S.curve_for('In 4 > Control', 'Name'))
         c = S.curve_for('In 4 > Control', 'Delay Time')
         self.assertEqual((c.to_norm('25ms'), c.format(0.25)), (0.25, '25 ms'))
@@ -143,6 +151,42 @@ class Params(unittest.TestCase):
         self.assertEqual(t.find('In 4 > Control', 'FXSend1').index, 0x127E)
 
 
+class MDNS(unittest.TestCase):
+    @staticmethod
+    def name(n):
+        return b''.join(bytes([len(p)]) + p.encode() for p in n.split('.')) + b'\0'
+
+    def rr(self, name, rtype, data):
+        return self.name(name) + struct.pack('>HHIH', rtype, 0x8001, 120, len(data)) + data
+
+    def test_parse_mixer_answer(self):
+        """Same records the TouchMix-16 sent for _ds2inet._tcp (2026-10-21)."""
+        from touchmix.discover import parse_dns, dns_query
+        inst = 'QSC JD HOME._ds2inet._tcp.local'
+        txt = b''.join(bytes([len(t)]) + t for t in
+                       (b'ProtocolVersion=1', b'SWVersion=196608', b'DeviceType=MicroX16'))
+        pkt = (struct.pack('>HHHHHH', 0, 0x8400, 0, 4, 0, 0)
+               + self.rr('_ds2inet._tcp.local', 12, self.name(inst))
+               + self.rr(inst, 16, txt)
+               + self.rr(inst, 33, struct.pack('>HHH', 0, 0, 54596) + self.name('QSC JD HOME.local'))
+               + self.rr('QSC JD HOME.local', 1, bytes([192, 168, 10, 129])))
+        recs = {(n, t): v for n, t, v in parse_dns(pkt)}
+        self.assertEqual(recs[(inst, 33)], (54596, 'QSC JD HOME.local'))
+        self.assertEqual(recs[(inst, 16)]['DeviceType'], 'MicroX16')
+        self.assertEqual(recs[('QSC JD HOME.local', 1)], '192.168.10.129')
+        self.assertEqual(recs[('_ds2inet._tcp.local', 12)], inst)
+        self.assertTrue(dns_query('_ds2inet._tcp.local').endswith(b'\x08_ds2inet\x04_tcp\x05local\x00\x00\x0c\x00\x01'))
+
+    def test_parse_compressed_names(self):
+        from touchmix.discover import parse_dns
+        # the PTR target points back at the question name (offset 12)
+        q = self.name('_ds2inet._tcp.local')
+        ans = b'\xc0\x0c' + struct.pack('>HHIH', 12, 1, 120, 2) + b'\xc0\x0c'
+        pkt = struct.pack('>HHHHHH', 0, 0x8400, 1, 1, 0, 0) + q + struct.pack('>HH', 12, 1) + ans
+        (name, rtype, value), = parse_dns(pkt)
+        self.assertEqual((name, rtype, value), ('_ds2inet._tcp.local', 12, '_ds2inet._tcp.local'))
+
+
 class Client(unittest.TestCase):
     def setUp(self):
         self.mixer = FakeMixer()
@@ -152,7 +196,15 @@ class Client(unittest.TestCase):
 
     def test_discover(self):
         found = discover(['127.0.0.1/32'], port=self.mixer.port)
-        self.assertEqual(found, [('127.0.0.1', 'Test Mixer', 'MicroX16')])
+        self.assertEqual(found, [('127.0.0.1', 'Test Mixer', 'MicroX16', self.mixer.port)])
+        self.assertEqual(found[0].port, self.mixer.port)
+
+    def test_cli_host_with_port(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            rc = main(['--host', '127.0.0.1:%d' % self.mixer.port, 'info'])
+        self.assertEqual(rc, 0)
+        self.assertIn('Test Mixer', out.getvalue())
 
     def test_cli_auto_discovers(self):
         out = io.StringIO()
@@ -176,6 +228,12 @@ class Client(unittest.TestCase):
         self.assertEqual(P.decode_hello(hello), ('Revive-Test', 'MicroX16-AndroidTablet'))
         self.assertIn(P.POLL_REQ, [t for t, _ in self.mixer.received])
         self.assertEqual(self.mixer.mute, 1)
+
+    def test_config_name_varies(self):
+        self.mixer.config_name = 'NH8-config.xml.dscomp'
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            self.assertEqual(tm.config_text[548], 'Vox')
 
     def test_access_rights(self):
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
@@ -270,12 +328,24 @@ class MappingHelpers(unittest.TestCase):
         self.assertIn('stepped', kind)
         self.assertEqual(M.fit_curve([(x, 'Peak') for x in xs])[0], 'text')
         self.assertEqual(M.fit_curve([(x, 1.0) for x in xs])[0], 'constant')
+        kind, formula, _ = M.fit_curve([(x, 1.0 if x >= 0.5 else 0.0) for x in xs])
+        self.assertEqual((kind, formula), ('switch', 'off up to 0.45, on from 0.5'))
 
-    def test_probe_plan_resolves(self):
+    def test_probe_plans_resolve(self):
         t = S.ParamTable()
-        for section, param, band, channels in M.PROBE_PLAN:
-            for c in M.parse_channels(channels):
-                t.find('%s > %s' % (S.strip_path(c), section), param, band - 1)
+        for name, plan in M.PLANS.items():
+            for item in M.plan_items(plan):
+                self.assertTrue(M.plan_pids(t, *item[:4]), (name, item))
+
+    def test_plan_pids_bands(self):
+        t = S.ParamTable()
+        pids = M.plan_pids(t, 'GEQ', '*', 1, 'main')
+        names = [t[p].name.strip() for p in pids]
+        self.assertIn('1000', names)
+        self.assertNotIn('FxEnbl', names)
+        self.assertEqual(len(M.plan_pids(t, 'GEQ', '*', 1, 'main,aux1')), 2 * len(pids))
+        self.assertEqual(t.find('Main > GEQ', '1000').name, '1000 ')     # trailing space in QSC's XML
+        self.assertEqual(S.strip_path('pb'), '2-Trk PB')
 
     def test_builtin_scripts_resolve(self):
         t = S.ParamTable()
@@ -329,7 +399,7 @@ class Mapping(unittest.TestCase):
         c, = first['changes']
         self.assertEqual((c['id'], c['first'], c['last'], c['count']), ('0x021e', 0.5, 0.75, 2))
         self.assertEqual(c['name'], 'In 4 > Control > Fader')
-        self.assertEqual(c['config'], 0.0)
+        self.assertAlmostEqual(c['config'], -0.0627, places=3)
         self.assertTrue(first['expect_seen'])
         self.assertFalse(second['expect_seen'])
         self.assertTrue(second['changes'][0]['background'])
@@ -363,8 +433,8 @@ class Mapping(unittest.TestCase):
         table = M.curve_table(res['points'])
         self.assertEqual(len(table), 9)
         self.assertEqual(table[0], (0.0, -55.0))
-        self.assertEqual(dict(table)[0.75], 0.0)
-        self.assertEqual(dict(table)[1.0], fader_db(1.0))
+        self.assertAlmostEqual(dict(table)[0.75], -0.0627, places=3)
+        self.assertEqual(dict(table)[1.0], 12.0)
         self.assertTrue(res['restored'], self.out)
         self.assertEqual(self.mixer.values[542], -55.0)
         self.assertAlmostEqual(self.mixer.values[618], -6.0, delta=0.05)
@@ -403,6 +473,50 @@ class Mapping(unittest.TestCase):
         self.assertIn('Control Fader', M.format_summary(summary))
         self.assertEqual(self.mixer.values[545], 'C')
 
+    def test_probe_more_pids_than_values(self):
+        s = self.session()
+        try:
+            res = M.probe(s, [0x21E, 0x26A, 0x21F], M.sweep_values(2), say=self.out.append, restore=False)
+        finally:
+            s.close()
+        self.assertEqual(sorted(p['id'] for p in res['points']), ['0x021e', '0x021f', '0x026a'])
+        self.assertEqual({p['id']: p['wire'] for p in res['points']},
+                         {'0x021e': 0.0, '0x026a': 1.0, '0x021f': 0.0})
+
+    def test_send_chunked_caps_message_size(self):
+        class Rec:
+            calls = []
+
+            def set_many(self, changes):
+                self.calls.append(list(changes))
+        rec = Rec()
+        M.send_chunked(rec, [(i, 0.0) for i in range(40)], size=16)
+        self.assertEqual([len(c) for c in rec.calls], [16, 16, 8])
+
+    def test_probe_batches_and_checkpoints(self):
+        saved = []
+        s = self.session()
+        try:
+            res = M.probe(s, [0x21E, 0x26A], M.sweep_values(4), say=self.out.append,
+                          checkpoint=saved.append, max_batch=1)
+        finally:
+            s.close()
+        self.assertEqual(saved, [{0x21E: -55.0, 0x26A: -6.0}])
+        sizes = [P.decode_param_set(p) for t, p in self.mixer.received if t == P.PARAM_SET]
+        self.assertTrue(all(len(list(d)) == 1 for d in sizes))
+        self.assertEqual(len(res['points']), 4)
+        self.assertTrue(res['restored'], self.out)
+
+    def test_cli_map_restore(self):
+        import tempfile
+        path = os.path.join(tempfile.mkdtemp(), 'restore-point.json')
+        M.save_restore_point(path, '127.0.0.1', 'Test Mixer', 'Fader', {0x21E: -20.0, 0x26A: -55.0})
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'map', 'restore', path, '--yes'])
+        self.assertEqual(rc, 0)
+        self.assertEqual(self.mixer.values[618], -55.0)
+        self.assertAlmostEqual(self.mixer.values[542], -20.0, places=3)     # straight from the known fader law
+
     def test_probe_warns_when_nothing_changes(self):
         s = self.session()
         try:
@@ -426,7 +540,7 @@ class Mapping(unittest.TestCase):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             main(['map', 'show', path])
-        self.assertIn('0.7500    0.0', out.getvalue())
+        self.assertIn('0.7500    -0.0627', out.getvalue())
 
 
 if __name__ == '__main__':

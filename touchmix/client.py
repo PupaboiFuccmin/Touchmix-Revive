@@ -10,7 +10,8 @@ from . import protocol as P
 from .params import (ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
                      send_name, curve_for)
 
-CONFIG_FILE = 'NH4-config.xml.dscomp'
+# The number varies: NH4 on some connections, NH8 on others (seen 2026-10-21)
+CONFIG_FILE = re.compile(r'NH\d+-config\.xml\.dscomp$')
 SETTINGS_SUFFIX = '.settings.dqx.dscomp'
 
 
@@ -29,11 +30,14 @@ class TouchMix:
         with TouchMix('192.168.1.1') as tm:
             tm.wait_ready()
             tm.mute(4, True)
+
+    Without a port, connect() asks the network (mDNS) which port the mixer
+    is listening on: it changes when the mixer reboots.
     """
 
-    def __init__(self, host, port=P.PORT, name=None, device_type='AndroidTablet',
+    def __init__(self, host, port=None, name=None, device_type='AndroidTablet',
                  poll_interval=0.1, timeout=5.0, params=None):
-        self.host, self.port = host, port
+        self.host, self.port = host, port   # None: looked up over mDNS on connect
         self.name = name or default_client_name()
         self.device_type = device_type
         self.poll_interval = poll_interval
@@ -42,7 +46,7 @@ class TouchMix:
 
         self.mixer_name = None
         self.mixer_suffix = None
-        self.config = {}        # index -> value string from NH4-config.xml (engineering units)
+        self.config = {}        # index -> value string from NH<n>-config.xml (engineering units)
         self.config_text = {}   # index -> text attribute (names etc.)
         self.live = {}          # index -> normalized float last seen on the wire
         self.files = {}         # file name -> inflated bytes
@@ -65,6 +69,10 @@ class TouchMix:
     # ------------------------------------------------------------ lifecycle
 
     def connect(self):
+        if not self.port:
+            # the control port changes when the mixer reboots; it advertises it over mDNS
+            from .discover import lookup_port
+            self.port = lookup_port(self.host) or P.PORT
         self._sock = socket.create_connection((self.host, self.port), timeout=self.timeout)
         self._sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         # the mixer greets first
@@ -166,7 +174,7 @@ class TouchMix:
         self.set(self.channel_param(channel, 'Pan'), pan_to_norm(value))
 
     def set_value(self, channel, section, name, value, band=1):
-        """Set a control in real units, via the curve table in params.CURVES:
+        """Set a control in real units, via the curve tables in params.py:
         set_value(4, 'Comp', 'Thresh', -20), set_value(4, 'EQ', 'Q', 2, band=3)."""
         par = self.params.find('%s > %s' % (strip_path(channel), section), name, band - 1)
         curve = curve_for(par.path, par.name)
@@ -277,7 +285,7 @@ class TouchMix:
             except zlib.error:
                 pass
             self.files[name] = raw
-            if name == CONFIG_FILE:
+            if CONFIG_FILE.match(name):
                 self._load_config(raw)
                 self._ready.set()
             elif name.endswith(SETTINGS_SUFFIX):

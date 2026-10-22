@@ -1,0 +1,65 @@
+{
+ "kind": "probe",
+ "created": "2026-10-21T20:08:16",
+ "mixer": "QSC JD HOME",
+ "host": "192.168.10.129",
+ "section": "GEQ",
+ "param": "FxEnbl",
+ "band": 1,
+ "channels": [
+  "main",
+  "aux1",
+  "aux2",
+  "aux3",
+  "aux4",
+  "aux5",
+  "aux6"
+ ],
+ "points": [
+  {
+   "id": "0x0036",
+   "wire": 0.0,
+   "eng": 0.0
+  },
+  {
+   "id": "0x06c1",
+   "wire": 0.25,
+   "eng": 0.0
+  },
+  {
+   "id": "0x077c",
+   "wire": 0.5,
+   "eng": 1.0
+  },
+  {
+   "id": "0x0837",
+   "wire": 0.75,
+   "eng": 1.0
+  },
+  {
+   "id": "0x08f2",
+   "wire": 1.0,
+   "eng": 1.0
+  },
+  {
+   "id": "0x09ad",
+   "wire": 0.0,
+   "eng": 0.0
+  },
+  {
+   "id": "0x0a68",
+   "wire": 0.25,
+   "eng": 0.0
+  }
+ ],
+ "originals": {
+  "0x0036": 1.0,
+  "0x06c1": 1.0,
+  "0x077c": 1.0,
+  "0x0837": 1.0,
+  "0x08f2": 1.0,
+  "0x09ad": 1.0,
+  "0x0a68": 1.0
+ },
+ "restored": true
+}
