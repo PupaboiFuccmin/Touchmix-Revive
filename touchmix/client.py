@@ -1,6 +1,7 @@
 """TouchMix-16 network client."""
 import re
 import socket
+import struct
 import threading
 import time
 import xml.etree.ElementTree as ET
@@ -68,6 +69,8 @@ class TouchMix:
         self._send_lock = threading.Lock()
         self._ready = threading.Event()
         self._access_known = threading.Event()
+        self._index_known = threading.Event()
+        self._recalled = threading.Event()
         self._closed = threading.Event()
         self._file_buf = {}
         self._file_name = None
@@ -243,6 +246,56 @@ class TouchMix:
         self.set_many([('Global > Transport > Multi-track Enable', 0.0 if on else 1.0),
                        ('Global > Misc Input > Playback', int_to_norm(0 if on else 1))])
 
+    # Scenes. Recall from the PC is not confirmed yet: recall_scene() reports
+    # whether the mixer answered with all-config, which it does after every
+    # recall made on its own screen.
+
+    SCENE_LOCATIONS = {'0': 'factory', '1': 'user', '3': 'usb'}
+
+    def scenes(self, timeout=5.0):
+        """Scenes in the file index: [{'name', 'file', 'uuid', 'location', 'current'}]."""
+        self._index_known.wait(timeout)
+        raw = next((v for k, v in self.files.items() if k.startswith('fileIndex')), None)
+        if raw is None:
+            return []
+        current = self.current_scene_uuid()
+        out = []
+        for c in ET.fromstring(raw).iter('Collection'):
+            if c.get('Type') != '0':
+                continue
+            for f in c.iter('File'):
+                out.append(dict(name=f.get('Description', ''), file=f.get('Path', '').rsplit('/', 1)[-1],
+                                uuid=f.get('Uuid', ''), location=self.SCENE_LOCATIONS.get(c.get('Location'), c.get('Location')),
+                                current=f.get('Uuid') == current))
+        return out
+
+    def current_scene_uuid(self):
+        """The scene last saved or recalled, from FileMan > Scene Uuid0-7."""
+        try:
+            words = [int(float(self.config.get(self.resolve('Global > FileMan > Scene Uuid%d' % i)))) for i in range(8)]
+        except (TypeError, ValueError):
+            return None
+        return b''.join(struct.pack('<H', w) for w in words).hex()
+
+    def find_scene(self, name):
+        """A scene by name, file name or UUID (case-insensitive)."""
+        key = name.strip().lower()
+        for s in self.scenes():
+            if key in (s['name'].lower(), s['file'].lower(), s['file'].lower().split('.')[0], s['uuid']):
+                return s
+        raise KeyError('no scene %r (see scene list)' % name)
+
+    def recall_scene(self, name, trigger=0.0, timeout=6.0):
+        """Write the scene's UUID to FileMan > Scene Uuid0-7, then FileMan > Recall.
+        Returns True if the mixer sent its post-recall state (all-config)."""
+        scene = self.find_scene(name)
+        words = struct.unpack('<8H', bytes.fromhex(scene['uuid']))
+        self.set_many([('Global > FileMan > Scene Uuid%d' % i, w / 65536.0) for i, w in enumerate(words)])
+        time.sleep(0.3)
+        self._recalled.clear()
+        self.set('Global > FileMan > Recall', trigger)
+        return self._recalled.wait(timeout)
+
     def fx_type(self, fx, kind):
         """Pick FX 1-4's processor: 'none', 'chorus', 'delay', 'pitch', 'dense',
         'lush' or 'mono-delay'. The mixer loads that processor's default preset."""
@@ -378,6 +431,10 @@ class TouchMix:
             if CONFIG_FILE.match(name):
                 self._load_config(raw)
                 self._ready.set()
+                if name.startswith('all-'):
+                    self._recalled.set()        # the full state the mixer sends after a recall
+            elif name.startswith('fileIndex'):
+                self._index_known.set()
             elif name.endswith(SETTINGS_SUFFIX):
                 self._load_access(raw)
         elif self._file_name is not None:

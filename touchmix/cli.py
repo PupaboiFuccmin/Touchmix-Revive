@@ -492,6 +492,31 @@ def cmd_collect(args):
     print('Done: %d copied, %d already there.' % (copied, skipped))
 
 
+def cmd_scene(args):
+    """scene list | recall NAME"""
+    tm = open_mixer(args)
+    try:
+        if args.action == 'list':
+            for s in tm.scenes():
+                print('  %s %-8s %-24s %s' % ('*' if s['current'] else ' ', s['location'], s['name'], s['uuid']))
+            print('(* = last saved or recalled)')
+            return
+        if not args.name:
+            sys.exit('scene recall needs a scene name (see scene list)')
+        warn_no_access(tm)
+        scene = tm.find_scene(args.name)
+        print('Recalling %s scene %r ...' % (scene['location'], scene['name']))
+        if tm.recall_scene(args.name, trigger=args.trigger):
+            print('The mixer sent its new state: recalled.')
+            return 0
+        print('No answer from the mixer within %d s: the recall probably did not happen.' % 6)
+        if args.trigger == 0:
+            print('Try again with --trigger 1.')
+        return 2
+    finally:
+        tm.close()
+
+
 def cmd_fx(args):
     """fx N type [KIND]: show or pick FX N's processor."""
     pid = ParamTable().find('FX %d > Editor' % args.fx, 'FX type').index
@@ -845,6 +870,12 @@ def main(argv=None):
     co.add_argument('--out', help='where to put it (default: ~/Music/TouchMix)')
     co.add_argument('--no-names', action='store_true', help="don't ask the mixer for channel names")
     co.set_defaults(fn=cmd_collect)
+
+    sc = sub.add_parser('scene', help='list scenes, or recall one: scene recall TEST')
+    sc.add_argument('action', choices=['list', 'recall'])
+    sc.add_argument('name', nargs='?', help='scene name, file name or UUID')
+    sc.add_argument('--trigger', type=float, default=0.0, help='value written to FileMan > Recall (default 0)')
+    sc.set_defaults(fn=cmd_scene)
 
     fx = sub.add_parser('fx', help='show or pick an FX processor: fx 1 type lush')
     fx.add_argument('fx', type=int, choices=[1, 2, 3, 4])

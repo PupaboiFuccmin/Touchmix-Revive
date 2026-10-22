@@ -495,6 +495,30 @@ class Client(unittest.TestCase):
             self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'set',
                                    'Global > Control > Demo Enabled', '0', '--force']), 0)
 
+    def test_scene_list_and_recall(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'list']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'usr']), 0)
+        self.assertIn('TEST', out.getvalue())
+        self.assertIn('recalled', out.getvalue())
+        # the UUID words went out exactly as the mixer reported them for a scene save
+        self.assertEqual(self.mixer.recalled, ['af18348e0817414895e398710bf6f0bb'])
+        writes = [(pid, v) for t, p in self.mixer.received if t == P.PARAM_SET
+                  for pid, _, _, v in P.decode_param_set(p)]
+        self.assertEqual(writes[-1], (0x0FB, 0.0))
+
+    def test_scene_recall_reports_no_answer(self):
+        self.mixer.recall_trigger = 1.0          # this mixer ignores Recall = 0
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'TEST'])
+            self.assertEqual(rc, 2)
+            self.assertIn('--trigger 1', out.getvalue())
+            rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'TEST', '--trigger', '1'])
+        self.assertEqual(rc, 0)
+        self.assertEqual(self.mixer.recalled, ['790091c8bc2044e880d34b355d7bbd21'])
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

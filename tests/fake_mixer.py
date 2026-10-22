@@ -49,6 +49,19 @@ SETTINGS = '''<?xml version="1.0" encoding="UTF-8"?>
 </DQData>
 '''
 
+FILE_INDEX = '''<?xml version="1.0" encoding="UTF-8"?>
+<Index Version="1">
+  <Collection Type="0" Location="0">
+    <File Path="/usr/share/ds2i/factory/scenes/DEFAULT.scene.dqx" Uuid="5ef99f1a29a3fe853a6d2c4a7c51e85f" Description="(Default)"/>
+  </Collection>
+  <Collection Type="0" Location="1">
+    <File Path="/usr/share/ds2i/user/scenes/TEST.scene.dqx" Uuid="790091c8bc2044e880d34b355d7bbd21" Description="TEST"/>
+    <File Path="/usr/share/ds2i/user/scenes/USR.scene.dqx" Uuid="af18348e0817414895e398710bf6f0bb" Description="usr"/>
+  </Collection>
+  <Collection Type="100" Location="0"/>
+</Index>
+'''
+
 FADERS = (542, 618)
 
 
@@ -65,6 +78,9 @@ class FakeMixer:
         self.access = access     # like the real mixer, writes are ignored without it
         self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0}
         self.texts = {554: 'Vox'}
+        self.recall_trigger = 0.0        # the value of FileMan > Recall that makes it recall
+        self.scene_uuid = [0] * 8        # FileMan > Scene Uuid0-7, as words
+        self.recalled = []
         self.received = []
         self.clients = []
         self.srv = socket.socket()
@@ -154,6 +170,7 @@ class FakeMixer:
                         c.sendall(P.frame(P.SESSION, b'\xb4\x9c\x01\x00\x00\x00')
                                   + P.frame(P.STATUS, struct.pack('<Hf', 0xCE, 0.99))
                                   + self._config_file()
+                                  + self._file('fileIndex.xml.dscomp', FILE_INDEX, 'tmp')
                                   + self._settings_file(P.decode_hello(payload)[0]))
                     elif msg_type == P.POLL_REQ:
                         seq = payload[:4]
@@ -162,6 +179,13 @@ class FakeMixer:
                         for pid, _, _, value in P.decode_param_set(payload):
                             if self.access:
                                 self.apply(pid, value)
+                            if self.access and 0x101 <= pid <= 0x108:
+                                self.scene_uuid[pid - 0x101] = round(value * 65536)
+                            if self.access and pid == 0x0FB and value == self.recall_trigger:
+                                self.recalled.append(bytes(struct.pack('<8H', *self.scene_uuid)).hex())
+                                name, self.config_name = self.config_name, 'all-config.xml.dscomp'
+                                c.sendall(self._config_file())
+                                self.config_name = name
                     elif msg_type == P.TEXT:
                         pid, text = P.decode_text(payload)
                         if self.access and pid in self.texts:
