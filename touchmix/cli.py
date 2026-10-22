@@ -14,6 +14,7 @@ Examples:
   python -m touchmix record status
   python -m touchmix record arm 1-8
   python -m touchmix record start
+  python -m touchmix collect
   python -m touchmix param 4 Comp Thresh -20
   python -m touchmix param 4 EQ Q 2 --band 3
   python -m touchmix eq 4 1 gain -3
@@ -31,6 +32,7 @@ import time
 
 from .discover import discover, default_subnets, lookup_port, mdns_browse
 from . import protocol as P
+from . import collect as C
 from . import mapping as M
 from .mapping import parse_channels
 from .client import TouchMix, TouchMixError
@@ -380,6 +382,69 @@ def cmd_mp3(args):
         tm.close()
 
 
+def channel_names_from_mixer(args):
+    """Channel names from the mixer, or {} (with a note) if it can't be reached."""
+    try:
+        host = args.host or os.environ.get('TOUCHMIX_HOST')
+        if host:
+            tm = TouchMix(pick_host(args), port=args.port, name=args.name)
+        else:
+            found = discover(args.subnet, port=args.port)
+            if not found:
+                raise TouchMixError('no mixer found on the network')
+            tm = TouchMix(found[0].ip, port=found[0].port, name=args.name)
+        tm.connect()
+        try:
+            tm.wait_ready()
+            names = C.mixer_channel_names(tm)
+        finally:
+            tm.close()
+        print('Channel names from %s' % tm.mixer_name)
+        return names
+    except (TouchMixError, OSError) as e:
+        print('(mixer not reachable: %s; using In 1, In 2, ...)' % e)
+        return {}
+
+
+def cmd_collect(args):
+    """Copy a recorded session off a TouchMix USB drive, named after the channels."""
+    drives = [args.drive] if args.drive else C.find_drives()
+    if not drives:
+        sys.exit('No TouchMix drive found. Plug the USB drive into this PC, or pass --drive.')
+    if len(drives) > 1:
+        sys.exit('Several TouchMix drives found (%s); pick one with --drive.' % ', '.join(drives))
+    found = C.sessions(drives[0])
+    if not found:
+        sys.exit('No sessions on %s.' % drives[0])
+    if args.list:
+        print('Sessions on %s, newest first:' % drives[0])
+        for s in found:
+            print('  %-24s %s  %2d tracks  %7.1f MB%s' % (
+                s.name, time.strftime('%Y-%m-%d %H:%M', time.localtime(s.mtime)), len(s.tracks),
+                s.size / 1e6, '' if s.has_header else '  (no header: not stopped properly?)'))
+        return
+    if args.session:
+        match = [s for s in found if s.name.lower() == args.session.lower()]
+        if not match:
+            sys.exit('No session %r on %s (see collect --list).' % (args.session, drives[0]))
+        session = match[0]
+    else:
+        session = found[0]
+    if not session.tracks:
+        sys.exit('Session %s has no recorded tracks (nothing was armed?).' % session.name)
+    if not session.has_header:
+        print('!! %s has no header file: recording may not have been stopped properly.' % session.name)
+    names = {} if args.no_names else channel_names_from_mixer(args)
+    C.label_tracks(session, names)
+    out = os.path.join(args.out or C.default_out_dir(),
+                       '%s %s' % (session.name, time.strftime('%Y-%m-%d %H%M', time.localtime(session.mtime))))
+    plan = C.plan_copy(session, out)
+    print('Session %s: %d tracks, %d files, %.1f MB -> %s' % (
+        session.name, len(session.tracks), len(plan), session.size / 1e6, out))
+    copied, skipped = C.copy_session(plan)
+    print('Done: %d copied, %d already there.' % (copied, skipped))
+
+
 def cmd_find(args):
     for p in ParamTable().search(args.text):
         print('%5d 0x%04x  %s' % (p.index, p.index, p.full_name))
@@ -611,6 +676,14 @@ def main(argv=None):
     mp.add_argument('action', choices=['status', 'mode', 'play', 'stop', 'next', 'previous', 'top', 'select'])
     mp.add_argument('value', nargs='?', help='mode: on/off; select or play: song number, 1 = first')
     mp.set_defaults(fn=cmd_mp3)
+
+    co = sub.add_parser('collect', help='copy the newest recording off the USB drive, one file per channel')
+    co.add_argument('--drive', help='drive or folder holding the sessions (default: find it)')
+    co.add_argument('--session', help='session name (default: the newest)')
+    co.add_argument('--list', action='store_true', help='list the sessions on the drive and stop')
+    co.add_argument('--out', help='where to put it (default: ~/Music/TouchMix)')
+    co.add_argument('--no-names', action='store_true', help="don't ask the mixer for channel names")
+    co.set_defaults(fn=cmd_collect)
 
     f = sub.add_parser('find', help='search parameter names (offline)')
     f.add_argument('text')

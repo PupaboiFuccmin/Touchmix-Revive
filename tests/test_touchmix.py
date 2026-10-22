@@ -226,7 +226,7 @@ class Client(unittest.TestCase):
             tm.wait_ready(5)
             self.assertEqual(tm.mixer_name, 'Test Mixer')
             self.assertEqual(tm.config_value('In 4 > Control > Mute'), ('0', None))
-            self.assertEqual(tm.config_text[548], 'Vox')
+            self.assertEqual(tm.config_text[554], 'Vox')
             tm.mute(4, True)
             time.sleep(0.3)
         hello = [p for t, p in self.mixer.received if t == P.HELLO][0]
@@ -246,7 +246,7 @@ class Client(unittest.TestCase):
         self.mixer.config_name = 'NH8-config.xml.dscomp'
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
             tm.wait_ready(5)
-            self.assertEqual(tm.config_text[548], 'Vox')
+            self.assertEqual(tm.config_text[554], 'Vox')
 
     def test_access_rights(self):
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:

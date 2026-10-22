@@ -124,6 +124,7 @@ python3 -m touchmix record start               # start / stop / play / rtz (retu
 python3 -m touchmix mp3 status                 # USB MP3 player: mode, song, transport
 python3 -m touchmix mp3 mode on                # MP3 playback mode (off = back to multitrack)
 python3 -m touchmix mp3 play 2                 # play song 2; also stop, next, previous, top
+python3 -m touchmix collect                    # copy the newest recording off the USB drive (see below)
 python3 -m touchmix find "aux 1 > comp"        # search parameter names (offline)
 python3 -m touchmix set "In 4 > Control > Phase" 1   # any parameter, raw 0..1 value
 ```
@@ -140,6 +141,45 @@ playback) and `talkback`.
 `Lo-Cut`, `Hi-Cut`, `Gate`, `Comp`, `De-Esser`, `GEQ`, `Anti FB` and `HPF`.
 Values are in the control's own units (dB, Hz, ms, ratio, or on/off). See
 [Value scaling](docs/PROTOCOL.md#value-scaling) for every range.
+
+## Recording to your DAW
+
+The mixer records to its USB drive only. Recordings can't be pulled over the
+network (see [RESEARCH.md](docs/RESEARCH.md)), but the rest can be run from the
+PC:
+
+```sh
+python3 -m touchmix record arm 1-8           # arm the channels you want
+python3 -m touchmix record start
+python3 -m touchmix record stop              # always stop before unplugging the drive
+```
+
+Then plug the drive into the PC and run:
+
+```sh
+python3 -m touchmix collect
+```
+```
+Channel names from QSC JD HOME
+Session DEFAULT: 2 tracks, 2 files, 3.2 MB -> C:\Users\you\Music\TouchMix\DEFAULT 2026-10-22 0322
+  copy  01 Kick.wav
+  copy  02 Snare.wav
+```
+
+`collect` finds the drive and the newest session, and copies each recorded
+track to `Music/TouchMix/<session> <date>/` as `NN <channel name>.wav`. It
+reads the names from the mixer if it can reach it. Each start and stop makes
+a new region, so a channel recorded in three takes becomes `01 Kick - R1.wav`,
+`- R2`, `- R3`. The files are 32-bit integer WAV that DAWs import as they are.
+
+`collect` only reads the drive. Changing anything on it can make the session
+unusable on the mixer. It never overwrites files it copied before, so it is
+safe to run again. Options: `--list` lists the sessions, `--session NAME`
+picks one, `--out DIR` sets the destination, `--drive D:\` names the drive,
+and `--no-names` skips the mixer.
+
+Tracks 1–16 are inputs 1–16, 17/18 and 19/20 the two stereo inputs, and
+21/22 the 2-track recording.
 
 ## From Python
 

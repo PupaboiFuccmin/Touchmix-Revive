@@ -20,7 +20,7 @@ CONFIG = '''<?xml version="1.0" encoding="UTF-8"?>
       <Parameter Type="41" Instance="0" name="Fader" value="{v[542]}" Index="542"/>
       <Parameter Type="2" Instance="0" name="Mute" value="{v[543]}" Index="543"/>
       <Parameter Type="4" Instance="0" name="Pan" value="{v[545]}" Index="545"/>
-      <Parameter Type="165" Instance="0" name="Name" value="0" Index="548" text="Vox"/>
+      <Parameter Type="165" Instance="0" name="Name" value="0" Index="554" text="Vox"/>
     </Effect>
   </Channel>
   <Channel Type="0" Instance="4" Version="0" Name="In 5">

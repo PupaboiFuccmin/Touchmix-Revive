@@ -168,7 +168,15 @@ over the control connection. So far everything points to no:
   `fileIndex.xml`, which covers scenes and presets but not recording sessions.
 
 A request could still hide behind a confirm button nobody has pressed in a
-capture yet. Until one shows up, recordings come off the USB drive.
+capture yet. Until one shows up, recordings come off the USB drive, and
+`touchmix collect` copies them off with channel names (see the README).
+
+**Recording format**, from a 9 s test recorded from the PC on 2026-10-22: mono
+broadcast WAV (`JUNK`, `fmt `, `bext` with originator "MicroX", `data`), format
+tag 1 (integer PCM), 32 bits, at the mixer's sample rate (44.1 kHz that day).
+Read as int32 the samples are plausible input noise (about −68 dBFS); read as
+float they are meaningless denormals. So despite QSC's "32-bit float", these
+are 32-bit integers, and DAWs read them without conversion.
 
 ## Next steps
 
