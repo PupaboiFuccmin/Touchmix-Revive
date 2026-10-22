@@ -199,6 +199,20 @@ So on bands 1 and 4, `BndEnbl` is the bell/shelf switch, not a band on/off.
 screen has **no mode selector** (confirmed on the mixer), so the `Comp > Mode`
 value the mixer reports on connect isn't a front-panel control for inputs.
 
+## Input source and channel names
+
+From `map tour source,names` on channel 16 (2026-10-22,
+`mappings/tour-source-names-20261022-001134.log`):
+
+* **Track / Input** (Record/Play screen): `In N > Control > Source`, 0 = live
+  input, 1 = Track (the recorder). The mixer also reports
+  `In N > Control > Tracking`, the channel's recorder state as n/2: 0 normal,
+  1 playing from Track, 2 armed for recording (seen earlier when arming).
+* **Renaming** (Setup tab > Name): the mixer reports a **9.1 text** message
+  with the new name for `In N > Control > Name` (`0x05BA` on channel 16),
+  plus a 5.1 `Name` = 0. Whether a client can rename by sending the same 9.1
+  is untested.
+
 ## Pulling recordings over the network: no sign of it
 
 Brainstorm priority 2 asked whether recorded tracks can come off the mixer
