@@ -71,6 +71,12 @@ tm.transport('play')
 title = tm.config_text[0x0118]   # 'Global > Control > Current Song', kept up to date
 ```
 
+**FX processors:**
+
+```python
+tm.fx_type(1, 'lush')         # chorus, delay, pitch, dense, lush, mono-delay, none
+```
+
 **Names and other text settings:**
 
 ```python

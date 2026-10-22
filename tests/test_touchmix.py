@@ -462,6 +462,17 @@ class Client(unittest.TestCase):
         # the bytes sent to the real mixer on 2026-10-22, which renamed In 16
         self.assertEqual(P.encode_text(0x05BA, 'In 16').hex(), '090001001100' + 'ba0500000500496e203136')
 
+    def test_cli_fx_type(self):
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'fx', '1', 'type', 'lush']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'fx', '1', 'type', 'Mono Delay']), 0)
+        writes = [(pid, v) for t, p in self.mixer.received if t == P.PARAM_SET
+                  for pid, _, _, v in P.decode_param_set(p)]
+        # the mixer reported Lush Reverb as 5/1024 and Mono Delay as 6/1024 on FX 1 (0x0B96)
+        self.assertEqual(writes, [(0x0B96, 5 / 1024.0), (0x0B96, 6 / 1024.0)])
+        self.assertEqual(S.fx_type_number('Stereo Delay'), 2)
+        self.assertRaises(ValueError, S.fx_type_number, 'flanger')
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

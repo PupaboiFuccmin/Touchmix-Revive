@@ -8,7 +8,7 @@ import zlib
 
 from . import protocol as P
 from .params import (ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
-                     send_name, curve_for, transport_to_norm, int_to_norm)
+                     send_name, curve_for, transport_to_norm, int_to_norm, fx_type_number)
 
 # The full mixer state. Sent on connect as NH<n>-config (NH4 on some
 # connections, NH8 on others), and again as all-config after every scene or
@@ -232,6 +232,11 @@ class TouchMix:
         These are the two values the mixer reported when the mode was switched."""
         self.set_many([('Global > Transport > Multi-track Enable', 0.0 if on else 1.0),
                        ('Global > Misc Input > Playback', int_to_norm(0 if on else 1))])
+
+    def fx_type(self, fx, kind):
+        """Pick FX 1-4's processor: 'none', 'chorus', 'delay', 'pitch', 'dense',
+        'lush' or 'mono-delay'. The mixer loads that processor's default preset."""
+        self.set('FX %d > Editor > FX type' % int(fx), int_to_norm(fx_type_number(kind)))
 
     def set_text(self, param, text):
         """Set a text parameter, e.g. 'In 4 > Control > Name'. ASCII only."""

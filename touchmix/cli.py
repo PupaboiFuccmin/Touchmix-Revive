@@ -37,7 +37,8 @@ from . import collect as C
 from . import mapping as M
 from .mapping import parse_channels
 from .client import TouchMix, TouchMixError
-from .params import ParamTable, strip_path, send_name, curve_for, TRANSPORT_STATES, transport_name
+from .params import (ParamTable, strip_path, send_name, curve_for, TRANSPORT_STATES, transport_name,
+                     FX_TYPE_NAMES, fx_type_number)
 
 
 def pick_host(args):
@@ -487,6 +488,22 @@ def cmd_collect(args):
     print('Done: %d copied, %d already there.' % (copied, skipped))
 
 
+def cmd_fx(args):
+    """fx N type [KIND]: show or pick FX N's processor."""
+    pid = ParamTable().find('FX %d > Editor' % args.fx, 'FX type').index
+    preset = ParamTable().find('FX %d > Control' % args.fx, 'Preset').index
+    if args.kind is None:
+        tm = open_mixer(args)
+        try:
+            n = int(float(tm.config.get(pid) or 0))
+            print('FX %d: %s (preset %r)' % (args.fx, FX_TYPE_NAMES.get(n, n), tm.config_text.get(preset, '')))
+        finally:
+            tm.close()
+        return
+    n = fx_type_number(args.kind)
+    return apply_and_verify(args, lambda tm: tm.fx_type(args.fx, n), pid)
+
+
 def cmd_name(args):
     pid = ParamTable().find('%s > Control' % strip_path(args.channel), 'Name').index
     tm = open_mixer(args)
@@ -822,6 +839,13 @@ def main(argv=None):
     co.add_argument('--out', help='where to put it (default: ~/Music/TouchMix)')
     co.add_argument('--no-names', action='store_true', help="don't ask the mixer for channel names")
     co.set_defaults(fn=cmd_collect)
+
+    fx = sub.add_parser('fx', help='show or pick an FX processor: fx 1 type lush')
+    fx.add_argument('fx', type=int, choices=[1, 2, 3, 4])
+    fx.add_argument('what', choices=['type'])
+    fx.add_argument('kind', nargs='?', help='none, chorus, delay, pitch, dense, lush, mono-delay (omit to show)')
+    fx.add_argument('--verify', action='store_true', help='reconnect and check the mixer stored it')
+    fx.set_defaults(fn=cmd_fx)
 
     nm = sub.add_parser('name', help='rename a channel, e.g. name 16 Kick')
     nm.add_argument('channel', help='1-16, st17, st19, main, aux1-10, fx1-4, dca1-8')

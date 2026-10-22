@@ -214,6 +214,28 @@ From `map tour source,names` on channel 16 (2026-10-22,
   channel** (tested on In 16: "in 16" → "In 16"). The mixer does not echo it
   back to the sender. `touchmix name 16 Kick` does this.
 
+## FX processors
+
+From `map tour fx` (2026-10-22, `mappings/tour-fx-20261022-002752.log`).
+On firmware 3, touching FX 1 in the FX Masters bank opens the processor picker
+directly. The choice is `FX N > Editor > FX type`, an integer sent as n/1024:
+
+| FX type | Processor | Default preset loaded | File index preset type |
+|--------:|-----------|-----------------------|-----------------------:|
+| 0 | None | | |
+| 1 | Chorus | Chorus Med | 205 |
+| 2 | Stereo Delay | ST Med Delay | 206 |
+| 3 | Pitch Shift | Pitch-Light Detune | 207 |
+| 4 | Dense Reverb | D Live Plate Med | 208 |
+| 5 | Lush Reverb | L Med Hall | 209 |
+| 6 | Mono Delay | Mono 250 Delay | 210 |
+
+Picking a processor makes the mixer load its default preset. The preset's name
+arrives as 9.1 text on `FX N > Control > Preset`, and the processor's own
+parameters update. **Writing `FX type` from the PC does the same** (tested:
+FX 1 Mono Delay → Lush Reverb → Mono Delay, each confirmed by read-back).
+`touchmix fx 1 type lush` and `TouchMix.fx_type()` do this.
+
 ## Pulling recordings over the network: no sign of it
 
 Brainstorm priority 2 asked whether recorded tracks can come off the mixer

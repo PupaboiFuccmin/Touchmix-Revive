@@ -173,6 +173,27 @@ FADER_0DB = fader_db_to_norm(0.0)   # 0.7512; the app sends 0.75 (-0.06 dB)
 # sent as n/7, from `map run transport` and an MP3 player log (2026-10-21).
 # 'rtz' is return to zero for the recorder and top of list for the MP3 player.
 # 6 and 7 are unknown.
+# FX processor (FX N > Editor > FX type), an integer sent as n/1024, from
+# `map tour fx` (2026-10-22). Picking one loads its default preset. In the file
+# index, that processor's presets are type 204 + n (205 chorus ... 210 mono delay).
+FX_TYPES = {'none': 0, 'chorus': 1, 'delay': 2, 'pitch': 3, 'dense': 4, 'lush': 5, 'mono-delay': 6}
+FX_TYPE_NAMES = {0: 'None', 1: 'Chorus', 2: 'Stereo Delay', 3: 'Pitch Shift', 4: 'Dense Reverb',
+                 5: 'Lush Reverb', 6: 'Mono Delay'}
+
+
+def fx_type_number(name):
+    """'lush', 'Lush Reverb', 'mono-delay', '5' ... -> 0..6."""
+    s = str(name).strip().lower().replace(' ', '-')
+    if s.isdigit() and int(s) in FX_TYPE_NAMES:
+        return int(s)
+    aliases = {'stereo-delay': 'delay', 'pitch-shift': 'pitch', 'dense-reverb': 'dense',
+               'lush-reverb': 'lush', 'mono': 'mono-delay', 'monodelay': 'mono-delay'}
+    s = aliases.get(s, s)
+    if s not in FX_TYPES:
+        raise ValueError('unknown FX type %r (use %s)' % (name, ', '.join(FX_TYPES)))
+    return FX_TYPES[s]
+
+
 TRANSPORT_STATES = {'stop': 0, 'play': 1, 'record': 2, 'next': 3, 'previous': 4, 'rtz': 5}
 TRANSPORT_STEPS = 7
 

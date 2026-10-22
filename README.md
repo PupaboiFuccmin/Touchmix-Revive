@@ -127,6 +127,7 @@ python3 -m touchmix mp3 mode on                # MP3 playback mode (off = back t
 python3 -m touchmix mp3 play 2                 # play song 2; also stop, next, previous, top
 python3 -m touchmix collect                    # copy the newest recording off the USB drive (see below)
 python3 -m touchmix name 16 Kick               # rename a channel (inputs, auxes, FX, DCAs)
+python3 -m touchmix fx 1 type lush             # FX processor: none, chorus, delay, pitch, dense, lush, mono-delay
 python3 -m touchmix find "aux 1 > comp"        # search parameter names (offline)
 python3 -m touchmix set "In 4 > Control > Phase" 1   # any parameter, raw 0..1 value
 ```
