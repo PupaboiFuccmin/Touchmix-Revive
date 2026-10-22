@@ -1,0 +1,154 @@
+00:34:39 MSG 2.2 len=6 b49c01000000
+00:34:39 0x0696 0.0000                raw=00000000 tag=0000 Aux 1 > Control > Link
+00:34:39 0x0699 1.0000                raw=3f800000 tag=0000 Aux 1 > Comp > Mode
+00:34:39 0x0751 0.0000                raw=00000000 tag=0000 Aux 2 > Control > Link
+00:34:39 0x0754 1.0000                raw=3f800000 tag=0000 Aux 2 > Comp > Mode
+00:34:39 0x080c 0.0000                raw=00000000 tag=0000 Aux 3 > Control > Link
+00:34:39 0x080f 1.0000                raw=3f800000 tag=0000 Aux 3 > Comp > Mode
+00:34:39 0x08c7 0.0000                raw=00000000 tag=0000 Aux 4 > Control > Link
+00:34:39 0x08ca 1.0000                raw=3f800000 tag=0000 Aux 4 > Comp > Mode
+00:34:39 0x0982 0.0000                raw=00000000 tag=0000 Aux 5 > Control > Link
+00:34:39 0x0985 1.0000                raw=3f800000 tag=0000 Aux 5 > Comp > Mode
+00:34:39 0x0a3d 0.0000                raw=00000000 tag=0000 Aux 6 > Control > Link
+00:34:39 0x0a40 1.0000                raw=3f800000 tag=0000 Aux 6 > Comp > Mode
+00:34:39 0x000e 1.0000                raw=3f800000 tag=0000 Main > Comp > Mode
+00:34:39 0x0afb 1.0000                raw=3f800000 tag=0000 Aux 7/8 > Comp > Mode
+00:34:39 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
+00:34:39 FILE start NH4-config.xml.dscomp
+00:34:40 FILE end /usr/share/ds2i/tmp/NH4-config.xml.dscomp
+00:34:40 CONNECTED QSC JD HOME
+00:34:40 SECTION buttons
+00:34:40 STEP 1 Press MENU > touch "User Buttons" > touch "User Button 1" so it turns blue.
+00:34:40 FILE start fileIndex.xml.dscomp
+00:34:40 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+00:34:40 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:34:40 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:35:12 END 1
+00:35:12 STEP 2 Same screen: in the Action list touch "Mute", then pick channel 16 in the
+     Selection / Detail lists (whatever it offers), then touch "Assign".
+     Type what you picked, press Enter.
+00:36:18 0x0df9 0.0000                raw=33800001 tag=0000 U1 > Setup > Spec 1
+00:36:18 0x0dfa 0.0000                raw=35700001 tag=0000 U1 > Setup > Spec 2
+00:36:18 0x0dfb 0.0000                raw=35d00001 tag=0000 U1 > Setup > Spec 3
+00:36:18 0x0dfd 0.0000                raw=34000001 tag=0000 U1 > Setup > Spec 5
+00:36:18 0x0dff 0.3333                raw=3eaaaaaf tag=0000 U1 > Setup > Value
+00:36:18 0x0e02 0.0039                raw=3b800000 tag=0000 U1 > Setup > Type
+00:36:18 0x0df5 text 'Mute In 16'  U1 > Control > Name
+00:36:18 0x0df5 0.0000                raw=00000000 tag=0000 U1 > Control > Name
+00:36:18 0x0df6 0.0029                raw=3b400000 tag=0000 U1 > Control > Action
+00:36:18 0x0df7 0.0000                raw=00000000 tag=4257 U1 > Control > Selection
+00:36:18 0x0df8 0.0146                raw=3c700000 tag=44af U1 > Control > Detail
+00:36:23 END 2
+00:36:23 STEP 3 Press the physical U1 button on the mixer once (channel 16 should mute).
+00:36:29 0x05af 1.0000    on          raw=3f800000 tag=3330 In 16 > Control > Mute
+00:36:29 0x146c 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute6
+00:36:29 0x146b 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend6
+00:36:29 0x146a 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute5
+00:36:29 0x1469 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend5
+00:36:29 0x1468 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute4
+00:36:29 0x1467 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend4
+00:36:29 0x1466 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute3
+00:36:29 0x1465 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend3
+00:36:29 0x1464 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute2
+00:36:29 0x1463 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend2
+00:36:29 0x1462 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute1
+00:36:29 0x1461 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend1
+00:36:42 0x05af 0.0000    off         raw=00000000 tag=0000 In 16 > Control > Mute
+00:36:42 0x146c 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute6
+00:36:42 0x146b 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend6
+00:36:42 0x146a 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute5
+00:36:42 0x1469 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend5
+00:36:42 0x1468 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute4
+00:36:42 0x1467 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend4
+00:36:42 0x1466 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute3
+00:36:42 0x1465 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend3
+00:36:42 0x1464 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute2
+00:36:42 0x1463 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend2
+00:36:42 0x1462 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute1
+00:36:42 0x1461 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend1
+00:36:42 0x05af 1.0000    on          raw=3f800000 tag=0000 In 16 > Control > Mute
+00:36:42 0x146c 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute6
+00:36:42 0x146b 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend6
+00:36:42 0x146a 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute5
+00:36:42 0x1469 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend5
+00:36:42 0x1468 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute4
+00:36:42 0x1467 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend4
+00:36:42 0x1466 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute3
+00:36:42 0x1465 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend3
+00:36:42 0x1464 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute2
+00:36:42 0x1463 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend2
+00:36:42 0x1462 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute1
+00:36:42 0x1461 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend1
+00:36:45 END 3
+00:36:45 STEP 4 Press U1 again (unmute).
+00:36:48 0x05af 0.0000    off         raw=00000000 tag=0000 In 16 > Control > Mute
+00:36:48 0x146c 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute6
+00:36:48 0x146b 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend6
+00:36:48 0x146a 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute5
+00:36:48 0x1469 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend5
+00:36:48 0x1468 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute4
+00:36:48 0x1467 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend4
+00:36:48 0x1466 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute3
+00:36:48 0x1465 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend3
+00:36:48 0x1464 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute2
+00:36:48 0x1463 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend2
+00:36:48 0x1462 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute1
+00:36:48 0x1461 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend1
+00:36:50 END 4
+00:36:50 STEP 5 Back on MENU > User Buttons, User Button 1 still blue: touch "Reset"
+     so it goes back to its factory job (Nav Left).
+00:37:28 0x00ce 0.9900                raw=3f7d70a4 tag=0000 Global > Misc Input > Wireless Strength
+00:37:29 0x05af 1.0000    on          raw=3f800000 tag=0000 In 16 > Control > Mute
+00:37:29 0x146c 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute6
+00:37:29 0x146b 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend6
+00:37:29 0x146a 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute5
+00:37:29 0x1469 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend5
+00:37:29 0x1468 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute4
+00:37:29 0x1467 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend4
+00:37:29 0x1466 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute3
+00:37:29 0x1465 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend3
+00:37:29 0x1464 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute2
+00:37:29 0x1463 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend2
+00:37:29 0x1462 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute1
+00:37:29 0x1461 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend1
+00:37:44 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
+00:37:44 0x0e02 0.0039                raw=3b800000 tag=0000 U1 > Setup > Type
+00:37:44 0x0df6 0.0029                raw=3b400000 tag=0000 U1 > Control > Action
+00:37:44 0x0df7 0.0000                raw=00000000 tag=4257 U1 > Control > Selection
+00:37:44 0x0df8 0.0146                raw=3c700000 tag=44af U1 > Control > Detail
+00:37:50 0x05af 0.0000    off         raw=00000000 tag=0000 In 16 > Control > Mute
+00:37:50 0x146c 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute6
+00:37:50 0x146b 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend6
+00:37:50 0x146a 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute5
+00:37:50 0x1469 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend5
+00:37:50 0x1468 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute4
+00:37:50 0x1467 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend4
+00:37:50 0x1466 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute3
+00:37:50 0x1465 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend3
+00:37:50 0x1464 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute2
+00:37:50 0x1463 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend2
+00:37:50 0x1462 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute1
+00:37:50 0x1461 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend1
+00:37:50 0x05af 1.0000    on          raw=3f800000 tag=0000 In 16 > Control > Mute
+00:37:50 0x146c 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute6
+00:37:50 0x146b 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend6
+00:37:50 0x146a 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute5
+00:37:50 0x1469 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend5
+00:37:50 0x1468 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute4
+00:37:50 0x1467 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend4
+00:37:50 0x1466 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute3
+00:37:50 0x1465 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend3
+00:37:50 0x1464 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute2
+00:37:50 0x1463 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend2
+00:37:50 0x1462 0.0000    off         raw=00000000 tag=0000 In 16 > Control > AuxMute1
+00:37:50 0x1461 0.0000    -inf dB     raw=00000000 tag=0000 In 16 > Control > AuxSend1
+00:37:59 0x0df5 text 'Nav Left'  U1 > Control > Name
+00:37:59 0x0df5 0.0000                raw=00000000 tag=0000 U1 > Control > Name
+00:37:59 0x0dff 0.3333                raw=3eaaaaa9 tag=0000 U1 > Setup > Value
+00:37:59 0x0e02 0.0098                raw=3c200000 tag=001b U1 > Setup > Type
+00:37:59 0x0df5 text 'Nav left'  U1 > Control > Name
+00:37:59 0x0df5 0.0000                raw=00000000 tag=483a U1 > Control > Name
+00:37:59 0x0df6 0.0068                raw=3be00000 tag=000b U1 > Control > Action
+00:37:59 0x0df7 0.0000                raw=00000000 tag=0033 U1 > Control > Selection
+00:37:59 0x0df8 0.0000                raw=00000000 tag=4257 U1 > Control > Detail
+00:38:04 END 5

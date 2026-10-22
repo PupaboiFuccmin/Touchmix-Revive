@@ -481,8 +481,10 @@ Times are seconds from the start of the capture.
    a tag that changes per session. The sends were not actually zeroed, so
    these entries probably mean something other than "set to 0". Plain writes
    with tag 0 do stick: probes muted and unmuted Main, Aux, FX and DCA, plus
-   the aux-send mutes, and the config read back each change. What the batch
-   is for is still unknown.
+   the aux-send mutes, and the config read back each change. **The mixer
+   emits the same batch itself** when a user button mutes a channel
+   (RESEARCH.md, "User buttons"), so it reports a mute and is not a
+   requirement for clients. Its exact meaning is still unknown.
 3. **2.2 session payload** `0x00019CB4`: a session ID, uptime, or build number?
 4. **File-end trailer** (6 bytes): CRC32 plus something else?
 5. **Poll (6.1/7.1) request contents**: which meters each entry selects.

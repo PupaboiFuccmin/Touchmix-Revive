@@ -236,6 +236,32 @@ parameters update. **Writing `FX type` from the PC does the same** (tested:
 FX 1 Mono Delay → Lush Reverb → Mono Delay, each confirmed by read-back).
 `touchmix fx 1 type lush` and `TouchMix.fx_type()` do this.
 
+## User buttons
+
+From `map tour buttons` (2026-10-22, `mappings/tour-buttons-20261022-003437.log`).
+U1 was assigned to mute channel 16 in Menu > User Buttons, pressed, then Reset:
+
+| Setting | Mute In 16 | After Reset (factory) |
+|---------|-----------:|----------------------:|
+| `U1 > Control > Action` | 3 (Mute) | 7 (Utility) |
+| `U1 > Control > Selection` | 0 | 0 (Selected parameter) |
+| `U1 > Control > Detail` | 15 (channel 16) | 0 (Nav left) |
+| `U1 > Control > Name` (9.1 text) | "Mute In 16" | "Nav left" |
+| `U1 > Setup > Type` | 4 | 10 |
+
+All are integers sent as n/1024, indexes into the option lists the config
+carries as `text` (Action: Recall Input Preset, Recall Output Preset, Recall
+Scene, Mute, Go To Screen, Recording, Select, Utility, Tap Tempo). The Setup
+`Spec 1`–`6` and `Value` changed too, as packed values not decoded yet.
+Pressing the physical button toggles the target (In 16 Mute) and the mixer
+reports it like any other change.
+
+**The mute side batch comes from the mixer.** Each U1 press reported
+`In 16 > Control > Mute` together with `AuxSend1`–`6` = 0 and `AuxMute1`–`6`
+= 0, the same batch the app sends with every mute (open question 2 in
+PROTOCOL.md). So the batch is the mixer's own report of a mute, not something
+a client has to send; plain mute writes work (confirmed earlier by probes).
+
 ## Pulling recordings over the network: no sign of it
 
 Brainstorm priority 2 asked whether recorded tracks can come off the mixer
