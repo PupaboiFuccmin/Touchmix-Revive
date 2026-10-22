@@ -25,7 +25,7 @@ import threading
 import time
 
 from .client import TouchMix
-from .params import ParamTable, strip_path, norm_to_fader_db, curve_for
+from .params import ParamTable, strip_path, norm_to_fader_db, curve_for, int_to_norm, FX_TYPES
 
 # Most parameters written per message and per probe round. 196 GEQ sliders in
 # one message made the mixer reboot (2026-10-21); 16 at a time never caused trouble.
@@ -697,12 +697,43 @@ FLAG_PLAN = [(s, p, 1, ch, FLAG_STEPS) for s, p, ch in [
     ('Control', 'Mute', 'main,aux1-6,fx1-4,dca1-8'),
 ]]
 
-PLANS = {'inputs': PROBE_PLAN, 'buses': BUS_PLAN, 'flags': FLAG_PLAN}
+# FX processor settings, all on FX 1: each group first switches FX 1 to that
+# processor (the setup write), and FX 1's processor is put back at the end.
+# Tap Tempo is left out: writing it acts like tapping.
+FX_STEPS = 11
+FX_SETTINGS = [
+    ('chorus', 'Chorus', ['Rate', 'Depth', 'Waveform', 'Delay', 'HPF', 'LPF']),
+    ('delay', 'Delay', ['Delay', 'Regen', 'DelayR', 'Regen R', 'HpfL', 'HpfR', 'LpfL', 'LpfR',
+                        'Param Link', 'Filter Link']),
+    ('pitch', 'PitchShift', ['Left Shift', 'Right Shift', 'Delay L', 'Delay R', 'P.Corr. Rate', 'Coarse edit',
+                             'HPF', 'LPF', 'Key']),
+    ('dense', 'D-Reverb', ['Rev Time', 'Initial Delay', 'Hi Ratio', 'Room', 'Diffusion', 'Reverb Delay', 'ER',
+                           'HPF', 'LPF']),
+    ('lush', 'L-Reverb', ['Size', 'Pre Delay', 'Room', 'Low Rev Time', 'X-over', 'High Rev Time', 'Diffusion',
+                          'HPF', 'LPF']),
+    ('mono-delay', 'Mono Delay', ['Delay', 'Regen', 'HpfL', 'LpfL']),
+]
+FX_PLAN = [(section, param, 1, 'fx1', FX_STEPS, (('FX 1 > Editor > FX type', int_to_norm(FX_TYPES[kind])),))
+           for kind, section, params in FX_SETTINGS for param in params]
+
+# Mute groups, and the monitor/headphone levels. Unplug headphones first: the
+# levels are swept to full.
+EXTRAS_PLAN = [
+    ('Control', 'Mute', 1, 'mute1-8', FLAG_STEPS),
+    ('Control', 'Monitor / Cue Level', 1, 'global'),
+    ('Control', 'Phones / Cue Level', 1, 'global'),
+    ('Control', 'CR gain boost', 1, 'global'),
+    ('Control', 'Phones gain boost', 1, 'global'),
+]
+
+PLANS = {'inputs': PROBE_PLAN, 'buses': BUS_PLAN, 'flags': FLAG_PLAN, 'fx': FX_PLAN, 'extras': EXTRAS_PLAN}
 
 
 def plan_items(plan):
-    """Normalize plan entries to (section, param, band, channels, steps or None)."""
-    return [tuple(item) + (None,) * (5 - len(item)) for item in plan]
+    """Normalize plan entries to (section, param, band, channels, steps or None,
+    setup or None). setup is ((param, wire value), ...) written before the probe
+    (FX 1's processor, say); the original values are put back after the plan."""
+    return [tuple(item) + (None,) * (6 - len(item)) for item in plan]
 
 
 def plan_pids(params, section, param, band, channels):
@@ -787,10 +818,23 @@ def probe_all(session, plan, steps, outdir, save_fn, say=print, restore=True, ch
     Returns [(name, file or None, fit or error text)]."""
     summary = []
     plan = plan_items(plan)
-    for i, (section, param, band, channels, item_steps) in enumerate(plan, 1):
+    # setup parameters are integers (FX type): remember them to put back at the end
+    setup_originals = {}
+    for item in plan:
+        for p, _ in item[5] or ():
+            pid = session.params.find(*p.rsplit(' > ', 1)).index
+            setup_originals.setdefault(pid, int_to_norm(int(float(session.tm.config.get(pid) or 0))))
+    current_setup = None
+    for i, (section, param, band, channels, item_steps, setup) in enumerate(plan, 1):
         name = plan_name(section, param, band)
         say('\n=== %d/%d  %s on %s' % (i, len(plan), name, channels))
         try:
+            if setup and setup != current_setup:
+                say('setup: %s' % ', '.join('%s = %g' % s for s in setup))
+                session.tm.set_many(list(setup))
+                time.sleep(1.5)                     # the mixer loads the processor's default preset
+                session.reopen()
+                current_setup = setup
             chans = parse_channels(channels)
             pids = plan_pids(session.params, section, param, band, channels)
             cp = (lambda originals, name=name: checkpoint(name, originals)) if checkpoint else None
@@ -814,6 +858,14 @@ def probe_all(session, plan, steps, outdir, save_fn, say=print, restore=True, ch
             except Exception as e2:
                 say('!! could not reconnect: %s' % e2)
                 break
+    if setup_originals:
+        say('\nputting back: %s' % ', '.join('0x%04x = %g' % kv for kv in setup_originals.items()))
+        try:
+            session.tm.set_many(list(setup_originals.items()))
+            time.sleep(1.5)
+            session.reopen()
+        except Exception as e:
+            say('!! could not put the setup back: %s' % e)
     return summary
 
 

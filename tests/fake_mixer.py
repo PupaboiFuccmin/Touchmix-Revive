@@ -21,6 +21,7 @@ CONFIG = '''<?xml version="1.0" encoding="UTF-8"?>
       <Parameter Type="2" Instance="0" name="Mute" value="{v[543]}" Index="543"/>
       <Parameter Type="4" Instance="0" name="Pan" value="{v[545]}" Index="545"/>
       <Parameter Type="165" Instance="0" name="Name" value="0" Index="554" text="{t[554]}"/>
+      <Parameter Type="140" Instance="0" name="FX type" value="{v[2966]}" Index="2966"/>
     </Effect>
   </Channel>
   <Channel Type="0" Instance="4" Version="0" Name="In 5">
@@ -76,7 +77,7 @@ class FakeMixer:
         self.config_name = config_name
         self.status_before_hello = False   # the real mixer does this while playing MP3s
         self.access = access     # like the real mixer, writes are ignored without it
-        self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0}
+        self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0, 0x0B96: 6}
         self.texts = {554: 'Vox'}
         self.received = []
         self.clients = []
@@ -110,6 +111,8 @@ class FakeMixer:
             self.values[pid] = fader_db(value)
         elif pid == 543:
             self.values[pid] = int(value)
+        elif pid == 0x0B96:                     # an integer setting, sent as n/1024
+            self.values[pid] = round(value * 1024)
         elif pid == 545:    # stored as text, to test probing a stepped/enum parameter
             self.values[pid] = 'L' if value < 0.34 else 'C' if value < 0.67 else 'R'
         elif pid in self.values:

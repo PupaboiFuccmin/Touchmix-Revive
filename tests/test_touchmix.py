@@ -703,6 +703,21 @@ class Mapping(unittest.TestCase):
         self.assertIn('Control Fader', M.format_summary(summary))
         self.assertEqual(self.mixer.values[545], 'C')
 
+    def test_probe_all_setup_and_put_back(self):
+        """A plan item with a setup write gets it first, and the original is put back at the end."""
+        import tempfile
+        self.mixer.values[0x0B96] = 6.0           # FX 1 > Editor > FX type: Mono Delay
+        outdir = tempfile.mkdtemp()
+        plan = [('Control', 'Fader', 1, '4', 3, (('FX 1 > Editor > FX type', 5 / 1024.0),))]
+        s = self.session()
+        try:
+            M.probe_all(s, plan, 3, outdir, lambda path, body: None, say=self.out.append)
+        finally:
+            s.close()
+        fx_writes = [v for t, p in self.mixer.received if t == P.PARAM_SET
+                     for pid, _, _, v in P.decode_param_set(p) if pid == 0x0B96]
+        self.assertEqual(fx_writes, [5 / 1024.0, 6 / 1024.0])
+
     def test_probe_more_pids_than_values(self):
         s = self.session()
         try:

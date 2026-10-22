@@ -638,14 +638,15 @@ def cmd_map_probe_all(args):
     if not plan:
         sys.exit('nothing matches --only %r' % args.only)
     if args.channels:
-        plan = [(sec, par, band, args.channels if ch == M.INPUTS else ch, st) for sec, par, band, ch, st in plan]
+        plan = [(sec, par, band, args.channels if ch == M.INPUTS else ch) + rest for sec, par, band, ch, *rest in plan]
     if args.start > 1:
         plan = plan[args.start - 1:]
         if not plan:
             sys.exit('--start %d is past the end of the plan' % args.start)
     print('Probe batch (%s): %d controls, results in %s/' % (args.plan, len(plan), args.outdir))
-    for i, (sec, par, band, ch, st) in enumerate(plan, args.start):
-        print('  %3d. %-26s %-24s %d values' % (i, M.plan_name(sec, par, band), ch, st or args.steps))
+    for i, (sec, par, band, ch, st, setup) in enumerate(plan, args.start):
+        print('  %3d. %-26s %-24s %d values%s' % (i, M.plan_name(sec, par, band), ch, st or args.steps,
+                                                  '  (FX 1 switched for it)' if setup else ''))
     print('These are LIVE controls on every listed channel. Turn the amps down.')
     if not args.yes and input('Type yes to go ahead > ').strip().lower() != 'yes':
         return 1

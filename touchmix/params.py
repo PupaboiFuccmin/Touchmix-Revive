@@ -65,6 +65,10 @@ def strip_path(target):
         return '2-Trk PB'
     if t in ('talkback', 'tb'):
         return 'Talkback'
+    if t == 'global':
+        return 'Global'
+    if t.startswith('mute') and t[4:].isdigit() and 1 <= int(t[4:]) <= 8:
+        return 'Mute %d' % int(t[4:])          # mute groups
     if t.startswith('st') and t[2:].isdigit():
         return 'Stereo In 17/18' if int(t[2:]) in (17, 18) else 'Stereo In 19/20'
     for prefix, label in (('aux', 'Aux'), ('fx', 'FX'), ('dca', 'DCA')):
