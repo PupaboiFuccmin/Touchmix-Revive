@@ -506,7 +506,7 @@ def cmd_scene(args):
         warn_no_access(tm)
         scene = tm.find_scene(args.scene)
         print('Recalling %s scene %r ...' % (scene['location'], scene['name']))
-        if tm.recall_scene(args.scene, trigger=args.trigger):
+        if tm.recall_scene(args.scene, trigger=args.trigger, select=args.select):
             print('The mixer sent its new state: recalled.')
             return 0
         print('No answer from the mixer within %d s: the recall probably did not happen.' % 6)
@@ -536,6 +536,12 @@ def cmd_fx(args):
 def cmd_name(args):
     pid = ParamTable().find('%s > Control' % strip_path(args.channel), 'Name').index
     tm = open_mixer(args)
+    if args.new_name is None:
+        try:
+            print('%s is named %r' % (strip_path(args.channel), tm.config_text.get(pid, '')))
+        finally:
+            tm.close()
+        return
     warn_no_access(tm)
     try:
         old = tm.config_text.get(pid, '')
@@ -875,6 +881,8 @@ def main(argv=None):
     sc.add_argument('action', choices=['list', 'recall'])
     sc.add_argument('scene', nargs='?', help='scene name, file name or UUID')
     sc.add_argument('--trigger', type=float, default=0.0, help='value written to FileMan > Recall (default 0)')
+    sc.add_argument('--select', action='store_true',
+                    help='also write FileMan Type, Location and Number for the scene (experiment)')
     sc.set_defaults(fn=cmd_scene)
 
     fx = sub.add_parser('fx', help='show or pick an FX processor: fx 1 type lush')
@@ -886,7 +894,7 @@ def main(argv=None):
 
     nm = sub.add_parser('name', help='rename a channel, e.g. name 16 Kick')
     nm.add_argument('channel', help='1-16, st17, st19, main, aux1-10, fx1-4, dca1-8')
-    nm.add_argument('new_name', metavar='name', help='the new name (ASCII, keep it short)')
+    nm.add_argument('new_name', metavar='name', nargs='?', help='the new name (ASCII, keep it short); omit to show it')
     nm.add_argument('--verify', action='store_true', help='reconnect and check the mixer stored it')
     nm.set_defaults(fn=cmd_name)
 

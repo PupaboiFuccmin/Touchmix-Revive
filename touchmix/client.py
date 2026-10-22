@@ -263,9 +263,10 @@ class TouchMix:
         for c in ET.fromstring(raw).iter('Collection'):
             if c.get('Type') != '0':
                 continue
-            for f in c.iter('File'):
+            for number, f in enumerate(c.iter('File')):
                 out.append(dict(name=f.get('Description', ''), file=f.get('Path', '').rsplit('/', 1)[-1],
                                 uuid=f.get('Uuid', ''), location=self.SCENE_LOCATIONS.get(c.get('Location'), c.get('Location')),
+                                location_code=int(c.get('Location')), number=number,
                                 current=f.get('Uuid') == current))
         return out
 
@@ -285,12 +286,21 @@ class TouchMix:
                 return s
         raise KeyError('no scene %r (see scene list)' % name)
 
-    def recall_scene(self, name, trigger=0.0, timeout=6.0):
+    def recall_scene(self, name, trigger=0.0, timeout=6.0, select=False):
         """Write the scene's UUID to FileMan > Scene Uuid0-7, then FileMan > Recall.
-        Returns True if the mixer sent its post-recall state (all-config)."""
+        With select, also FileMan > Type (0 = scene), Location and Number (its
+        position in the file index), as n/1024. Returns True if the mixer sent
+        its post-recall state (all-config).
+
+        Not working yet: UUID + Recall alone did not recall (2026-10-22)."""
         scene = self.find_scene(name)
         words = struct.unpack('<8H', bytes.fromhex(scene['uuid']))
-        self.set_many([('Global > FileMan > Scene Uuid%d' % i, w / 65536.0) for i, w in enumerate(words)])
+        changes = [('Global > FileMan > Scene Uuid%d' % i, w / 65536.0) for i, w in enumerate(words)]
+        if select:
+            changes += [('Global > FileMan > Type', int_to_norm(0)),
+                        ('Global > FileMan > Location', int_to_norm(scene['location_code'])),
+                        ('Global > FileMan > Number', int_to_norm(scene['number']))]
+        self.set_many(changes)
         time.sleep(0.3)
         self._recalled.clear()
         self.set('Global > FileMan > Recall', trigger)
