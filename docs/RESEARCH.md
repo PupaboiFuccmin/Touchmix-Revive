@@ -148,6 +148,28 @@ would fit `Copy To External`.
 scene UUID in `Scene Uuid0–7`), then write `Recall`. The `Omit …` and
 `With …` flags match the app's recall options.
 
+## Pulling recordings over the network: no sign of it
+
+Brainstorm priority 2 asked whether recorded tracks can come off the mixer
+over the control connection. So far everything points to no:
+
+* In every capture and monitor session, files only flow **mixer → client**,
+  and only the three sent on connect (config, file index, the client's
+  settings).
+* `PCAPdroid_21_Oct_23_11_21` (2026-10-21, 116 s): the app opened the
+  recording page, switched MP3 → multitrack, opened save and recall dialogs.
+  `tmcap summary` found **no new message types**. The app sent only:
+  `Playback` = 1/1024 + `Multi-track Enable` = 1 (the mode switch, the same
+  as `mp3 mode off`), `FileMan > Save As` = 0, and `FileMan > Recall` = 0
+  three times. A UI bug in the app stopped the confirm buttons working, so
+  the actual recall and save were not captured. The `= 0` writes look like
+  "open the dialog".
+* The app never requests a listing; what it knows about files comes from
+  `fileIndex.xml`, which covers scenes and presets but not recording sessions.
+
+A request could still hide behind a confirm button nobody has pressed in a
+capture yet. Until one shows up, recordings come off the USB drive.
+
 ## Next steps
 
 In order of risk:
