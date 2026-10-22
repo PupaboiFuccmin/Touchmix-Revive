@@ -94,6 +94,28 @@ This is not hypothetical. One early probe wrote all 196 graphic-EQ sliders in
 a single message, and the mixer rebooted. Probes now write at most 16
 parameters per message and per round (`mapping.MAX_BATCH`).
 
+## The mixer tour
+
+For things you do on the mixer's own touchscreen (scenes, presets, mode
+switches, names, effect types, user buttons, recorder buttons, meters),
+`map tour` prompts one action at a time and logs everything the mixer reports
+in between: parameter changes in real units, status pushes, 9.1 text values,
+unknown message types, and, for the meters section, changed poll replies.
+
+```sh
+python -m touchmix map tour                    # every section
+python -m touchmix map tour scenes,modes       # just these
+```
+
+Do each step on the mixer, then press Enter. For steps that cycle through a
+setting's options, type the label the screen shows after each switch. That
+pairs each value with its name. Everything uses channel 16, and nothing
+deletes anything or powers the mixer down. The log (`tour-*.log`) marks each
+`STEP` and `END`, so it is easy to see which messages belong to which action.
+
+`monitor --log FILE` does the same without a script: type a note before each
+action you do.
+
 ## Guided runs
 
 For things a sweep can't find (which ID a button press uses, what a mode

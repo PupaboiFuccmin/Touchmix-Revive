@@ -360,6 +360,69 @@ class Client(unittest.TestCase):
         self.assertEqual(writes[0], (0x0117, 1 / 1024.0))          # select song 2 ...
         self.assertAlmostEqual(writes[1][1], 1 / 7.0, places=6)    # ... then play
 
+    def test_monitor_log_with_notes(self):
+        import tempfile
+        path = os.path.join(tempfile.mkdtemp(), 'session.log')
+        mixer = self.mixer
+
+        class Typing(io.StringIO):
+            """Types a note, then the 'action' happens on the mixer, then Enter on an empty line."""
+            lines = ['recall scene STUDIO\n', '\n']
+
+            def readline(self, *a):
+                line = self.lines.pop(0)
+                if not line.strip():
+                    mixer.push(0x21F, 1.0)      # the action, after the note
+                    time.sleep(0.3)
+                return line
+        real_stdin = sys.stdin
+        sys.stdin = Typing()
+        try:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'monitor', '--log', path])
+        finally:
+            sys.stdin = real_stdin
+        self.assertEqual(rc, 0)
+        with open(path, encoding='utf-8') as f:
+            lines = f.read().splitlines()
+        kinds = [l.split()[1] for l in lines]
+        self.assertEqual(kinds[0], 'CONNECTED')
+        note = kinds.index('NOTE')
+        self.assertIn('recall scene STUDIO', lines[note])
+        self.assertTrue(any('In 4 > Control > Mute' in l for l in lines[note + 1:]))
+
+    def test_map_tour_logs_steps(self):
+        import tempfile
+        path = os.path.join(tempfile.mkdtemp(), 'tour.log')
+        mixer = self.mixer
+
+        class Typing(io.StringIO):
+            # fx section: step 1 cycles options (two labels, then empty), step 2 is plain
+            lines = ['Hall\n', 'Plate\n', '\n', '\n']
+
+            def readline(self, *a):
+                line = self.lines.pop(0)
+                if line == 'Hall\n':
+                    mixer.push(0x21F, 1.0)      # what the mixer reports for that option
+                    time.sleep(0.3)
+                return line
+        real_stdin = sys.stdin
+        sys.stdin = Typing()
+        try:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'map', 'tour', 'fx', '--out', path])
+        finally:
+            sys.stdin = real_stdin
+        self.assertEqual(rc, 0)
+        with open(path, encoding='utf-8') as f:
+            log = f.read()
+        kinds = [l.split()[1] for l in log.splitlines()]
+        markers = [k for k in kinds if k in ('CONNECTED', 'SECTION', 'STEP', 'END')]
+        self.assertEqual(markers, ['CONNECTED', 'SECTION', 'STEP', 'END', 'STEP', 'END'])
+        self.assertLess(log.index('In 4 > Control > Mute'), log.index('LABEL 1.1 Hall'))
+        self.assertIn('LABEL 1.2 Plate', log)
+        self.assertIn('END 2', log)
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

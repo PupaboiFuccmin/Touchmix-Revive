@@ -28,6 +28,7 @@ import os
 import re
 import struct
 import sys
+import threading
 import time
 
 from .discover import discover, default_subnets, lookup_port, mdns_browse
@@ -151,55 +152,93 @@ def cmd_info(args):
         tm.close()
 
 
-def cmd_monitor(args):
-    tm = TouchMix(pick_host(args), port=args.port, name=args.name)
+def make_writer(path, echo=True):
+    """out(line): append to `path` (if given) and print (if echo or no file)."""
+    log = open(path, 'a', encoding='utf-8') if path else None
+    lock = threading.Lock()
+
+    def out(line):
+        with lock:
+            if log:
+                log.write(line + '\n')
+                log.flush()
+            if not log or echo:
+                print(line, flush=True)
+    out.close = log.close if log else (lambda: None)
+    return out
+
+
+def attach_logger(tm, out, status=False, raw=False, polls=False):
+    """Report what the mixer sends through out(): parameter changes in real
+    units, text values, and optionally status pushes, unknown message types,
+    file transfers and changed poll replies."""
 
     @tm.on_change
-    def show(pid, value, raw, tag, source):
-        if source == 'status' and not args.all:
+    def show(pid, value, raw_u32, tag, source):
+        if source == 'status' and not status:
             return
         par = tm.params.get(pid)
         if source == 'text':
-            print('%s 0x%04x text %r  %s' % (time.strftime('%H:%M:%S'), pid, tm.config_text.get(pid),
-                                             par.full_name if par else '?'), flush=True)
+            out('%s 0x%04x text %r  %s' % (time.strftime('%H:%M:%S'), pid, tm.config_text.get(pid),
+                                           par.full_name if par else '?'))
             return
         curve = curve_for(par.path, par.name) if par else None
-        print('%s 0x%04x %-9.4f %-11s raw=%08x tag=%04x %s' % (
+        out('%s 0x%04x %-9.4f %-11s raw=%08x tag=%04x %s' % (
             time.strftime('%H:%M:%S'), pid, value, curve.format(value) if curve else '',
-            raw, tag, par.full_name if par else '?'), flush=True)
+            raw_u32, tag, par.full_name if par else '?'))
 
     known = (P.PARAM_SET, P.STATUS, P.POLL_RESP, P.FILE, P.TEXT)
     last_poll = {}
 
     @tm.on_message
-    def raw(msg_type, payload):
+    def show_raw(msg_type, payload):
         stamp = time.strftime('%H:%M:%S')
-        if args.raw and msg_type not in known:
-            print('%s MSG %d.%d len=%d %s' % ((stamp,) + msg_type + (len(payload), payload[:64].hex())), flush=True)
-        elif args.raw and msg_type == P.FILE:
+        if raw and msg_type not in known:
+            out('%s MSG %d.%d len=%d %s' % ((stamp,) + msg_type + (len(payload), payload[:64].hex())))
+        elif raw and msg_type == P.FILE:
             off, data, _ = P.decode_file_chunk(payload)
             if off in (P.FILE_START, P.FILE_END):
-                print('%s FILE %s %s' % (stamp, 'start' if off == P.FILE_START else 'end',
-                                         data.decode('ascii', 'replace')), flush=True)
-        elif args.polls and msg_type == P.POLL_RESP:
+                out('%s FILE %s %s' % (stamp, 'start' if off == P.FILE_START else 'end',
+                                       data.decode('ascii', 'replace')))
+        elif polls and msg_type == P.POLL_RESP:
             body = payload[4:]                       # drop the sequence number
             prev = last_poll.get(len(body))
             last_poll[len(body)] = body
             if prev is not None and prev != body:
-                floats = [struct.unpack('<f', body[i:i + 4])[0] for i in range(4, len(body) - 3, 4)]
-                print('%s POLL len=%d %s' % (stamp, len(body), ' '.join('%.3g' % f for f in floats)), flush=True)
+                out('%s POLL len=%d %s' % (stamp, len(body), body.hex()))     # raw: the layout is not known
+
+
+def cmd_monitor(args):
+    tm = TouchMix(pick_host(args), port=args.port, name=args.name)
+    out = make_writer(args.log, echo=not args.quiet)
+    log = args.log
+    attach_logger(tm, out, status=args.all, raw=args.raw, polls=args.polls)
 
     tm.connect()
     tm.wait_ready()
-    print('Connected to %s. Change something on the mixer (Ctrl+C to stop).' % tm.mixer_name)
+    out('%s CONNECTED %s' % (time.strftime('%H:%M:%S'), tm.mixer_name))
     try:
-        while tm.connected:
-            time.sleep(0.5)
-        print('Disconnected:', tm.error)
-    except KeyboardInterrupt:
+        if log:
+            print('Logging to %s. Before each action, type what you are about to do and press Enter.' % args.log)
+            print('An empty line or Ctrl+C stops.')
+            while tm.connected:
+                note = input('note> ').strip()
+                if not note:
+                    break
+                out('%s NOTE %s' % (time.strftime('%H:%M:%S'), note))
+        else:
+            print('Connected to %s. Change something on the mixer (Ctrl+C to stop).' % tm.mixer_name)
+            while tm.connected:
+                time.sleep(0.5)
+        if not tm.connected:
+            out('%s DISCONNECTED %s' % (time.strftime('%H:%M:%S'), tm.error))
+    except (KeyboardInterrupt, EOFError):
         pass
     finally:
         tm.close()
+        out.close()
+        if log:
+            print('Saved %s' % args.log)
 
 
 def apply_and_verify(args, action, pid):
@@ -599,6 +638,59 @@ def cmd_map_restore(args):
     return 0 if ok else 2
 
 
+def cmd_map_tour(args):
+    """Walk through actions on the mixer's own screen, logging everything it reports."""
+    wanted = [s.strip() for s in args.sections.split(',')] if args.sections else list(M.TOUR)
+    unknown = [s for s in wanted if s not in M.TOUR]
+    if unknown:
+        sys.exit('unknown section %s (choose from %s)' % (', '.join(unknown), ', '.join(M.TOUR)))
+    steps = [(sec, s) for sec in wanted for s in M.TOUR[sec]]
+    path = args.out or 'tour-%s-%s.log' % ('-'.join(wanted) if args.sections else 'all', time.strftime('%Y%m%d-%H%M%S'))
+    tm = TouchMix(pick_host(args), port=args.port, name=args.name)
+    out = make_writer(path, echo=False)
+    attach_logger(tm, out, status=True, raw=True, polls='meters' in wanted)
+    tm.connect()
+    tm.wait_ready()
+    out('%s CONNECTED %s' % (time.strftime('%H:%M:%S'), tm.mixer_name))
+    print(M.TOUR_INTRO)
+    print('Logging to %s. Ctrl+C stops at any point (what you did so far is saved).\n' % path)
+    section = None
+    try:
+        for i, (sec, (prompt, repeat)) in enumerate(steps, 1):
+            if sec != section:
+                section = sec
+                print('\n== %s ==' % sec)
+                out('%s SECTION %s' % (time.strftime('%H:%M:%S'), sec))
+            out('%s STEP %d %s' % (time.strftime('%H:%M:%S'), i, prompt))
+            print('\n%d/%d  %s' % (i, len(steps), prompt))
+            if repeat:
+                print('     Do it once, type what the screen shows now (e.g. the mode name), Enter.')
+                print('     Repeat for every option. Empty Enter when you are back at the first one.')
+                n = 0
+                while True:
+                    label = input('     shows> ').strip()
+                    if not label:
+                        break
+                    n += 1
+                    out('%s LABEL %d.%d %s' % (time.strftime('%H:%M:%S'), i, n, label))
+            else:
+                note = input('     Enter when done (or type a note first) > ').strip()
+                if note:
+                    out('%s LABEL %d %s' % (time.strftime('%H:%M:%S'), i, note))
+            time.sleep(0.3)             # let the last messages for this step arrive
+            out('%s END %d' % (time.strftime('%H:%M:%S'), i))
+            if not tm.connected:
+                print('!! lost the connection: %s' % tm.error)
+                break
+        print('\nAll done.')
+    except (KeyboardInterrupt, EOFError):
+        print('\nStopped.')
+    finally:
+        tm.close()
+        out.close()
+        print('Saved %s. Tell Claude when it is there.' % path)
+
+
 def cmd_map_show(args):
     import json
     with open(args.file) as f:
@@ -631,6 +723,8 @@ def main(argv=None):
     m.add_argument('--all', action='store_true', help='include status pushes (Wi-Fi strength etc.)')
     m.add_argument('--raw', action='store_true', help='also print unknown message types and file transfers')
     m.add_argument('--polls', action='store_true', help='also print poll replies (meters?) whenever they change')
+    m.add_argument('--log', help='write everything to this file, and let you type notes between actions')
+    m.add_argument('--quiet', action='store_true', help='with --log: write only to the file, not the screen')
     m.set_defaults(fn=cmd_monitor)
 
     def ctl(name, helptext, fn, *extra):
@@ -727,6 +821,10 @@ def main(argv=None):
                     help='restore point or probe file (default mappings/%s)' % M.RESTORE_POINT)
     rs.add_argument('--yes', action='store_true', help='do not ask for confirmation')
     rs.set_defaults(fn=cmd_map_restore)
+    tr = msub.add_parser('tour', help='walk through actions on the mixer screen, logging what it reports')
+    tr.add_argument('sections', nargs='?', help='comma-separated: %s (default: all)' % ', '.join(M.TOUR))
+    tr.add_argument('--out', help='log file (default tour-<sections>-<time>.log)')
+    tr.set_defaults(fn=cmd_map_tour)
     sh = msub.add_parser('show', help='print a saved mapping file')
     sh.add_argument('file')
     sh.set_defaults(fn=cmd_map_show)

@@ -15,6 +15,7 @@ Two ways in:
 Results are written as JSON. They hold only IDs, names and values, never the
 raw config, so they are safe to commit.
 """
+import collections
 import datetime
 import json
 import math
@@ -165,6 +166,65 @@ def script_mutes(table, target=None):
         dict(prompt='Talkback ON'),
         dict(prompt='Talkback OFF'),
     ]
+
+
+# ---------------------------------------------------------------- tour
+# Steps for `map tour`: done on the mixer's own screen while the PC logs what the
+# mixer reports. (prompt, repeat): repeat steps cycle through a setting's options
+# and ask for each label. Channel 16 is used throughout, so leave it unused.
+# Nothing here deletes anything or powers the mixer down.
+
+TOUR_INTRO = """Do each step on the TouchMix's own touchscreen, then press Enter.
+Leave a few seconds between steps. Everything uses channel 16: pick nothing
+plugged into it, or note its settings first."""
+
+TOUR = collections.OrderedDict([
+    ('scenes', [
+        ('Open the Scenes screen (just look, change nothing)', False),
+        ('Save the current mix as a NEW user scene named TEST (Save As, confirm)', False),
+        ('Recall the scene TEST (confirm). Same mix, so nothing should change audibly', False),
+        ('Recall TEST again, this time with "omit levels" (or the closest option) ticked', False),
+    ]),
+    ('presets', [
+        ('Channel 16: recall any factory input preset (confirm)', False),
+        ('Channel 16: save its settings as a user preset named TEST16', False),
+        ('Channel 16: recall the "Default" / reset preset, or reset the channel', False),
+    ]),
+    ('modes', [
+        ('Channel 16 compressor: switch the compressor mode / type', True),
+        ('Channel 16 EQ band 1: switch the band type (bell, shelf, ...)', True),
+        ('Channel 16 low cut: switch the filter type or slope, if it has one', True),
+        ('Channel 16: switch the input source (analog, track/USB, ...)', True),
+    ]),
+    ('names', [
+        ('Rename channel 16 to TEST16', False),
+        ('Rename channel 16 back to what it was', False),
+    ]),
+    ('fx', [
+        ('FX 1: switch the effect type', True),
+        ('FX 1: put the effect type back to what it was', False),
+    ]),
+    ('buttons', [
+        ('Open the User Buttons setup and assign button 1 to "Mute" of channel 16', False),
+        ('Press user button 1 once (channel 16 mutes)', False),
+        ('Press user button 1 again (unmute)', False),
+        ('Put user button 1 back to its old assignment', False),
+    ]),
+    ('recorder', [
+        ('Recorder (multitrack, USB drive in): press Play on the last session', False),
+        ('Set a locate point', False),
+        ('Go to the locate point', False),
+        ('Press any other transport buttons the recorder has (pause, rewind, fast forward), one at a time', True),
+        ('Stop', False),
+    ]),
+    ('meters', [
+        ('Silence: nothing playing into any input, 10 seconds', False),
+        ('Play a steady sound into input 1 only, 10 seconds', False),
+        ('Stop it. Play the same sound into input 2 only, 10 seconds', False),
+        ('Same sound into input 1 again, but 10 dB quieter (lower the source, not the fader), 10 seconds', False),
+        ('Stop. Silence, 5 seconds', False),
+    ]),
+])
 
 
 SCRIPTS = {
