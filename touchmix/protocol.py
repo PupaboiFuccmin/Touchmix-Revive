@@ -68,6 +68,14 @@ def decode_param_set(payload):
         yield pid, tag, raw, struct.unpack('<f', struct.pack('<I', raw))[0]
 
 
+def encode_text(pid, text):
+    """Type 9.1 to the mixer: set a text parameter (a channel name, say).
+    Accepted by the mixer (2026-10-22: renamed In 16), which reports it to the
+    other clients but sends nothing back to the sender."""
+    data = text.encode('ascii')
+    return frame(TEXT, struct.pack('<HHH', pid, 0, len(data)) + data)
+
+
 def decode_text(payload):
     """Type 9.1: u16 id, u16 (0 so far), u16 length, then the text."""
     pid, _, ln = struct.unpack('<HHH', payload[:6])

@@ -22,6 +22,11 @@ def default_client_name():
     return 'Revive-' + host
 
 
+# Longest name tried so far is 6 characters ('TEST16'); the mixer's own
+# keyboard may allow more. Keep names short until the limit is known.
+MAX_NAME = 16
+
+
 class TouchMixError(Exception):
     pass
 
@@ -227,6 +232,18 @@ class TouchMix:
         These are the two values the mixer reported when the mode was switched."""
         self.set_many([('Global > Transport > Multi-track Enable', 0.0 if on else 1.0),
                        ('Global > Misc Input > Playback', int_to_norm(0 if on else 1))])
+
+    def set_text(self, param, text):
+        """Set a text parameter, e.g. 'In 4 > Control > Name'. ASCII only."""
+        pid = self.resolve(param)
+        self._send(P.encode_text(pid, text))
+        self.config_text[pid] = text
+
+    def rename(self, channel, name):
+        """Rename a channel (1-16, st17, aux1, fx2, dca3, ...), as on its Setup tab."""
+        if not name or len(name) > MAX_NAME:
+            raise ValueError('channel names are 1-%d characters' % MAX_NAME)
+        self.set_text(self.channel_param(channel, 'Name'), name)
 
     def mp3_select(self, index):
         """Select song `index` (0 = first) in the MP3 list."""

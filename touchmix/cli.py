@@ -487,6 +487,26 @@ def cmd_collect(args):
     print('Done: %d copied, %d already there.' % (copied, skipped))
 
 
+def cmd_name(args):
+    pid = ParamTable().find('%s > Control' % strip_path(args.channel), 'Name').index
+    tm = open_mixer(args)
+    warn_no_access(tm)
+    try:
+        old = tm.config_text.get(pid, '')
+        tm.rename(args.channel, args.name)
+        time.sleep(0.3)
+    finally:
+        tm.close()
+    print('renamed %s: %r -> %r' % (strip_path(args.channel), old, args.name))
+    if args.verify:
+        time.sleep(0.5)
+        check = open_mixer(args)
+        now = check.config_text.get(pid)
+        check.close()
+        print('mixer now says %r: %s' % (now, 'CHANGED' if now == args.name else 'unchanged'))
+        return 0 if now == args.name else 2
+
+
 def cmd_find(args):
     for p in ParamTable().search(args.text):
         print('%5d 0x%04x  %s' % (p.index, p.index, p.full_name))
@@ -781,6 +801,12 @@ def main(argv=None):
     co.add_argument('--out', help='where to put it (default: ~/Music/TouchMix)')
     co.add_argument('--no-names', action='store_true', help="don't ask the mixer for channel names")
     co.set_defaults(fn=cmd_collect)
+
+    nm = sub.add_parser('name', help='rename a channel, e.g. name 16 Kick')
+    nm.add_argument('channel', help='1-16, st17, st19, main, aux1-10, fx1-4, dca1-8')
+    nm.add_argument('name', help='the new name (ASCII, keep it short)')
+    nm.add_argument('--verify', action='store_true', help='reconnect and check the mixer stored it')
+    nm.set_defaults(fn=cmd_name)
 
     f = sub.add_parser('find', help='search parameter names (offline)')
     f.add_argument('text')

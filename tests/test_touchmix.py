@@ -449,6 +449,16 @@ class Client(unittest.TestCase):
             tm.wait_ready(5)
             self.assertRaises(ValueError, tm.eq_shelf, 16, 2)
 
+    def test_cli_rename(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'name', '4', 'Kick', '--verify'])
+        self.assertEqual(rc, 0, out.getvalue())
+        self.assertEqual(self.mixer.texts[554], 'Kick')
+        self.assertIn("'Vox' -> 'Kick'", out.getvalue())
+        # the bytes sent to the real mixer on 2026-10-22, which renamed In 16
+        self.assertEqual(P.encode_text(0x05BA, 'In 16').hex(), '090001001100' + 'ba0500000500496e203136')
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

@@ -210,8 +210,9 @@ From `map tour source,names` on channel 16 (2026-10-22,
   1 playing from Track, 2 armed for recording (seen earlier when arming).
 * **Renaming** (Setup tab > Name): the mixer reports a **9.1 text** message
   with the new name for `In N > Control > Name` (`0x05BA` on channel 16),
-  plus a 5.1 `Name` = 0. Whether a client can rename by sending the same 9.1
-  is untested.
+  plus a 5.1 `Name` = 0. **Sending the same 9.1 from the PC renames the
+  channel** (tested on In 16: "in 16" → "In 16"). The mixer does not echo it
+  back to the sender. `touchmix name 16 Kick` does this.
 
 ## Pulling recordings over the network: no sign of it
 

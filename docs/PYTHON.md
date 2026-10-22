@@ -71,6 +71,13 @@ tm.transport('play')
 title = tm.config_text[0x0118]   # 'Global > Control > Current Song', kept up to date
 ```
 
+**Names and other text settings:**
+
+```python
+tm.rename(16, 'Kick')                                  # as on the channel's Setup tab
+tm.set_text('Aux 1 > Control > Name', 'Drums')         # any text parameter
+```
+
 **Any mapped control, in real units:**
 
 ```python

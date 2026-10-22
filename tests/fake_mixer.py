@@ -20,7 +20,7 @@ CONFIG = '''<?xml version="1.0" encoding="UTF-8"?>
       <Parameter Type="41" Instance="0" name="Fader" value="{v[542]}" Index="542"/>
       <Parameter Type="2" Instance="0" name="Mute" value="{v[543]}" Index="543"/>
       <Parameter Type="4" Instance="0" name="Pan" value="{v[545]}" Index="545"/>
-      <Parameter Type="165" Instance="0" name="Name" value="0" Index="554" text="Vox"/>
+      <Parameter Type="165" Instance="0" name="Name" value="0" Index="554" text="{t[554]}"/>
     </Effect>
   </Channel>
   <Channel Type="0" Instance="4" Version="0" Name="In 5">
@@ -64,6 +64,7 @@ class FakeMixer:
         self.status_before_hello = False   # the real mixer does this while playing MP3s
         self.access = access     # like the real mixer, writes are ignored without it
         self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0}
+        self.texts = {554: 'Vox'}
         self.received = []
         self.clients = []
         self.srv = socket.socket()
@@ -116,7 +117,7 @@ class FakeMixer:
 
     def _config_file(self):
         # padding makes the file span several chunks
-        xml = CONFIG.format(v=self.values, padding='<!-- %s -->' % ('x' * 3000))
+        xml = CONFIG.format(v=self.values, t=self.texts, padding='<!-- %s -->' % ('x' * 3000))
         return self._file(self.config_name, xml, 'tmp')
 
     def _settings_file(self, client):
@@ -161,6 +162,10 @@ class FakeMixer:
                         for pid, _, _, value in P.decode_param_set(payload):
                             if self.access:
                                 self.apply(pid, value)
+                    elif msg_type == P.TEXT:
+                        pid, text = P.decode_text(payload)
+                        if self.access and pid in self.texts:
+                            self.texts[pid] = text
         except OSError:
             pass
         finally:

@@ -162,9 +162,16 @@ char text[len]      (no terminator)
 ```
 
 Seen when the MP3 player changes song: `18 01 00 00 12 00` + `ERN FULL SONG
-(tw)`, i.e. `0x0118 Global > Control > Current Song`. Text parameters
-(names, IP addresses, Demo Enabled) probably change this way too. Whether a
-client can send 9.1 to set one is untested.
+(tw)`, i.e. `0x0118 Global > Control > Current Song`, and when a channel is
+renamed on the mixer (`In N > Control > Name`, together with a 5.1 `Name` = 0).
+
+**A client can send 9.1 too.** `ba 05 00 00 05 00` + `In 16` renamed input 16
+(2026-10-22). The mixer stored it, and the config on the next connect showed
+the new name. It sent nothing back to the sender. `TouchMix.set_text()` and
+`rename()` use this.
+
+9.9 has the same layout. It has been seen for `Rta Local > Used by device`
+(the mixer's own name).
 
 ### Integer parameters ✅
 
