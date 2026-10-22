@@ -248,6 +248,16 @@ class Client(unittest.TestCase):
             tm.wait_ready(5)
             self.assertEqual(tm.config_text[554], 'Vox')
 
+    def test_config_refreshed_after_recall(self):
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            self.assertEqual(tm.config.get(543), '0')
+            self.mixer.values[543] = 1                       # the recalled scene has In 4 muted
+            self.mixer.config_name = 'all-config.xml.dscomp'
+            self.mixer.push_frame(self.mixer._config_file())
+            time.sleep(0.3)
+            self.assertEqual(tm.config.get(543), '1')
+
     def test_access_rights(self):
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
             tm.wait_ready(5)

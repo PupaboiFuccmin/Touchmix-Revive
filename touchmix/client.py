@@ -10,8 +10,10 @@ from . import protocol as P
 from .params import (ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
                      send_name, curve_for, transport_to_norm, int_to_norm)
 
-# The number varies: NH4 on some connections, NH8 on others (seen 2026-10-21)
-CONFIG_FILE = re.compile(r'NH\d+-config\.xml\.dscomp$')
+# The full mixer state. Sent on connect as NH<n>-config (NH4 on some
+# connections, NH8 on others), and again as all-config after every scene or
+# preset recall (seen 2026-10-22), so tm.config stays current.
+CONFIG_FILE = re.compile(r'(NH\d+|all)-config\.xml\.dscomp$')
 SETTINGS_SUFFIX = '.settings.dqx.dscomp'
 
 

@@ -148,6 +148,38 @@ would fit `Copy To External`.
 scene UUID in `Scene Uuid0–7`), then write `Recall`. The `Omit …` and
 `With …` flags match the app's recall options.
 
+## Scenes and presets: what the mixer reports
+
+From `map tour scenes` on the mixer's own screen (2026-10-21,
+`mappings/tour-scenes-20261021-234423.log`):
+
+**Save As (new scene "TEST"):** `FileMan > Save As` = 0, then about 2 s later
+`FileMan > Name` = "TEST" (as 9.1 text), `FileMan > Session` = "DEFAULT",
+`FileMan > Scene Uuid0`–`7`, and a fresh `fileIndex.xml` with the new scene.
+
+**Recall (scene, and a channel preset):** `FileMan > Recall` = 0, then about
+2 s later the mixer sends **`all-config.xml.dscomp`**, the complete mixer
+state after the recall, to every client. The client now treats it like the
+connect-time config, so `tm.config` stays current.
+
+**Scene IDs:** `Scene Uuid0`–`7` are the scene's UUID from the file index, as
+eight little-endian u16 words, each sent as n/65536:
+
+```
+fileIndex  TEST.scene.dqx  Uuid 790091c8bc2044e880d34b355d7bbd21
+wire       0x0079 0xc891 0x20bc 0xe844 0xd380 0x354b 0x7b5d 0x21bd
+bytes      79 00  91 c8  bc 20  44 e8  80 d3  4b 35  5d 7b  bd 21
+```
+
+No `Type`, `Location` or `Number` changes were reported, so the mixer's own
+screen picks the file internally. The likeliest client-side recall is: write
+the scene's UUID to `Scene Uuid0`–`7`, then `Recall`, and expect an
+`all-config` back. Untested. The app's earlier `Recall = 0` writes (without a
+UUID, behind its broken confirm) did not recall anything.
+
+The tour stopped at step 6 (saving a channel preset) when the mixer's screen
+froze. The mixer restarted, and its control port changed again (to 45262).
+
 ## Pulling recordings over the network: no sign of it
 
 Brainstorm priority 2 asked whether recorded tracks can come off the mixer
