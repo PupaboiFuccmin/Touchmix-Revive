@@ -508,6 +508,18 @@ class Client(unittest.TestCase):
                   for pid, _, _, v in P.decode_param_set(p)]
         self.assertEqual(writes[-1], (0x0FB, 0.0))
 
+    def test_commands_keep_the_client_name(self):
+        """The mixer keys access on the client name, so no command's own
+        arguments may change it (scene recall usr once connected as 'usr')."""
+        from touchmix.client import default_client_name
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'usr'])
+            main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'name', '4', 'Kick'])
+            main(['--host', '127.0.0.1', '--port', str(self.mixer.port), '--name', 'Studio-PC', 'name', '4', 'Vox'])
+        hellos = [P.decode_hello(p)[0] for t, p in self.mixer.received if t == P.HELLO]
+        self.assertEqual(hellos, [default_client_name(), default_client_name(), 'Studio-PC'])
+        self.assertEqual(self.mixer.texts[554], 'Vox')
+
     def test_scene_recall_reports_no_answer(self):
         self.mixer.recall_trigger = 1.0          # this mixer ignores Recall = 0
         out = io.StringIO()

@@ -501,12 +501,12 @@ def cmd_scene(args):
                 print('  %s %-8s %-24s %s' % ('*' if s['current'] else ' ', s['location'], s['name'], s['uuid']))
             print('(* = last saved or recalled)')
             return
-        if not args.name:
+        if not args.scene:
             sys.exit('scene recall needs a scene name (see scene list)')
         warn_no_access(tm)
-        scene = tm.find_scene(args.name)
+        scene = tm.find_scene(args.scene)
         print('Recalling %s scene %r ...' % (scene['location'], scene['name']))
-        if tm.recall_scene(args.name, trigger=args.trigger):
+        if tm.recall_scene(args.scene, trigger=args.trigger):
             print('The mixer sent its new state: recalled.')
             return 0
         print('No answer from the mixer within %d s: the recall probably did not happen.' % 6)
@@ -539,18 +539,18 @@ def cmd_name(args):
     warn_no_access(tm)
     try:
         old = tm.config_text.get(pid, '')
-        tm.rename(args.channel, args.name)
+        tm.rename(args.channel, args.new_name)
         time.sleep(0.3)
     finally:
         tm.close()
-    print('renamed %s: %r -> %r' % (strip_path(args.channel), old, args.name))
+    print('renamed %s: %r -> %r' % (strip_path(args.channel), old, args.new_name))
     if args.verify:
         time.sleep(0.5)
         check = open_mixer(args)
         now = check.config_text.get(pid)
         check.close()
-        print('mixer now says %r: %s' % (now, 'CHANGED' if now == args.name else 'unchanged'))
-        return 0 if now == args.name else 2
+        print('mixer now says %r: %s' % (now, 'CHANGED' if now == args.new_name else 'unchanged'))
+        return 0 if now == args.new_name else 2
 
 
 def cmd_find(args):
@@ -873,7 +873,7 @@ def main(argv=None):
 
     sc = sub.add_parser('scene', help='list scenes, or recall one: scene recall TEST')
     sc.add_argument('action', choices=['list', 'recall'])
-    sc.add_argument('name', nargs='?', help='scene name, file name or UUID')
+    sc.add_argument('scene', nargs='?', help='scene name, file name or UUID')
     sc.add_argument('--trigger', type=float, default=0.0, help='value written to FileMan > Recall (default 0)')
     sc.set_defaults(fn=cmd_scene)
 
@@ -886,7 +886,7 @@ def main(argv=None):
 
     nm = sub.add_parser('name', help='rename a channel, e.g. name 16 Kick')
     nm.add_argument('channel', help='1-16, st17, st19, main, aux1-10, fx1-4, dca1-8')
-    nm.add_argument('name', help='the new name (ASCII, keep it short)')
+    nm.add_argument('new_name', metavar='name', help='the new name (ASCII, keep it short)')
     nm.add_argument('--verify', action='store_true', help='reconnect and check the mixer stored it')
     nm.set_defaults(fn=cmd_name)
 
