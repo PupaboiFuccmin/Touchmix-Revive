@@ -1,14 +1,19 @@
-# Research: controls beyond the app
+# Research: controls beyond the mixing screens
 
-Notes from looking for things the TouchMix control protocol can do that the
-official app doesn't obviously expose. Everything here was found read-only:
-from the parameter dictionary, and from the config and file index the mixer
-sends to every client. Nothing in this file has been written to the mixer yet.
+Notes on what the TouchMix control protocol can do besides mixing. Most of
+this was found read-only, from the parameter dictionary and from the config
+and file index the mixer sends to every client.
 
-## Parameters with no obvious place in the app
+**Most of these are not hidden.** The official app and the mixer's own screen
+have recording, scenes, presets, the RTA, pink noise and user buttons. What is
+new here is driving them from a PC. Which ones the app does *not* expose has
+not been checked; the likeliest candidates are Powerdown, Test screen, Demo
+Enabled and the MP3 player settings.
 
-All of these are ordinary parameters (5.1 param-set). The client can already
-write them with `TouchMix.set()`, and none have been tried.
+## Non-mixing parameters
+
+All of these are ordinary parameters (5.1 param-set), and `TouchMix.set()` can
+write them. Only the recorder has been tried (see below).
 
 | Area | Parameters (`params.csv` path) | Value now | Possible use |
 |------|--------------------------------|-----------|--------------|
