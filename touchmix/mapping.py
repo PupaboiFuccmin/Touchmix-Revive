@@ -276,14 +276,18 @@ TOUR = collections.OrderedDict([
          '     one at a time, typing each name. Empty Enter when done.', True),
     ]),
     ('meters', [
-        ('Silence: nothing playing into any input. Wait 10 seconds, then Enter.', False),
-        ('Play a steady sound (a held synth note, or a tone) into input 1 only.\n'
-         '     Keep it going 10 seconds. Type roughly what channel 1\'s meter shows\n'
-         '     (e.g. "-12"), then Enter.', False),
-        ('Stop input 1. Play the same sound into input 2 only, 10 seconds, then Enter.', False),
-        ('Same sound into input 1 again but about 10 dB quieter (turn the SOURCE down,\n'
-         '     not the fader), 10 seconds. Type the meter reading, then Enter.', False),
-        ('Stop everything. Silence for 5 seconds, then Enter.', False),
+        ('Silence: nothing playing. Wait 10 seconds, then Enter.', False),
+        ('Start a HELD note (a pad or organ, not a plucked sound) on your synth on\n'
+         '     inputs 7/8, at a normal level, and keep it held through every step below.\n'
+         '     Wait 10 seconds. Type roughly what the Main meter shows (e.g. "-12"), Enter.', False),
+        ('Still holding: MUTE channels 7 and 8 on the mixer. Wait 10 seconds, Enter.', False),
+        ('Unmute 7 and 8. Pull the MAIN fader all the way down. Wait 10 seconds, Enter.', False),
+        ("Put the Main fader back where it was. Pull channel 7's fader all the way\n"
+         '     down (channel 8 stays up). Wait 10 seconds, Enter.', False),
+        ("Put channel 7 back. Pull channel 8's fader all the way down. Wait 10 seconds, Enter.", False),
+        ("Put channel 8 back. Turn the synth's own volume down by about half (not a\n"
+         '     mixer fader). Wait 10 seconds. Type the Main meter reading, Enter.', False),
+        ('Let go of the note: silence for 10 seconds, Enter.', False),
     ]),
 ])
 

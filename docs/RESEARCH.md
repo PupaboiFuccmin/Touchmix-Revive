@@ -281,6 +281,62 @@ reports it like any other change.
 PROTOCOL.md). So the batch is the mixer's own report of a mute, not something
 a client has to send; plain mute writes work (confirmed earlier by probes).
 
+## FX processor settings, mute groups, monitor levels
+
+`probe-all --plan fx,extras` (2026-10-22, 52 files in `mappings/`). For each
+processor, FX 1 was switched to it, its settings swept in 11 steps, and FX 1
+put back on Mono Delay. All restored, all exact fits. The curves are in
+`FX_CURVES` in `params.py`:
+
+| Processor | Settings |
+|-----------|----------|
+| Chorus | Rate lin 0.35–5 Hz, Depth lin 0.1–3.5, Waveform steps 0–2, Delay lin 0–20 ms, HPF exp 20–2000 Hz, LPF exp 200–20000 Hz |
+| Stereo Delay / Mono Delay | Delay (L/R) lin 1–1500 ms, Regen lin 0–99 %, HPF / LPF as above, Param Link and Filter Link switches |
+| Pitch Shift | Shift (L/R) lin ±1300 cents, Delay (L/R) lin 0–100 ms, P.Corr. Rate lin 0–10, Coarse edit switch, Key steps 0–12, HPF / LPF |
+| Dense Reverb | Rev Time exp 0.33–10 s, Initial Delay lin 0–200 ms, Hi Ratio lin 0.1–1, Room steps 1–4, Diffusion lin 0–10, Reverb Delay lin 0–100 ms, ER lin 0–100, HPF / LPF |
+| Lush Reverb | Size lin 22.5–39.1, Pre Delay lin 0–200 ms, Room steps 1–5, Low / High Rev Time lin 0.2–4 s, X-over exp 100–12000 Hz, Diffusion lin 0–100, HPF / LPF |
+
+"steps" settings are whole numbers, `lo + round(x * (hi - lo))`. Their labels
+(which waveform, which key, which room) aren't known yet.
+
+**Extras:** mute groups 1–8 `Mute` switch at 0.5 (`mute mute3 on` works). The
+monitor level follows the fader law (−55…+12 dB). The **headphone level
+follows the same law but to +24 dB** (`79·x^0.69 − 55`). CR and phones gain
+boost are lin ±20 dB.
+
+`touchmix fx 1 show` lists FX 1's current settings in real units, and
+`touchmix fx 1 set "Rev Time" 2.5` sets one. **The set is untested on the
+mixer.**
+
+## Recorder buttons
+
+From `map tour recorder` (2026-10-22, `mappings/tour-recorder-meters-20261022-014726.log`):
+
+| Button | Mixer reported |
+|--------|----------------|
+| `|<<` | `Transport` = 5, then 0 |
+| `<<` rewind | `Transport` = 4, then 0 |
+| `>` play | 1 |
+| `>>` fast forward | 3 |
+| stop / rec | 0 / 2 |
+| Set | `Locate` = play position (fraction of the session, 0.527), then `Set Locate` 1 → 0 |
+| Go To | `Goto Locate` 1 → 0 |
+
+Dragging the play pointer reported nothing. Opening "New / Recall" and
+recalling the recording session reported `FileMan > Recall` = 0, the session
+name, the scene UUID and the MP3 playlist (as text). `record ff`, `rew`,
+`set`, `goto` and `locate F` send these. **They are untested on the mixer.**
+
+## Meters: lead
+
+While a synth played into inputs 7/8, the 42-byte poll reply (to the poll the
+client sends) changed continuously: `u16 0x0028`, then 10 little-endian
+floats. Floats 1–2 (nearly equal, about 0.98 → 0.07 as the note decayed) and
+9–10 moved; 3–8 stayed 0. Probably linear-amplitude meters in stereo pairs,
+but not yet which meters. The rewritten `map tour meters` (held note on 7/8;
+mute, Main fader down, channel faders down, source quieter) should tell them
+apart.
+
 ## Pulling recordings over the network: no sign of it
 
 Brainstorm priority 2 asked whether recorded tracks can come off the mixer

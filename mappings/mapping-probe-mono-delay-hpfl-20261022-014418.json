@@ -1,0 +1,73 @@
+{
+ "kind": "probe",
+ "created": "2026-10-22T01:44:18",
+ "mixer": "QSC JD HOME",
+ "host": "192.168.10.129",
+ "section": "Mono Delay",
+ "param": "HpfL",
+ "band": 1,
+ "channels": [
+  "fx1"
+ ],
+ "points": [
+  {
+   "id": "0x0bde",
+   "wire": 0.0,
+   "eng": 20.0
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.1,
+   "eng": 31.697864532470703
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.2,
+   "eng": 50.23773193359375
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.3,
+   "eng": 79.62144470214844
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.4,
+   "eng": 126.19147491455078
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.5,
+   "eng": 200.0
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.6,
+   "eng": 316.9786682128906
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.7,
+   "eng": 502.37725830078125
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.8,
+   "eng": 796.21435546875
+  },
+  {
+   "id": "0x0bde",
+   "wire": 0.9,
+   "eng": 1261.91455078125
+  },
+  {
+   "id": "0x0bde",
+   "wire": 1.0,
+   "eng": 2000.0
+  }
+ ],
+ "originals": {
+  "0x0bde": 80.0
+ },
+ "restored": true
+}

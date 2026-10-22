@@ -99,7 +99,7 @@ class Scaling(unittest.TestCase):
                 self.assertIsNotNone(curve, '%s (%s)' % (par.full_name, f))
                 self.assertAlmostEqual(curve.from_norm(p['wire']), p['eng'], delta=0.01 + abs(p['eng']) * 1e-5,
                                        msg='%s at %s (%s)' % (par.full_name, p['wire'], f))
-                if curve.kind not in ('switch',) and curve.from_norm(p['wire']) > S.FADER_MIN_DB:
+                if curve.kind not in ('switch', 'steps') and curve.from_norm(p['wire']) > S.FADER_MIN_DB:
                     self.assertAlmostEqual(curve.to_norm(p['eng']), p['wire'], places=4,
                                            msg='%s inverse at %s' % (par.full_name, p['eng']))
                 checked += 1
@@ -110,7 +110,12 @@ class Scaling(unittest.TestCase):
         self.assertEqual(S.curve_for('In 4 > Control', 'Trim').hi, 15)
         self.assertIs(S.curve_for('Aux 1 > Control', 'Fader'), S.FADER)
         self.assertIsNone(S.curve_for('Main > Comp', 'Mode'))       # enums are not mapped
-        self.assertIsNone(S.curve_for('FX 1 > D-Reverb', 'Rev Time'))
+        self.assertIsNone(S.curve_for('FX 1 > Editor', 'Param 1'))     # generic editor slots: unmapped
+        self.assertEqual(S.curve_for('FX 1 > D-Reverb', 'Rev Time').format(0.5), '1.817 s')
+        self.assertEqual(S.curve_for('FX 2 > PitchShift', 'Key').format(0.3), '4')
+        self.assertAlmostEqual(S.curve_for('Global > Control', 'Phones / Cue Level').from_norm(1.0), 24.0)
+        self.assertAlmostEqual(S.curve_for('Global > Control', 'Phones / Cue Level').to_norm('-55'), 0.0)
+        self.assertIs(S.curve_for('Mute 3 > Control', 'Mute'), S.SWITCH)
         self.assertIsNone(S.curve_for('DCA 1 > Control', 'Trim'))
         self.assertEqual(S.curve_for('Main > Comp', 'Ratio').hi, 100)    # buses differ from inputs
         self.assertEqual(S.curve_for('In 4 > Comp', 'Ratio').hi, 20)
@@ -331,6 +336,17 @@ class Client(unittest.TestCase):
         self.assertAlmostEqual(transport[0], 2 / 7.0, places=6)
         self.assertEqual(transport[1], 0.0)
         self.assertIn('Transport:', out.getvalue())
+
+    def test_cli_record_locate_and_wind(self):
+        port = str(self.mixer.port)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            for args in (['ff'], ['rew'], ['locate', '0.5'], ['set'], ['goto']):
+                self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'record'] + args), 0)
+        writes = [(pid, round(v, 6)) for t, p in self.mixer.received if t == P.PARAM_SET
+                  for pid, _, _, v in P.decode_param_set(p)]
+        # what the mixer reported for >>, <<, Set and Go To on the Record/Play screen
+        self.assertEqual(writes, [(0x00B8, round(3 / 7.0, 6)), (0x00B8, round(4 / 7.0, 6)), (0x00BF, 0.5),
+                                  (0x00BD, 1.0), (0x00BD, 0.0), (0x00BE, 1.0), (0x00BE, 0.0)])
 
     def test_transport_values(self):
         self.assertAlmostEqual(S.transport_to_norm('play'), 0.142857, places=6)

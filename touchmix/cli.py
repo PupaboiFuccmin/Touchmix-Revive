@@ -360,7 +360,8 @@ def record_status(tm):
 
 
 def cmd_record(args):
-    """record status | arm CH... | disarm CH... | start | stop | play | rtz"""
+    """record status | arm CH... | disarm CH... | start | stop | play | rtz | ff | rew
+    | set | goto | locate FRACTION"""
     tm = open_mixer(args)
     try:
         if args.action == 'status':
@@ -373,6 +374,17 @@ def cmd_record(args):
             for ch in chans:
                 tm.arm(ch, args.action == 'arm')
             print('%s %s' % (args.action, ', '.join(chans)))
+        elif args.action == 'set':
+            tm.locate_set()
+            print('locate point set at the play pointer')
+        elif args.action == 'goto':
+            tm.locate_goto()
+            print('play pointer -> locate point')
+        elif args.action == 'locate':
+            if len(args.channels) != 1:
+                sys.exit('usage: record locate FRACTION (0..1 of the session, e.g. 0.5)')
+            tm.locate(args.channels[0])
+            print('locate point -> %s of the session' % args.channels[0])
         else:
             state = {'start': 'record'}.get(args.action, args.action)
             tm.transport(state)
@@ -504,18 +516,43 @@ def cmd_scene(args):
 
 
 def cmd_fx(args):
-    """fx N type [KIND]: show or pick FX N's processor."""
-    pid = ParamTable().find('FX %d > Editor' % args.fx, 'FX type').index
-    preset = ParamTable().find('FX %d > Control' % args.fx, 'Preset').index
-    if args.kind is None:
+    """fx N type [KIND] | fx N show | fx N set NAME VALUE"""
+    table = ParamTable()
+    pid = table.find('FX %d > Editor' % args.fx, 'FX type').index
+    preset = table.find('FX %d > Control' % args.fx, 'Preset').index
+    if args.what == 'set':
+        if len(args.rest) != 2:
+            sys.exit('usage: fx N set NAME VALUE, e.g. fx 1 set "Rev Time" 2.5 (see fx N show)')
+        name, value = args.rest
+        tm = open_mixer(args)
+        try:
+            section = tm.fx_section(args.fx)
+            if section is None:
+                sys.exit('FX %d has no processor loaded' % args.fx)
+            par = table.find('FX %d > %s' % (args.fx, section), name)
+        finally:
+            tm.close()
+        return apply_and_verify(args, lambda tm: tm.fx_set(args.fx, name, value), par.index)
+    if args.what == 'show' or not args.rest:
         tm = open_mixer(args)
         try:
             n = int(float(tm.config.get(pid) or 0))
             print('FX %d: %s (preset %r)' % (args.fx, FX_TYPE_NAMES.get(n, n), tm.config_text.get(preset, '')))
+            section = tm.fx_section(args.fx)
+            if args.what == 'show' and section:
+                for p in sorted(table.by_index.values(), key=lambda p: p.index):
+                    curve = curve_for(p.path, p.name)
+                    if p.path == 'FX %d > %s' % (args.fx, section) and curve:
+                        eng = tm.config.get(p.index)
+                        if curve.kind == 'switch':
+                            shown = 'on' if eng not in ('0', '0.0') else 'off'
+                        else:
+                            shown = ('%.6g %s' % (float(eng), curve.unit)).strip()
+                        print('  %-14s %s' % (p.name, shown))
         finally:
             tm.close()
         return
-    n = fx_type_number(args.kind)
+    n = fx_type_number(args.rest[0])
     return apply_and_verify(args, lambda tm: tm.fx_type(args.fx, n), pid)
 
 
@@ -846,8 +883,10 @@ def main(argv=None):
     s.set_defaults(fn=cmd_set)
 
     rec = sub.add_parser('record', help='USB recorder: status, arm/disarm tracks, start/stop/play/rtz')
-    rec.add_argument('action', choices=['status', 'arm', 'disarm', 'start', 'stop', 'play', 'rtz', 'next', 'previous'])
-    rec.add_argument('channels', nargs='*', help='for arm/disarm: 1-16, st17, st19, 2trk, ranges like 1-8, or all')
+    rec.add_argument('action', choices=['status', 'arm', 'disarm', 'start', 'stop', 'play', 'rtz', 'ff', 'rew',
+                                        'next', 'previous', 'set', 'goto', 'locate'])
+    rec.add_argument('channels', nargs='*', help='for arm/disarm: 1-16, st17, st19, 2trk, ranges like 1-8, or all; '
+                                                 'for locate: a fraction of the session, 0..1')
     rec.add_argument('--verify', action='store_true', help='reconnect and show the recorder status afterwards')
     rec.set_defaults(fn=cmd_record)
 
@@ -868,10 +907,11 @@ def main(argv=None):
     sc.add_argument('action', choices=['list'])
     sc.set_defaults(fn=cmd_scene)
 
-    fx = sub.add_parser('fx', help='show or pick an FX processor: fx 1 type lush')
+    fx = sub.add_parser('fx', help='FX processor: fx 1 type lush | fx 1 show | fx 1 set "Rev Time" 2.5')
     fx.add_argument('fx', type=int, choices=[1, 2, 3, 4])
-    fx.add_argument('what', choices=['type'])
-    fx.add_argument('kind', nargs='?', help='none, chorus, delay, pitch, dense, lush, mono-delay (omit to show)')
+    fx.add_argument('what', choices=['type', 'show', 'set'])
+    fx.add_argument('rest', nargs='*', help='type: none, chorus, delay, pitch, dense, lush, mono-delay; '
+                                            'set: NAME VALUE (see fx N show)')
     fx.add_argument('--verify', action='store_true', help='reconnect and check the mixer stored it')
     fx.set_defaults(fn=cmd_fx)
 

@@ -9,7 +9,7 @@ import zlib
 
 from . import protocol as P
 from .params import (ParamTable, strip_path, risky, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
-                     send_name, curve_for, transport_to_norm, int_to_norm, fx_type_number)
+                     send_name, curve_for, transport_to_norm, int_to_norm, fx_type_number, FX_SECTIONS)
 
 # The full mixer state. Sent on connect as NH<n>-config (NH4 on some
 # connections, NH8 on others), and again as all-config after every scene or
@@ -235,9 +235,28 @@ class TouchMix:
         self.set(pid, 1.0 if on else 0.0)
 
     def transport(self, state):
-        """'record', 'play', 'stop', 'next', 'previous' or 'rtz' (return to
-        zero; top of list in MP3 mode)."""
+        """'record', 'play', 'stop', 'ff', 'rew' or 'rtz' (return to zero).
+        In MP3 mode 'next' / 'previous' (the same values as ff / rew) and
+        'rtz' (top of list)."""
         self.set('Global > Transport > Transport', transport_to_norm(state))
+
+    def _pulse(self, param):
+        """Write 1 then 0, as the mixer reports its momentary buttons."""
+        self.set(param, 1.0)
+        time.sleep(0.1)
+        self.set(param, 0.0)
+
+    def locate_set(self):
+        """The recorder's Set button: the locate point moves to the play pointer."""
+        self._pulse('Global > Transport > Set Locate')
+
+    def locate_goto(self):
+        """The recorder's Go To button: the play pointer jumps to the locate point."""
+        self._pulse('Global > Transport > Goto Locate')
+
+    def locate(self, fraction):
+        """Put the locate point at a fraction (0..1) of the session's length."""
+        self.set('Global > Transport > Locate', min(1.0, max(0.0, float(fraction))))
 
     def mp3_mode(self, on=True):
         """Switch the USB player between MP3 playback and multitrack recording.
@@ -289,6 +308,19 @@ class TouchMix:
         """Pick FX 1-4's processor: 'none', 'chorus', 'delay', 'pitch', 'dense',
         'lush' or 'mono-delay'. The mixer loads that processor's default preset."""
         self.set('FX %d > Editor > FX type' % int(fx), int_to_norm(fx_type_number(kind)))
+
+    def fx_section(self, fx):
+        """The section holding FX N's current processor settings ('L-Reverb', ...), or None."""
+        n = int(float(self.config.get(self.resolve('FX %d > Editor > FX type' % int(fx))) or 0))
+        return FX_SECTIONS.get(n)
+
+    def fx_set(self, fx, name, value):
+        """Set a setting of FX N's current processor in real units:
+        fx_set(1, 'Rev Time', 2.5) with Dense Reverb loaded."""
+        section = self.fx_section(fx)
+        if section is None:
+            raise KeyError('FX %d has no processor loaded' % int(fx))
+        self.set_value('fx%d' % int(fx), section, name, value)
 
     def set_text(self, param, text):
         """Set a text parameter, e.g. 'In 4 > Control > Name'. ASCII only."""

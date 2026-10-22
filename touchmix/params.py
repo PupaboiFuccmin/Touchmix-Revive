@@ -198,7 +198,10 @@ def fx_type_number(name):
     return FX_TYPES[s]
 
 
-TRANSPORT_STATES = {'stop': 0, 'play': 1, 'record': 2, 'next': 3, 'previous': 4, 'rtz': 5}
+# 3 / 4 are fast forward / rewind on the multitrack recorder (the >> and <<
+# buttons) and next / previous song in MP3 mode.
+TRANSPORT_STATES = {'stop': 0, 'play': 1, 'record': 2, 'next': 3, 'previous': 4, 'rtz': 5,
+                    'ff': 3, 'rew': 4}
 TRANSPORT_STEPS = 7
 
 
@@ -216,7 +219,7 @@ def transport_to_norm(state):
 
 
 def transport_name(n):
-    """Config value (0, 1, 2, ...) -> 'stop', 'play', 'record', or the number."""
+    """Config value (0, 1, 2, ...) -> 'stop', 'play', 'record', 'next', ..., or the number."""
     n = int(float(n))
     return next((k for k, v in TRANSPORT_STATES.items() if v == n), str(n))
 
@@ -243,7 +246,8 @@ def fader_to_norm(value):
 class Curve:
     """kind is 'linear' (lo + (hi-lo)*x), 'exp' (lo * (hi/lo)^x), 'expoff'
     (lo + (hi-lo) * (r^x - 1)/(r - 1), an exponential that starts at 0),
-    'fader' or 'switch'."""
+    'steps' (lo + round(x * (hi-lo)), whole numbers), 'fader' (the fader law,
+    lo + (hi-lo) * x^0.69, -55 = -inf) or 'switch'."""
 
     def __init__(self, kind, lo=0.0, hi=1.0, unit='', ratio=None):
         self.kind, self.lo, self.hi, self.unit, self.ratio = kind, lo, hi, unit, ratio
@@ -251,7 +255,11 @@ class Curve:
     def from_norm(self, x):
         x = clamp01(x)
         if self.kind == 'fader':
-            return norm_to_fader_db(x)
+            if x <= 0:
+                return FADER_MIN_DB
+            return self.lo + (self.hi - self.lo) * x ** FADER_EXP
+        if self.kind == 'steps':
+            return float(self.lo + int(round(x * (self.hi - self.lo))))
         if self.kind == 'switch':
             return 1.0 if x >= 0.5 else 0.0
         if self.kind == 'exp':
@@ -264,10 +272,14 @@ class Curve:
         """Real units -> wire value. Plain numbers are in the curve's unit (dB for faders)."""
         s = str(value).strip().lower()
         if self.kind == 'fader':
-            try:
-                return fader_db_to_norm(float(s))
-            except ValueError:
-                return fader_to_norm(s)     # '-10db', 'off', 'unity'
+            if s in ('off', '-inf', 'inf', '-infdb'):
+                return 0.0
+            if s == 'unity':
+                s = '0'
+            db = float(s[:-2] if s.endswith('db') else s)       # '-10', '-10db'
+            if db <= self.lo:
+                return 0.0
+            return clamp01(((db - self.lo) / (self.hi - self.lo)) ** (1.0 / FADER_EXP))
         if self.kind == 'switch':
             return 1.0 if s in ('on', '1', '1.0', 'true', 'yes') else 0.0
         if self.unit and s.endswith(self.unit.lower()):
@@ -287,6 +299,8 @@ class Curve:
             return '-inf dB'
         if self.kind == 'switch':
             return 'on' if v else 'off'
+        if self.kind == 'steps':
+            return '%d' % v
         return '%.4g%s' % (v, ' ' + self.unit if self.unit else '')
 
     def __repr__(self):
@@ -392,14 +406,80 @@ BUS_CURVES = {
     ('Anti FB', 'Width'): Curve('linear', 10, 30),
 }
 
-FX_CURVES = {                           # FX 1-4 returns
+FX_HPF = Curve('exp', 20, 2000, 'Hz')
+FX_LPF = Curve('exp', 200, 20000, 'Hz')
+DELAY_TIME = Curve('linear', 1, 1500, 'ms')
+REGEN = Curve('linear', 0, 99, '%')
+
+FX_CURVES = {                           # FX 1-4 returns and their processors
     ('Control', 'Width'): PAN,
     ('Control', 'AuxBalance*'): PAN,
     ('EQ', 'Freq'): EQ_FREQ,
     ('EQ', 'Gain'): EQ_GAIN,
     ('EQ', 'Q'): EQ_Q,
     ('HPF', 'Freq'): LOW_CUT,
+    # processor settings: probed on FX 1 (2026-10-22, `probe-all --plan fx`);
+    # FX 2-4 run the same processors
+    ('Chorus', 'Rate'): Curve('linear', 0.35, 5, 'Hz'),
+    ('Chorus', 'Depth'): Curve('linear', 0.1, 3.5),
+    ('Chorus', 'Waveform'): Curve('steps', 0, 2),
+    ('Chorus', 'Delay'): Curve('linear', 0, 20, 'ms'),
+    ('Chorus', 'HPF'): FX_HPF,
+    ('Chorus', 'LPF'): FX_LPF,
+    ('Delay', 'Delay'): DELAY_TIME,
+    ('Delay', 'DelayR'): DELAY_TIME,
+    ('Delay', 'Regen'): REGEN,
+    ('Delay', 'Regen R'): REGEN,
+    ('Delay', 'HpfL'): FX_HPF,
+    ('Delay', 'HpfR'): FX_HPF,
+    ('Delay', 'LpfL'): FX_LPF,
+    ('Delay', 'LpfR'): FX_LPF,
+    ('Delay', 'Param Link'): SWITCH,
+    ('Delay', 'Filter Link'): SWITCH,
+    ('Mono Delay', 'Delay'): DELAY_TIME,
+    ('Mono Delay', 'Regen'): REGEN,
+    ('Mono Delay', 'HpfL'): FX_HPF,
+    ('Mono Delay', 'LpfL'): FX_LPF,
+    ('PitchShift', 'Left Shift'): Curve('linear', -1300, 1300, 'cents'),
+    ('PitchShift', 'Right Shift'): Curve('linear', -1300, 1300, 'cents'),
+    ('PitchShift', 'Delay L'): Curve('linear', 0, 100, 'ms'),
+    ('PitchShift', 'Delay R'): Curve('linear', 0, 100, 'ms'),
+    ('PitchShift', 'P.Corr. Rate'): Curve('linear', 0, 10),
+    ('PitchShift', 'Coarse edit'): SWITCH,
+    ('PitchShift', 'HPF'): FX_HPF,
+    ('PitchShift', 'LPF'): FX_LPF,
+    ('PitchShift', 'Key'): Curve('steps', 0, 12),
+    ('D-Reverb', 'Rev Time'): Curve('exp', 0.33, 10, 's'),
+    ('D-Reverb', 'Initial Delay'): Curve('linear', 0, 200, 'ms'),
+    ('D-Reverb', 'Hi Ratio'): Curve('linear', 0.1, 1),
+    ('D-Reverb', 'Room'): Curve('steps', 1, 4),
+    ('D-Reverb', 'Diffusion'): Curve('linear', 0, 10),
+    ('D-Reverb', 'Reverb Delay'): Curve('linear', 0, 100, 'ms'),
+    ('D-Reverb', 'ER'): Curve('linear', 0, 100),
+    ('D-Reverb', 'HPF'): FX_HPF,
+    ('D-Reverb', 'LPF'): FX_LPF,
+    ('L-Reverb', 'Size'): Curve('linear', 22.5, 39.1),
+    ('L-Reverb', 'Pre Delay'): Curve('linear', 0, 200, 'ms'),
+    ('L-Reverb', 'Room'): Curve('steps', 1, 5),
+    ('L-Reverb', 'Low Rev Time'): Curve('linear', 0.2, 4, 's'),
+    ('L-Reverb', 'High Rev Time'): Curve('linear', 0.2, 4, 's'),
+    ('L-Reverb', 'X-over'): Curve('exp', 100, 12000, 'Hz'),
+    ('L-Reverb', 'Diffusion'): Curve('linear', 0, 100),
+    ('L-Reverb', 'HPF'): FX_HPF,
+    ('L-Reverb', 'LPF'): FX_LPF,
 }
+
+# FX type -> the section holding that processor's settings
+FX_SECTIONS = {1: 'Chorus', 2: 'Delay', 3: 'PitchShift', 4: 'D-Reverb', 5: 'L-Reverb', 6: 'Mono Delay'}
+
+GLOBAL_CURVES = {
+    ('Control', 'Monitor / Cue Level'): FADER,
+    ('Control', 'Phones / Cue Level'): Curve('fader', FADER_MIN_DB, 24, 'dB'),   # to +24, not +12
+    ('Control', 'CR gain boost'): Curve('linear', -20, 20, 'dB'),
+    ('Control', 'Phones gain boost'): Curve('linear', -20, 20, 'dB'),
+}
+
+MUTE_GROUP_CURVES = {('Control', 'Mute'): SWITCH}
 
 PLAYBACK_CURVES = {                     # 2-Trk PB
     ('Control', 'Digital Trim'): Curve('linear', -12, 0, 'dB'),
@@ -420,14 +500,18 @@ def channel_kind(channel):
         return 'input'
     if channel == 'Main' or channel.startswith('Aux '):
         return 'bus'
-    for prefix, kind in (('FX ', 'fx'), ('2-Trk PB', 'playback'), ('Talkback', 'talkback'), ('DCA ', 'dca')):
+    if channel == 'Global':
+        return 'global'
+    for prefix, kind in (('FX ', 'fx'), ('2-Trk PB', 'playback'), ('Talkback', 'talkback'), ('DCA ', 'dca'),
+                         ('Mute ', 'mutegroup')):
         if channel.startswith(prefix):
             return kind
     return None
 
 
 KIND_CURVES = {'input': INPUT_CURVES, 'bus': BUS_CURVES, 'fx': FX_CURVES,
-               'playback': PLAYBACK_CURVES, 'talkback': TALKBACK_CURVES, 'dca': {}}
+               'playback': PLAYBACK_CURVES, 'talkback': TALKBACK_CURVES, 'dca': {},
+               'global': GLOBAL_CURVES, 'mutegroup': MUTE_GROUP_CURVES}
 
 
 def _lookup(table, section, name):

@@ -1,0 +1,73 @@
+{
+ "kind": "probe",
+ "created": "2026-10-22T01:34:43",
+ "mixer": "QSC JD HOME",
+ "host": "192.168.10.129",
+ "section": "PitchShift",
+ "param": "Left Shift",
+ "band": 1,
+ "channels": [
+  "fx1"
+ ],
+ "points": [
+  {
+   "id": "0x0bb7",
+   "wire": 0.0,
+   "eng": -1300.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.1,
+   "eng": -1040.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.2,
+   "eng": -780.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.3,
+   "eng": -520.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.4,
+   "eng": -260.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.5,
+   "eng": 0.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.6,
+   "eng": 260.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.7,
+   "eng": 520.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.8,
+   "eng": 780.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 0.9,
+   "eng": 1040.0
+  },
+  {
+   "id": "0x0bb7",
+   "wire": 1.0,
+   "eng": 1300.0
+  }
+ ],
+ "originals": {
+  "0x0bb7": 5.0
+ },
+ "restored": true
+}

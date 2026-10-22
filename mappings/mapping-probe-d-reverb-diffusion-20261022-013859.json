@@ -1,0 +1,73 @@
+{
+ "kind": "probe",
+ "created": "2026-10-22T01:38:59",
+ "mixer": "QSC JD HOME",
+ "host": "192.168.10.129",
+ "section": "D-Reverb",
+ "param": "Diffusion",
+ "band": 1,
+ "channels": [
+  "fx1"
+ ],
+ "points": [
+  {
+   "id": "0x0bc6",
+   "wire": 0.0,
+   "eng": 0.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.1,
+   "eng": 1.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.2,
+   "eng": 2.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.3,
+   "eng": 3.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.4,
+   "eng": 4.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.5,
+   "eng": 5.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.6,
+   "eng": 6.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.7,
+   "eng": 7.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.8,
+   "eng": 8.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 0.9,
+   "eng": 9.0
+  },
+  {
+   "id": "0x0bc6",
+   "wire": 1.0,
+   "eng": 10.0
+  }
+ ],
+ "originals": {
+  "0x0bc6": 10.0
+ },
+ "restored": true
+}

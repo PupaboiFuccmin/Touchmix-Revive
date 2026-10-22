@@ -1,0 +1,560 @@
+01:47:27 MSG 2.2 len=6 b49c01000000
+01:47:27 0x0696 0.0000                raw=00000000 tag=0000 Aux 1 > Control > Link
+01:47:27 0x0699 1.0000                raw=3f800000 tag=0000 Aux 1 > Comp > Mode
+01:47:27 0x0751 0.0000                raw=00000000 tag=0000 Aux 2 > Control > Link
+01:47:27 0x0754 1.0000                raw=3f800000 tag=0000 Aux 2 > Comp > Mode
+01:47:27 0x080c 0.0000                raw=00000000 tag=0000 Aux 3 > Control > Link
+01:47:27 0x080f 1.0000                raw=3f800000 tag=0000 Aux 3 > Comp > Mode
+01:47:27 0x08c7 0.0000                raw=00000000 tag=0000 Aux 4 > Control > Link
+01:47:27 0x08ca 1.0000                raw=3f800000 tag=0000 Aux 4 > Comp > Mode
+01:47:27 0x0982 0.0000                raw=00000000 tag=0000 Aux 5 > Control > Link
+01:47:27 0x0985 1.0000                raw=3f800000 tag=0000 Aux 5 > Comp > Mode
+01:47:27 0x0a3d 0.0000                raw=00000000 tag=0000 Aux 6 > Control > Link
+01:47:27 0x0a40 1.0000                raw=3f800000 tag=0000 Aux 6 > Comp > Mode
+01:47:27 0x000e 1.0000                raw=3f800000 tag=0000 Main > Comp > Mode
+01:47:27 0x0afb 1.0000                raw=3f800000 tag=0000 Aux 7/8 > Comp > Mode
+01:47:27 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
+01:47:28 FILE start NH4-config.xml.dscomp
+01:47:28 FILE end /usr/share/ds2i/tmp/NH4-config.xml.dscomp
+01:47:28 CONNECTED QSC JD HOME
+01:47:28 SECTION recorder
+01:47:28 STEP 1 Press RECORD/PLAY. If it shows MP3 mode, switch it back to Multitrack.
+     Make sure the session with your test recording is loaded ("New / Recall").
+01:47:28 FILE start fileIndex.xml.dscomp
+01:47:28 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+01:47:28 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+01:47:28 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+01:47:42 0x00ce 0.9400                raw=3f70a3d7 tag=0000 Global > Misc Input > Wireless Strength
+01:47:57 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
+01:48:15 0x00fb 0.0000                raw=00000000 tag=0000 Global > FileMan > Recall
+01:48:16 0x00ff text 'SCNA'  Global > FileMan > Name
+01:48:16 0x0100 text 'DEFAULT'  Global > FileMan > Session
+01:48:16 0x0101 0.0168                raw=3c894000 tag=0000 Global > FileMan > Scene Uuid0
+01:48:16 0x0102 0.6128                raw=3f1cdf00 tag=0000 Global > FileMan > Scene Uuid1
+01:48:16 0x0103 0.1271                raw=3e022c00 tag=0000 Global > FileMan > Scene Uuid2
+01:48:16 0x0104 0.9542                raw=3f744900 tag=0000 Global > FileMan > Scene Uuid3
+01:48:16 0x0105 0.4675                raw=3eef6200 tag=0000 Global > FileMan > Scene Uuid4
+01:48:16 0x0106 0.6618                raw=3f296b00 tag=0000 Global > FileMan > Scene Uuid5
+01:48:16 0x0107 0.4602                raw=3eeb9e00 tag=0000 Global > FileMan > Scene Uuid6
+01:48:16 0x0108 0.4485                raw=3ee5a200 tag=0000 Global > FileMan > Scene Uuid7
+01:48:16 0x0117 text 'ERN FULL SONG (tw)\njackingcase(DEMO)'  Global > Control > Mp3 playlist
+01:48:16 0x0117 0.0000                raw=00000000 tag=0000 Global > Control > Mp3 playlist
+01:48:16 0x0118 text 'ERN FULL SONG (tw)'  Global > Control > Current Song
+01:48:16 0x0118 0.0000                raw=00000000 tag=0000 Global > Control > Current Song
+01:48:16 0x0100 text 'DEFAULT'  Global > FileMan > Session
+01:49:12 LABEL 1 I think its on my test but the length is long
+01:49:12 END 1
+01:49:12 STEP 2 Touch Play (the session plays), wait about 3 seconds.
+01:49:17 0x00b8 0.1429                raw=3e124925 tag=0000 Global > Transport > Transport
+01:49:18 0x00bc 0.0000                raw=00063d00 tag=0000 Global > Transport > Time display
+01:49:18 0x00bc 0.0000                raw=00066000 tag=0000 Global > Transport > Time display
+01:49:18 0x00bc 0.0000                raw=00068300 tag=0000 Global > Transport > Time display
+01:49:18 0x00bc 0.0000                raw=0006a600 tag=0000 Global > Transport > Time display
+01:49:18 0x00b9 0.0959                raw=3dc467f5 tag=0000 Global > Transport > Song Position (edit)
+01:49:18 0x00bc 0.0000                raw=0006c900 tag=0000 Global > Transport > Time display
+01:49:19 0x00bc 0.0000                raw=0006ec00 tag=0000 Global > Transport > Time display
+01:49:19 0x00bc 0.0000                raw=00070f00 tag=0000 Global > Transport > Time display
+01:49:19 0x00bc 0.0000                raw=00073200 tag=0000 Global > Transport > Time display
+01:49:19 0x00bc 0.0000                raw=00075500 tag=0000 Global > Transport > Time display
+01:49:20 0x00b9 0.1056                raw=3dd83195 tag=0000 Global > Transport > Song Position (edit)
+01:49:20 0x00bc 0.0000                raw=00077800 tag=0000 Global > Transport > Time display
+01:49:20 0x00bc 0.0000                raw=00079b00 tag=0000 Global > Transport > Time display
+01:49:20 0x00bc 0.0000                raw=0007be00 tag=0000 Global > Transport > Time display
+01:49:20 0x00bc 0.0000                raw=0007e100 tag=0000 Global > Transport > Time display
+01:49:20 0x00bc 0.0000                raw=00080400 tag=0000 Global > Transport > Time display
+01:49:21 0x00b9 0.1152                raw=3debfb35 tag=0000 Global > Transport > Song Position (edit)
+01:49:21 0x00bc 0.0000                raw=00082700 tag=0000 Global > Transport > Time display
+01:49:21 0x00bc 0.0000                raw=00084a00 tag=0000 Global > Transport > Time display
+01:49:21 0x00bc 0.0000                raw=00086d00 tag=0000 Global > Transport > Time display
+01:49:21 0x00bc 0.0000                raw=00089000 tag=0000 Global > Transport > Time display
+01:49:21 0x00bc 0.0000                raw=0008b300 tag=0000 Global > Transport > Time display
+01:49:22 0x00b9 0.1249                raw=3dffc4d5 tag=0000 Global > Transport > Song Position (edit)
+01:49:22 0x00bc 0.0000                raw=0008d600 tag=0000 Global > Transport > Time display
+01:49:22 0x00bc 0.0000                raw=0008f900 tag=0000 Global > Transport > Time display
+01:49:22 0x00bc 0.0000                raw=00091c00 tag=0000 Global > Transport > Time display
+01:49:22 0x00bc 0.0000                raw=00093f00 tag=0000 Global > Transport > Time display
+01:49:22 0x00bc 0.0000                raw=00096200 tag=0000 Global > Transport > Time display
+01:49:23 0x00b9 0.1345                raw=3e09c73b tag=0000 Global > Transport > Song Position (edit)
+01:49:23 0x00bc 0.0000                raw=00098500 tag=0000 Global > Transport > Time display
+01:49:23 0x00bc 0.0000                raw=0009a800 tag=0000 Global > Transport > Time display
+01:49:23 0x00bc 0.0000                raw=0009cb00 tag=0000 Global > Transport > Time display
+01:49:23 0x00bc 0.0000                raw=0009ee00 tag=0000 Global > Transport > Time display
+01:49:23 0x00bc 0.0000                raw=000a1100 tag=0000 Global > Transport > Time display
+01:49:24 0x00b9 0.1442                raw=3e13ac0b tag=0000 Global > Transport > Song Position (edit)
+01:49:24 0x00bc 0.0000                raw=000a3400 tag=0000 Global > Transport > Time display
+01:49:24 0x00bc 0.0000                raw=000a5700 tag=0000 Global > Transport > Time display
+01:49:24 0x00bc 0.0000                raw=000a7a00 tag=0000 Global > Transport > Time display
+01:49:24 0x00bc 0.0000                raw=000a9d00 tag=0000 Global > Transport > Time display
+01:49:24 0x00bc 0.0000                raw=000ac000 tag=0000 Global > Transport > Time display
+01:49:25 0x00b9 0.1539                raw=3e1d90db tag=0000 Global > Transport > Song Position (edit)
+01:49:25 0x00bc 0.0000                raw=000ae300 tag=0000 Global > Transport > Time display
+01:49:25 0x00bc 0.0000                raw=000b0600 tag=0000 Global > Transport > Time display
+01:49:25 0x00bc 0.0000                raw=000b2900 tag=0000 Global > Transport > Time display
+01:49:25 0x00bc 0.0000                raw=000b4c00 tag=0000 Global > Transport > Time display
+01:49:25 0x00bc 0.0000                raw=000b6f00 tag=0000 Global > Transport > Time display
+01:49:26 0x00b9 0.1635                raw=3e2775ab tag=0000 Global > Transport > Song Position (edit)
+01:49:26 0x00bc 0.0000                raw=000b9200 tag=0000 Global > Transport > Time display
+01:49:26 END 2
+01:49:26 STEP 3 Touch Stop.
+01:49:26 0x00bc 0.0000                raw=000bb500 tag=0000 Global > Transport > Time display
+01:49:26 0x00bc 0.0000                raw=000bd800 tag=0000 Global > Transport > Time display
+01:49:26 0x00bc 0.0000                raw=000bfb00 tag=0000 Global > Transport > Time display
+01:49:26 0x00bc 0.0000                raw=000c1e00 tag=0000 Global > Transport > Time display
+01:49:27 0x00b9 0.1732                raw=3e315a7b tag=0000 Global > Transport > Song Position (edit)
+01:49:27 0x00bc 0.0000                raw=000c4100 tag=0000 Global > Transport > Time display
+01:49:27 0x00bc 0.0000                raw=000c6400 tag=0000 Global > Transport > Time display
+01:49:27 0x00bc 0.0000                raw=000c8700 tag=0000 Global > Transport > Time display
+01:49:27 0x00bc 0.0000                raw=000caa00 tag=0000 Global > Transport > Time display
+01:49:27 0x00bc 0.0000                raw=000ccd00 tag=0000 Global > Transport > Time display
+01:49:28 0x00b9 0.1829                raw=3e3b3f4b tag=0000 Global > Transport > Song Position (edit)
+01:49:28 0x00bc 0.0000                raw=000cf000 tag=0000 Global > Transport > Time display
+01:49:28 0x00bc 0.0000                raw=000d1300 tag=0000 Global > Transport > Time display
+01:49:28 0x00bc 0.0000                raw=000d3600 tag=0000 Global > Transport > Time display
+01:49:28 0x00bc 0.0000                raw=000d5900 tag=0000 Global > Transport > Time display
+01:49:28 0x00bc 0.0000                raw=000d7c00 tag=0000 Global > Transport > Time display
+01:49:29 0x00b8 0.0000                raw=00000000 tag=0000 Global > Transport > Transport
+01:49:29 0x00b9 0.1922                raw=3e44cd45 tag=0000 Global > Transport > Song Position (edit)
+01:49:29 0x00bc 0.0000                raw=000d9900 tag=0000 Global > Transport > Time display
+01:49:32 END 3
+01:49:32 STEP 4 Drag the play pointer on the time line to about the middle.
+01:49:38 0x00bc 0.0000                raw=000e1851 tag=0000 Global > Transport > Time display
+01:49:38 0x00b9 0.1992                raw=3e4c0000 tag=0000 Global > Transport > Song Position (edit)
+01:49:39 0x00bc 0.0000                raw=000f3353 tag=0000 Global > Transport > Time display
+01:49:39 0x00b9 0.2148                raw=3e5c0000 tag=0000 Global > Transport > Song Position (edit)
+01:49:39 0x00bc 0.0000                raw=0014739a tag=0000 Global > Transport > Time display
+01:49:39 0x00b9 0.2891                raw=3e940000 tag=44af Global > Transport > Song Position (edit)
+01:49:39 0x00bc 0.0000                raw=0023edad tag=0000 Global > Transport > Time display
+01:49:39 0x00b9 0.5078                raw=3f020000 tag=0000 Global > Transport > Song Position (edit)
+01:49:39 0x00b9 0.5430                raw=3f0afffd tag=0000 Global > Transport > Song Position (edit)
+01:49:39 0x00bc 0.0000                raw=00266a70 tag=0000 Global > Transport > Time display
+01:49:39 0x00b9 0.5430                raw=3f0b0000 tag=0000 Global > Transport > Song Position (edit)
+01:49:39 0x00bc 0.0000                raw=0027cc32 tag=0000 Global > Transport > Time display
+01:49:39 0x00b9 0.5625                raw=3f100000 tag=ffff Global > Transport > Song Position (edit)
+01:49:39 0x00bc 0.0000                raw=00278572 tag=0000 Global > Transport > Time display
+01:49:39 0x00b9 0.5586                raw=3f0f0000 tag=44af Global > Transport > Song Position (edit)
+01:49:39 0x00bc 0.0000                raw=00228beb tag=0000 Global > Transport > Time display
+01:49:39 0x00b9 0.4883                raw=3efa0000 tag=44af Global > Transport > Song Position (edit)
+01:49:40 0x00bc 0.0000                raw=0020e369 tag=0000 Global > Transport > Time display
+01:49:40 0x00b9 0.4648                raw=3eee0000 tag=ffff Global > Transport > Song Position (edit)
+01:49:40 0x00b9 0.4609                raw=3eebfffc tag=0000 Global > Transport > Song Position (edit)
+01:49:40 0x00bc 0.0000                raw=00209ca9 tag=0000 Global > Transport > Time display
+01:49:40 0x00b9 0.4609                raw=3eec0000 tag=0000 Global > Transport > Song Position (edit)
+01:49:40 0x00bc 0.0000                raw=002055e9 tag=0000 Global > Transport > Time display
+01:49:40 0x00b9 0.4570                raw=3eea0000 tag=0000 Global > Transport > Song Position (edit)
+01:49:40 0x00bc 0.0000                raw=0021fe6b tag=0000 Global > Transport > Time display
+01:49:40 0x00b9 0.4805                raw=3ef60000 tag=0000 Global > Transport > Song Position (edit)
+01:49:40 0x00bc 0.0000                raw=0022452b tag=0000 Global > Transport > Time display
+01:49:40 0x00b9 0.4844                raw=3ef80000 tag=0000 Global > Transport > Song Position (edit)
+01:49:40 0x00bc 0.0000                raw=0022d2ac tag=0000 Global > Transport > Time display
+01:49:40 0x00b9 0.4922                raw=3efc0000 tag=0000 Global > Transport > Song Position (edit)
+01:49:41 0x00bc 0.0000                raw=0023602d tag=0000 Global > Transport > Time display
+01:49:41 0x00b9 0.5000                raw=3f000000 tag=4883 Global > Transport > Song Position (edit)
+01:49:41 0x00bc 0.0000                raw=00247b2e tag=0000 Global > Transport > Time display
+01:49:41 0x00b9 0.5156                raw=3f040000 tag=0000 Global > Transport > Song Position (edit)
+01:49:41 0x00bc 0.0000                raw=00266a70 tag=0000 Global > Transport > Time display
+01:49:41 0x00b9 0.5430                raw=3f0b0000 tag=0000 Global > Transport > Song Position (edit)
+01:49:41 0x00bc 0.0000                raw=0025dcf0 tag=0000 Global > Transport > Time display
+01:49:41 0x00b9 0.5352                raw=3f090000 tag=4883 Global > Transport > Song Position (edit)
+01:49:41 0x00bc 0.0000                raw=0025962f tag=0000 Global > Transport > Time display
+01:49:41 0x00b9 0.5312                raw=3f080000 tag=4883 Global > Transport > Song Position (edit)
+01:49:42 0x00b9 0.5273                raw=3f06fffe tag=0000 Global > Transport > Song Position (edit)
+01:49:42 0x00bc 0.0000                raw=00254f6f tag=0000 Global > Transport > Time display
+01:49:42 0x00b9 0.5273                raw=3f070000 tag=4883 Global > Transport > Song Position (edit)
+01:49:46 END 4
+01:49:46 STEP 5 Touch "Set" (the locate pointer moves there).
+01:49:55 0x00bf 0.5273                raw=3f06fffe tag=0000 Global > Transport > Locate
+01:49:55 0x00bd 1.0000                raw=3f800000 tag=0000 Global > Transport > Set Locate
+01:49:55 0x00bd 0.0000                raw=00000000 tag=44af Global > Transport > Set Locate
+01:49:59 END 5
+01:49:59 STEP 6 Drag the play pointer back to the start.
+01:50:03 0x00bc 0.0000                raw=00247b2e tag=0000 Global > Transport > Time display
+01:50:03 0x00b9 0.5156                raw=3f040000 tag=4114 Global > Transport > Song Position (edit)
+01:50:03 0x00bc 0.0000                raw=0024346e tag=0000 Global > Transport > Time display
+01:50:03 0x00b9 0.5117                raw=3f030000 tag=ffff Global > Transport > Song Position (edit)
+01:50:03 0x00bc 0.0000                raw=001d04e4 tag=0000 Global > Transport > Time display
+01:50:03 0x00b9 0.4102                raw=3ed20000 tag=0000 Global > Transport > Song Position (edit)
+01:50:03 0x00bc 0.0000                raw=000b9b8e tag=0000 Global > Transport > Time display
+01:50:03 0x00b9 0.1641                raw=3e280000 tag=0000 Global > Transport > Song Position (edit)
+01:50:03 0x00b9 0.0352                raw=3d0ffff6 tag=0000 Global > Transport > Song Position (edit)
+01:50:03 0x00bf 0.5273                raw=3f06fffb tag=0000 Global > Transport > Locate
+01:50:03 0x00bc 0.0000                raw=00027cc3 tag=0000 Global > Transport > Time display
+01:50:03 0x00b9 0.0352                raw=3d100000 tag=ffff Global > Transport > Song Position (edit)
+01:50:03 0x00bc 0.0000                raw=00000000 tag=0000 Global > Transport > Time display
+01:50:03 0x00b9 0.0000                raw=00000000 tag=0000 Global > Transport > Song Position (edit)
+01:50:06 END 6
+01:50:06 STEP 7 Touch "Go To" (the play pointer jumps to the locate point).
+01:50:10 0x00b9 0.5273                raw=3f06fffb tag=0000 Global > Transport > Song Position (edit)
+01:50:10 0x00bc 0.0000                raw=00254f6e tag=0000 Global > Transport > Time display
+01:50:10 0x00be 1.0000                raw=3f800000 tag=4883 Global > Transport > Goto Locate
+01:50:10 0x00be 0.0000                raw=00000000 tag=44af Global > Transport > Goto Locate
+01:50:13 END 7
+01:50:13 STEP 8 Touch any other transport buttons you see (rewind, fast forward, pause, ...),
+     one at a time, typing each name. Empty Enter when done.
+01:51:04 0x00b8 0.7143                raw=3f36db6e tag=0000 Global > Transport > Transport
+01:51:04 0x00b9 0.0000                raw=00000000 tag=0000 Global > Transport > Song Position (edit)
+01:51:04 0x00bc 0.0000                raw=00000000 tag=0000 Global > Transport > Time display
+01:51:04 0x00b8 0.0000                raw=00000000 tag=0000 Global > Transport > Transport
+01:51:07 LABEL 8.1 |<<
+01:51:14 0x00b8 0.5714                raw=3f124925 tag=0000 Global > Transport > Transport
+01:51:14 0x00b8 0.0000                raw=00000000 tag=0000 Global > Transport > Transport
+01:51:17 LABEL 8.2 <<
+01:51:25 0x00b8 0.1429                raw=3e124925 tag=0000 Global > Transport > Transport
+01:51:25 0x00bc 0.0000                raw=00002300 tag=0000 Global > Transport > Time display
+01:51:25 0x00bc 0.0000                raw=00004600 tag=0000 Global > Transport > Time display
+01:51:26 0x00bc 0.0000                raw=00006900 tag=0000 Global > Transport > Time display
+01:51:26 0x00bc 0.0000                raw=00008c00 tag=0000 Global > Transport > Time display
+01:51:26 0x00b9 0.0097                raw=3c1e4d02 tag=0000 Global > Transport > Song Position (edit)
+01:51:26 0x00bc 0.0000                raw=0000af00 tag=0000 Global > Transport > Time display
+01:51:26 0x00bc 0.0000                raw=0000d200 tag=0000 Global > Transport > Time display
+01:51:26 0x00bc 0.0000                raw=0000f500 tag=0000 Global > Transport > Time display
+01:51:27 0x00bc 0.0000                raw=00011800 tag=0000 Global > Transport > Time display
+01:51:27 0x00bc 0.0000                raw=00013b00 tag=0000 Global > Transport > Time display
+01:51:27 0x00b9 0.0193                raw=3c9e4d02 tag=0000 Global > Transport > Song Position (edit)
+01:51:27 0x00bc 0.0000                raw=00015e00 tag=0000 Global > Transport > Time display
+01:51:27 0x00bc 0.0000                raw=00018100 tag=0000 Global > Transport > Time display
+01:51:27 0x00bc 0.0000                raw=0001a400 tag=0000 Global > Transport > Time display
+01:51:28 0x00bc 0.0000                raw=0001c700 tag=0000 Global > Transport > Time display
+01:51:28 0x00bc 0.0000                raw=0001ea00 tag=0000 Global > Transport > Time display
+01:51:28 0x00b9 0.0290                raw=3ced7383 tag=0000 Global > Transport > Song Position (edit)
+01:51:28 0x00bc 0.0000                raw=00020d00 tag=0000 Global > Transport > Time display
+01:51:28 0x00bc 0.0000                raw=00023000 tag=0000 Global > Transport > Time display
+01:51:28 LABEL 8.3 >
+01:51:28 0x00bc 0.0000                raw=00025300 tag=0000 Global > Transport > Time display
+01:51:29 0x00bc 0.0000                raw=00027600 tag=0000 Global > Transport > Time display
+01:51:29 0x00bc 0.0000                raw=00029900 tag=0000 Global > Transport > Time display
+01:51:29 0x00b9 0.0386                raw=3d1e4d02 tag=0000 Global > Transport > Song Position (edit)
+01:51:29 0x00bc 0.0000                raw=0002bc00 tag=0000 Global > Transport > Time display
+01:51:29 0x00bc 0.0000                raw=0002df00 tag=0000 Global > Transport > Time display
+01:51:29 0x00bc 0.0000                raw=00030200 tag=0000 Global > Transport > Time display
+01:51:30 0x00bc 0.0000                raw=00032500 tag=0000 Global > Transport > Time display
+01:51:30 0x00bc 0.0000                raw=00034800 tag=0000 Global > Transport > Time display
+01:51:30 0x00b9 0.0483                raw=3d45e042 tag=0000 Global > Transport > Song Position (edit)
+01:51:30 0x00bc 0.0000                raw=00036b00 tag=0000 Global > Transport > Time display
+01:51:30 0x00bc 0.0000                raw=00038e00 tag=0000 Global > Transport > Time display
+01:51:31 0x00bc 0.0000                raw=0003b100 tag=0000 Global > Transport > Time display
+01:51:31 0x00bc 0.0000                raw=0003d400 tag=0000 Global > Transport > Time display
+01:51:31 0x00bc 0.0000                raw=0003f700 tag=0000 Global > Transport > Time display
+01:51:31 0x00b9 0.0580                raw=3d6d7383 tag=0000 Global > Transport > Song Position (edit)
+01:51:31 0x00bc 0.0000                raw=00041a00 tag=0000 Global > Transport > Time display
+01:51:31 0x00bc 0.0000                raw=00043d00 tag=0000 Global > Transport > Time display
+01:51:32 0x00bc 0.0000                raw=00046000 tag=0000 Global > Transport > Time display
+01:51:32 0x00bc 0.0000                raw=00048300 tag=0000 Global > Transport > Time display
+01:51:32 0x00bc 0.0000                raw=0004a600 tag=0000 Global > Transport > Time display
+01:51:32 0x00b9 0.0676                raw=3d8a8362 tag=0000 Global > Transport > Song Position (edit)
+01:51:32 0x00bc 0.0000                raw=0004c900 tag=0000 Global > Transport > Time display
+01:51:32 0x00bc 0.0000                raw=0004ec00 tag=0000 Global > Transport > Time display
+01:51:33 0x00bc 0.0000                raw=00050f00 tag=0000 Global > Transport > Time display
+01:51:33 0x00bc 0.0000                raw=00053200 tag=0000 Global > Transport > Time display
+01:51:33 0x00bc 0.0000                raw=00055500 tag=0000 Global > Transport > Time display
+01:51:33 0x00b9 0.0773                raw=3d9e4d02 tag=0000 Global > Transport > Song Position (edit)
+01:51:33 0x00bc 0.0000                raw=00057800 tag=0000 Global > Transport > Time display
+01:51:33 0x00bc 0.0000                raw=00059b00 tag=0000 Global > Transport > Time display
+01:51:34 0x00bc 0.0000                raw=0005be00 tag=0000 Global > Transport > Time display
+01:51:34 0x00bc 0.0000                raw=0005e100 tag=0000 Global > Transport > Time display
+01:51:34 0x00bc 0.0000                raw=00060400 tag=0000 Global > Transport > Time display
+01:51:34 0x00b9 0.0870                raw=3db216a2 tag=0000 Global > Transport > Song Position (edit)
+01:51:34 0x00bc 0.0000                raw=00062700 tag=0000 Global > Transport > Time display
+01:51:34 0x00bc 0.0000                raw=00064a00 tag=0000 Global > Transport > Time display
+01:51:35 0x00bc 0.0000                raw=00066d00 tag=0000 Global > Transport > Time display
+01:51:35 0x00bc 0.0000                raw=00069000 tag=0000 Global > Transport > Time display
+01:51:35 0x00bc 0.0000                raw=0006b300 tag=0000 Global > Transport > Time display
+01:51:35 0x00b9 0.0966                raw=3dc5e042 tag=0000 Global > Transport > Song Position (edit)
+01:51:35 0x00bc 0.0000                raw=0006d600 tag=0000 Global > Transport > Time display
+01:51:35 0x00bc 0.0000                raw=0006f900 tag=0000 Global > Transport > Time display
+01:51:36 0x00bc 0.0000                raw=00071c00 tag=0000 Global > Transport > Time display
+01:51:36 0x00bc 0.0000                raw=00073f00 tag=0000 Global > Transport > Time display
+01:51:36 0x00bc 0.0000                raw=00076200 tag=0000 Global > Transport > Time display
+01:51:36 0x00b9 0.1063                raw=3dd9a9e3 tag=0000 Global > Transport > Song Position (edit)
+01:51:36 0x00bc 0.0000                raw=00078500 tag=0000 Global > Transport > Time display
+01:51:36 0x00bc 0.0000                raw=0007a800 tag=0000 Global > Transport > Time display
+01:51:37 0x00bc 0.0000                raw=0007cb00 tag=0000 Global > Transport > Time display
+01:51:37 0x00bc 0.0000                raw=0007ee00 tag=0000 Global > Transport > Time display
+01:51:37 0x00bc 0.0000                raw=00081100 tag=0000 Global > Transport > Time display
+01:51:37 0x00b9 0.1159                raw=3ded7383 tag=0000 Global > Transport > Song Position (edit)
+01:51:37 0x00bc 0.0000                raw=00083400 tag=0000 Global > Transport > Time display
+01:51:37 0x00bc 0.0000                raw=00085700 tag=0000 Global > Transport > Time display
+01:51:38 0x00bc 0.0000                raw=00087a00 tag=0000 Global > Transport > Time display
+01:51:38 0x00bc 0.0000                raw=00089d00 tag=0000 Global > Transport > Time display
+01:51:38 0x00bc 0.0000                raw=0008c000 tag=0000 Global > Transport > Time display
+01:51:38 0x00b9 0.1256                raw=3e009e92 tag=0000 Global > Transport > Song Position (edit)
+01:51:38 0x00bc 0.0000                raw=0008e300 tag=0000 Global > Transport > Time display
+01:51:38 0x00bc 0.0000                raw=00090600 tag=0000 Global > Transport > Time display
+01:51:39 0x00bc 0.0000                raw=00092900 tag=0000 Global > Transport > Time display
+01:51:39 0x00b8 0.4286                raw=3edb6db7 tag=0000 Global > Transport > Transport
+01:51:39 0x00b9 0.1317                raw=3e06e89a tag=0000 Global > Transport > Song Position (edit)
+01:51:39 0x00bc 0.0000                raw=0009523e tag=0000 Global > Transport > Time display
+01:51:39 0x00bc 0.0000                raw=0009695c tag=0000 Global > Transport > Time display
+01:51:39 0x00bc 0.0000                raw=00098196 tag=0000 Global > Transport > Time display
+01:51:39 0x00bc 0.0000                raw=00099c2d tag=0000 Global > Transport > Time display
+01:51:40 0x00bc 0.0000                raw=0009b95c tag=0000 Global > Transport > Time display
+01:51:40 0x00b9 0.1392                raw=3e0e8c85 tag=0000 Global > Transport > Song Position (edit)
+01:51:40 0x00bc 0.0000                raw=0009d962 tag=0000 Global > Transport > Time display
+01:51:40 0x00bc 0.0000                raw=0009fc88 tag=0000 Global > Transport > Time display
+01:51:40 0x00bc 0.0000                raw=000a231b tag=0000 Global > Transport > Time display
+01:51:40 0x00bc 0.0000                raw=000a4d74 tag=0000 Global > Transport > Time display
+01:51:41 0x00bc 0.0000                raw=000a7bed tag=0000 Global > Transport > Time display
+01:51:41 0x00b9 0.1510                raw=3e1a9f10 tag=0000 Global > Transport > Song Position (edit)
+01:51:41 0x00bc 0.0000                raw=000aaeeb tag=0000 Global > Transport > Time display
+01:51:41 0x00bc 0.0000                raw=000ae6e5 tag=0000 Global > Transport > Time display
+01:51:41 LABEL 8.4 >>
+01:51:41 0x00bc 0.0000                raw=000b2453 tag=0000 Global > Transport > Time display
+01:51:42 0x00bc 0.0000                raw=000b67c0 tag=0000 Global > Transport > Time display
+01:51:42 0x00bc 0.0000                raw=000bb1bb tag=0000 Global > Transport > Time display
+01:51:42 0x00b9 0.1698                raw=3e2dd820 tag=0000 Global > Transport > Song Position (edit)
+01:51:42 0x00bc 0.0000                raw=000c02ee tag=0000 Global > Transport > Time display
+01:51:42 0x00bc 0.0000                raw=000c5c0b tag=0000 Global > Transport > Time display
+01:51:42 0x00bc 0.0000                raw=000cbdd7 tag=0000 Global > Transport > Time display
+01:51:43 0x00bc 0.0000                raw=000d2929 tag=0000 Global > Transport > Time display
+01:51:43 0x00bc 0.0000                raw=000d9ef4 tag=0000 Global > Transport > Time display
+01:51:43 0x00b9 0.1997                raw=3e4c7243 tag=0000 Global > Transport > Song Position (edit)
+01:51:43 0x00bc 0.0000                raw=000e2037 tag=0000 Global > Transport > Time display
+01:51:43 0x00bc 0.0000                raw=000eae10 tag=0000 Global > Transport > Time display
+01:51:43 0x00bc 0.0000                raw=000f49c0 tag=0000 Global > Transport > Time display
+01:51:44 0x00bc 0.0000                raw=000ff49a tag=0000 Global > Transport > Time display
+01:51:44 0x00bc 0.0000                raw=0010b016 tag=0000 Global > Transport > Time display
+01:51:44 0x00b9 0.2472                raw=3e7d28ce tag=0000 Global > Transport > Song Position (edit)
+01:51:44 0x00bc 0.0000                raw=00117dd8 tag=0000 Global > Transport > Time display
+01:51:44 0x00bc 0.0000                raw=00125fa5 tag=0000 Global > Transport > Time display
+01:51:44 0x00bc 0.0000                raw=00135774 tag=0000 Global > Transport > Time display
+01:51:45 0x00bc 0.0000                raw=00146765 tag=0000 Global > Transport > Time display
+01:51:45 0x00bc 0.0000                raw=001591d7 tag=0000 Global > Transport > Time display
+01:51:45 0x00b9 0.3229                raw=3ea55978 tag=0000 Global > Transport > Song Position (edit)
+01:51:45 0x00bc 0.0000                raw=0016d95a tag=0000 Global > Transport > Time display
+01:51:45 0x00bc 0.0000                raw=001840c6 tag=0000 Global > Transport > Time display
+01:51:45 0x00bc 0.0000                raw=0019cb37 tag=0000 Global > Transport > Time display
+01:51:46 0x00bc 0.0000                raw=001b7c14 tag=0000 Global > Transport > Time display
+01:51:46 0x00bc 0.0000                raw=001d571d tag=0000 Global > Transport > Time display
+01:51:46 0x00b9 0.4435                raw=3ee30f77 tag=0000 Global > Transport > Song Position (edit)
+01:51:46 0x00bc 0.0000                raw=001f606b tag=0000 Global > Transport > Time display
+01:51:46 0x00b8 0.0000                raw=00000000 tag=0000 Global > Transport > Transport
+01:51:46 0x00b9 0.4558                raw=3ee95971 tag=0000 Global > Transport > Song Position (edit)
+01:51:46 0x00bc 0.0000                raw=00203ee5 tag=0000 Global > Transport > Time display
+01:51:54 LABEL 8.5 stop
+01:51:59 0x00b8 0.2857                raw=3e924925 tag=0000 Global > Transport > Transport
+01:51:59 0x00bc 0.0000                raw=002062e5 tag=0000 Global > Transport > Time display
+01:51:59 0x00bc 0.0000                raw=002085e5 tag=0000 Global > Transport > Time display
+01:51:59 0x00bc 0.0000                raw=0020a8e5 tag=0000 Global > Transport > Time display
+01:52:00 0x00bc 0.0000                raw=0020cbe5 tag=0000 Global > Transport > Time display
+01:52:00 0x00b9 0.4655                raw=3eee5315 tag=0000 Global > Transport > Song Position (edit)
+01:52:00 0x00bc 0.0000                raw=0020eee5 tag=0000 Global > Transport > Time display
+01:52:00 0x00bc 0.0000                raw=002111e5 tag=0000 Global > Transport > Time display
+01:52:00 0x00bc 0.0000                raw=002134e5 tag=0000 Global > Transport > Time display
+01:52:00 0x00bc 0.0000                raw=002157e5 tag=0000 Global > Transport > Time display
+01:52:01 0x00bc 0.0000                raw=00217ae5 tag=0000 Global > Transport > Time display
+01:52:01 0x00b9 0.4751                raw=3ef3457d tag=0000 Global > Transport > Song Position (edit)
+01:52:01 0x00bc 0.0000                raw=00219de5 tag=0000 Global > Transport > Time display
+01:52:01 0x00bc 0.0000                raw=0021c0e5 tag=0000 Global > Transport > Time display
+01:52:01 0x00bc 0.0000                raw=0021e3e5 tag=0000 Global > Transport > Time display
+01:52:01 LABEL 8.6 rec
+01:52:02 0x00bc 0.0000                raw=002206e5 tag=0000 Global > Transport > Time display
+01:52:02 0x00bc 0.0000                raw=002229e5 tag=0000 Global > Transport > Time display
+01:52:02 0x00b9 0.4848                raw=3ef837e5 tag=0000 Global > Transport > Song Position (edit)
+01:52:02 0x00bc 0.0000                raw=00224ce5 tag=0000 Global > Transport > Time display
+01:52:02 0x00bc 0.0000                raw=00226fe5 tag=0000 Global > Transport > Time display
+01:52:02 0x00bc 0.0000                raw=002292e5 tag=0000 Global > Transport > Time display
+01:52:03 0x00bc 0.0000                raw=0022b5e5 tag=0000 Global > Transport > Time display
+01:52:03 0x00bc 0.0000                raw=0022d8e5 tag=0000 Global > Transport > Time display
+01:52:03 0x00b9 0.4945                raw=3efd2a4d tag=0000 Global > Transport > Song Position (edit)
+01:52:03 0x00bc 0.0000                raw=0022fbe5 tag=0000 Global > Transport > Time display
+01:52:03 0x00bc 0.0000                raw=00231ee5 tag=0000 Global > Transport > Time display
+01:52:03 0x00bc 0.0000                raw=002341e5 tag=0000 Global > Transport > Time display
+01:52:03 END 8
+01:52:03 SECTION meters
+01:52:03 STEP 9 Silence: nothing playing into any input. Wait 10 seconds, then Enter.
+01:52:04 0x00bc 0.0000                raw=002364e5 tag=0000 Global > Transport > Time display
+01:52:04 0x00bc 0.0000                raw=002387e5 tag=0000 Global > Transport > Time display
+01:52:04 0x00b9 0.5041                raw=3f010e5b tag=0000 Global > Transport > Song Position (edit)
+01:52:04 0x00bc 0.0000                raw=0023aae5 tag=0000 Global > Transport > Time display
+01:52:04 0x00bc 0.0000                raw=0023cde5 tag=0000 Global > Transport > Time display
+01:52:04 0x00bc 0.0000                raw=0023f0e5 tag=0000 Global > Transport > Time display
+01:52:05 0x00bc 0.0000                raw=002413e5 tag=0000 Global > Transport > Time display
+01:52:05 0x00bc 0.0000                raw=002436e5 tag=0000 Global > Transport > Time display
+01:52:05 0x00b9 0.5138                raw=3f03878f tag=0000 Global > Transport > Song Position (edit)
+01:52:05 0x00bc 0.0000                raw=002459e5 tag=0000 Global > Transport > Time display
+01:52:05 0x00bc 0.0000                raw=00247ce5 tag=0000 Global > Transport > Time display
+01:52:05 0x00bc 0.0000                raw=00249fe5 tag=0000 Global > Transport > Time display
+01:52:05 0x00c0 1.0000                raw=3f800000 tag=0000 Global > Transport > Busy
+01:52:05 0x00b8 0.0000                raw=00000000 tag=0000 Global > Transport > Transport
+01:52:06 0x00c0 0.0000                raw=00000000 tag=0000 Global > Transport > Busy
+01:52:06 0x00b9 0.5178                raw=3f048fb2 tag=0000 Global > Transport > Song Position (edit)
+01:52:06 0x00bc 0.0000                raw=0024a2e5 tag=0000 Global > Transport > Time display
+01:52:21 POLL len=42 280003807b3f06807b3f00000000000000000000000000000000000000000000000084706d3f73f87a3f
+01:52:21 POLL len=42 28006612783f4412783f0000000000000000000000000000000000000000000000003726613f13166f3f
+01:52:21 POLL len=42 2800b4fb7c3fa1fb7c3f0000000000000000000000000000000000000000000000009913663f7ef8733f
+01:52:22 POLL len=42 2800d1fc7c3fbffc7c3f00000000000000000000000000000000000000000000000035ad663ff298743f
+01:52:22 POLL len=42 280007657b3ff3647b3f0000000000000000000000000000000000000000000000000f81643fb05e723f
+01:52:22 POLL len=42 28005fe0753f60e0753f000000000000000000000000000000000000000000000000abfd5e3fb4dc6c3f
+01:52:22 POLL len=42 2800a5ef783fa6ef783f000000000000000000000000000000000000000000000000413a633f0f33713f
+01:52:22 POLL len=42 28009319753f9894783f0000000000000000000000000000000000000000000000005897613f23246c3f
+01:52:22 POLL len=42 28008487783f7087783f00000000000000000000000000000000000000000000000085ba5e3ff6676f3f
+01:52:22 POLL len=42 28002ac0783f2ac0783f00000000000000000000000000000000000000000000000092b8613fb2d46f3f
+01:52:22 POLL len=42 28002a05793f0e05793f00000000000000000000000000000000000000000000000086fd613feb18703f
+01:52:22 POLL len=42 2800c4e9783face9783f0000000000000000000000000000000000000000000000005a1e623fd130703f
+01:52:23 POLL len=42 2800c613793fab13793f000000000000000000000000000000000000000000000000c7db613f4420703f
+01:52:23 POLL len=42 280044a2783f2da2783f00000000000000000000000000000000000000000000000097df613f2faf6f3f
+01:52:23 POLL len=42 28002fe7773f1ce7773f0000000000000000000000000000000000000000000000005b2d613f04ee6e3f
+01:52:23 POLL len=42 28004ae7763f37e7763f000000000000000000000000000000000000000000000000cf005c3f15f36d3f
+01:52:23 POLL len=42 2800a163753f8c63753f0000000000000000000000000000000000000000000000000e135f3f0b656c3f
+01:52:23 POLL len=42 2800f83e703ff63e703f000000000000000000000000000000000000000000000000d3705d3ff9f26a3f
+01:52:23 POLL len=42 280045cc713f42cc713f000000000000000000000000000000000000000000000000fd90563f46d0683f
+01:52:23 POLL len=42 28005dab6f3f34ab6f3f000000000000000000000000000000000000000000000000c478593f19ae663f
+01:52:23 POLL len=42 280076ec673f71ec673f00000000000000000000000000000000000000000000000005db563f05e2633f
+01:52:24 POLL len=42 28000b5f693f185f693f000000000000000000000000000000000000000000000000d7d84c3fc566603f
+01:52:24 POLL len=42 2800a639653f8b39653f000000000000000000000000000000000000000000000000fccb4f3ffd3a5c3f
+01:52:24 POLL len=42 280039ba5c3f27ba5c3f000000000000000000000000000000000000000000000000c63a4b3f20d5573f
+01:52:24 POLL len=42 28005e40603f8740603f0000000000000000000000000000000000000000000000008374493f5229573f
+01:52:24 POLL len=42 28001432613f0432613f000000000000000000000000000000000000000000000000262d4a3f00eb573f
+01:52:24 POLL len=42 280075d95d3f87d95d3f0000000000000000000000000000000000000000000000002d0b473fb0c4543f
+01:52:24 POLL len=42 2800fdc8603f13c9603f00000000000000000000000000000000000000000000000080fb493fc1b6573f
+01:52:24 POLL len=42 2800c6ac5f3fa2ac5f3f0000000000000000000000000000000000000000000000005cde483f8a96563f
+01:52:24 POLL len=42 280042d05e3f68d05e3f0000000000000000000000000000000000000000000000005303483fd3ba553f
+01:52:24 POLL len=42 28002df15c3f37f15c3f000000000000000000000000000000000000000000000000e224463f32d8533f
+01:52:25 POLL len=42 2800af7e583fb27e583f0000000000000000000000000000000000000000000000009bd6433fb885513f
+01:52:25 POLL len=42 2800bccf593fbbcf593f00000000000000000000000000000000000000000000000080d8423fb4d8503f
+01:52:25 POLL len=42 2800bc2d5c3fb52d5c3f000000000000000000000000000000000000000000000000b825443f1b28523f
+01:52:25 POLL len=42 2800b1a25d3fa3a25d3f0000000000000000000000000000000000000000000000008a9e463f05b5543f
+01:52:25 POLL len=42 2800f3425e3ff5425e3f000000000000000000000000000000000000000000000000fd44473f0d4f553f
+01:52:25 POLL len=42 28001de95e3f13e95e3f000000000000000000000000000000000000000000000000aac0473f5eb7553f
+01:52:25 POLL len=42 2800c8115f3fc1115f3f000000000000000000000000000000000000000000000000df17483fac1e563f
+01:52:25 POLL len=42 280068945e3f66945e3f000000000000000000000000000000000000000000000000c097473fc0a2553f
+01:52:26 POLL len=42 2800e818603f0719603f000000000000000000000000000000000000000000000000bfaf453fd0a9553f
+01:52:26 POLL len=42 2800bb9b613fe59b613f00000000000000000000000000000000000000000000000087904a3fbeb7583f
+01:52:26 POLL len=42 28003f63633f3c63633f00000000000000000000000000000000000000000000000085684c3f80755a3f
+01:52:26 POLL len=42 2800afe3643fb3e3643f000000000000000000000000000000000000000000000000df1e4d3f0f2f5b3f
+01:52:26 POLL len=42 28000262653f0762653f000000000000000000000000000000000000000000000000d3694e3fd1735c3f
+01:52:26 POLL len=42 28005b4b633f524b633f0000000000000000000000000000000000000000000000006ef84e3fc80e5d3f
+01:52:26 POLL len=42 28000ea3653f19a3653f00000000000000000000000000000000000000000000000030a04e3f05bc5c3f
+01:52:26 POLL len=42 280017d9643f31d9643f00000000000000000000000000000000000000000000000043db4d3f41ee5b3f
+01:52:26 POLL len=42 2800e0f35f3fd3f35f3f000000000000000000000000000000000000000000000000e3ae4c3fb6d55a3f
+01:52:26 POLL len=42 2800d427623fd727623f000000000000000000000000000000000000000000000000a4284b3f9f3c593f
+01:52:27 POLL len=42 2800e2a5603ff9a5603f0000000000000000000000000000000000000000000000002ea2493f8bb9573f
+01:52:27 POLL len=42 2800581c5a3f641c5a3f000000000000000000000000000000000000000000000000f2b6473fd6be553f
+01:52:27 POLL len=42 280054a25c3f86a25c3f000000000000000000000000000000000000000000000000b8ae453f2ca9533f
+01:52:27 POLL len=42 280088e1583fade1583f000000000000000000000000000000000000000000000000db95433fc599513f
+01:52:27 POLL len=42 2800a812563faa12563f0000000000000000000000000000000000000000000000000d143f3f9b1f4d3f
+01:52:27 POLL len=42 2800f8a6573f01a7573f00000000000000000000000000000000000000000000000024c0403f26a64e3f
+01:52:27 POLL len=42 2800e526573fc626573f000000000000000000000000000000000000000000000000db17403f62244e3f
+01:52:27 POLL len=42 28000ac4563fddc3563f000000000000000000000000000000000000000000000000fdd43f3fdec94d3f
+01:52:27 POLL len=42 280031ca553f27ca553f000000000000000000000000000000000000000000000000d4c33e3fdade4c3f
+01:52:28 POLL len=42 2800accd543f9dcd543f000000000000000000000000000000000000000000000000ba993b3f95404a3f
+01:52:28 POLL len=42 28009344543f7144543f0000000000000000000000000000000000000000000000004cef3c3fa9914b3f
+01:52:28 POLL len=42 2800518f533f498f533f000000000000000000000000000000000000000000000000a93b3c3f48dd4a3f
+01:52:28 POLL len=42 280090c2533f55c2533f0000000000000000000000000000000000000000000000001c703b3f7da4493f
+01:52:28 POLL len=42 280030b9543f1fb9543f000000000000000000000000000000000000000000000000e6a53d3fc4d74b3f
+01:52:28 POLL len=42 2800f271553fee71553f000000000000000000000000000000000000000000000000615c3e3f21944c3f
+01:52:28 POLL len=42 28006f88563f5988563f000000000000000000000000000000000000000000000000b03d3f3ff7654d3f
+01:52:28 END 9
+01:52:28 STEP 10 Play a steady sound (a held synth note, or a tone) into input 1 only.
+     Keep it going 10 seconds. Type roughly what channel 1's meter shows
+     (e.g. "-12"), then Enter.
+01:52:28 POLL len=42 28001e66533fee65533f000000000000000000000000000000000000000000000000c3643c3f137a4a3f
+01:52:28 POLL len=42 2800584d563f4d4d563f0000000000000000000000000000000000000000000000008e433f3f7d624d3f
+01:52:29 POLL len=42 2800f777553fe177553f0000000000000000000000000000000000000000000000002f5e3e3f44834c3f
+01:52:29 POLL len=42 280088df543f60df543f000000000000000000000000000000000000000000000000dde23d3f12f14b3f
+01:52:29 POLL len=42 28004382563f4482563f000000000000000000000000000000000000000000000000b38f3f3f7d884d3f
+01:52:29 POLL len=42 28007f25593f5b25593f000000000000000000000000000000000000000000000000b274413f847e4f3f
+01:52:29 POLL len=42 280018ad593fecac593f00000000000000000000000000000000000000000000000091bb423fa0b9503f
+01:52:29 POLL len=42 280048e65a3f6ce65a3f0000000000000000000000000000000000000000000000002b2e433f5326513f
+01:52:29 POLL len=42 2800bb435b3f8b435b3f000000000000000000000000000000000000000000000000a439443f7758523f
+01:52:29 POLL len=42 2800f61f523fd31f523f000000000000000000000000000000000000000000000000391f3b3fe92f493f
+01:52:29 POLL len=42 2800377e3b3f137e3b3f000000000000000000000000000000000000000000000000c8c12f3f25d53d3f
+01:52:30 POLL len=42 28000206303fdd05303f0000000000000000000000000000000000000000000000000d05193fbc15273f
+01:52:30 POLL len=42 280017bf243ff3be243f00000000000000000000000000000000000000000000000098bf0d3fafd51b3f
+01:52:30 POLL len=42 280033200e3f11200e3f000000000000000000000000000000000000000000000000c563023faa76103f
+01:52:30 POLL len=42 28001ca9023ffba8023f0000000000000000000000000000000000000000000000000d4dd73e0d79f33e
+01:52:30 POLL len=42 2800693ed83e223ed83e000000000000000000000000000000000000000000000000a3c8c03e97eadc3e
+01:52:30 POLL len=42 2800d552c13e9152c13e000000000000000000000000000000000000000000000000ce52933e1476af3e
+01:52:30 POLL len=42 2800ffccaa3ebcccaa3e000000000000000000000000000000000000000000000000fb91793e93f0983e
+01:52:30 POLL len=42 2800ca0f7b3e350f7b3e000000000000000000000000000000000000000000000000b3144c3e3337823e
+01:52:30 POLL len=42 2800d6294d3e41294d3e0000000000000000000000000000000000000000000000006e52e23dc071293e
+01:52:30 POLL len=42 28000bbc1f3e70bb1f3e0000000000000000000000000000000000000000000000009d70873dca0ef83d
+01:52:31 POLL len=42 28009b348b3d79338b3d0000000000000000000000000000000000000000000000001f30b53c3de19d3d
+01:52:31 POLL len=42 2800fdddbd3c17d9bd3c0000000000000000000000000000000000000000000000000000000000000000
+01:52:31 POLL len=42 280000000000000000000000000000000000000000000000000000000000000000000000000000000000
+01:52:32 POLL len=42 2800d98a273fcf8a273f0000000000000000000000000000000000000000000000002cfb133f57d3203f
+01:52:33 POLL len=42 2800b7a92d3fa1a92d3f0000000000000000000000000000000000000000000000008bb0163faab2243f
+01:52:33 POLL len=42 28008eda2d3f96da2d3f00000000000000000000000000000000000000000000000077ec163f4ddc243f
+01:52:33 POLL len=42 28001e622b3f17622b3f000000000000000000000000000000000000000000000000f5ff153f41e8233f
+01:52:33 POLL len=42 280075ec293f87ec293f00000000000000000000000000000000000000000000000072fc123f0cfa203f
+01:52:33 POLL len=42 280028e8283f25e8283f00000000000000000000000000000000000000000000000064f4113fddf11f3f
+01:52:33 POLL len=42 280038fe273f39fe273f000000000000000000000000000000000000000000000000f9040e3f490d1c3f
+01:52:33 POLL len=42 2800183f273f2a3f273f000000000000000000000000000000000000000000000000213a103ff2571e3f
+01:52:33 POLL len=42 28002843263f2243263f0000000000000000000000000000000000000000000000005c450f3fe7501d3f
+01:52:33 POLL len=42 2800ad67233fc067233f0000000000000000000000000000000000000000000000006d0b0e3f9a1d1c3f
+01:52:33 POLL len=42 28002518223f2f18223f0000000000000000000000000000000000000000000000001d170b3fe62d193f
+01:52:34 POLL len=42 2800deeb1d3feaeb1d3f0000000000000000000000000000000000000000000000001645093f6876173f
+01:52:34 POLL len=42 2800729b1b3f629b1b3f0000000000000000000000000000000000000000000000000191043f6ab8123f
+01:52:34 POLL len=42 2800f9561a3f16571a3f000000000000000000000000000000000000000000000000b470033faa5e113f
+01:52:34 POLL len=42 2800b4001a3fac001a3f00000000000000000000000000000000000000000000000071f9023f85eb103f
+01:52:34 POLL len=42 2800ffd8193f20d9193f00000000000000000000000000000000000000000000000061f8023f0ed8103f
+01:52:34 POLL len=42 28004ea2193f3fa2193f0000000000000000000000000000000000000000000000003a56033f3f20113f
+01:52:34 POLL len=42 2800140c1a3f290c1a3f000000000000000000000000000000000000000000000000ea36033f1e06113f
+01:52:34 POLL len=42 2800f64a1a3fe04a1a3f0000000000000000000000000000000000000000000000002761033fb94e113f
+01:52:35 POLL len=42 280066c91a3f59c91a3f000000000000000000000000000000000000000000000000b8aa033f5565113f
+01:52:35 POLL len=42 2800bd291b3fc0291b3f0000000000000000000000000000000000000000000000008355043faf28123f
+01:52:35 POLL len=42 2800448e1b3f578e1b3f00000000000000000000000000000000000000000000000042ac043f318c123f
+01:52:35 POLL len=42 280014121d3f51121d3f000000000000000000000000000000000000000000000000c88f053f0f64133f
+01:52:35 POLL len=42 2800f3d31d3f3ad41d3f000000000000000000000000000000000000000000000000dbf7063f5ad1143f
+01:52:35 POLL len=42 28007ffd1e3f9ffd1e3f000000000000000000000000000000000000000000000000cf12083fdffd153f
+01:52:35 POLL len=42 2800beef203fb6ef203f000000000000000000000000000000000000000000000000820a093f40e7163f
+01:52:35 POLL len=42 2800432a223f472a223f000000000000000000000000000000000000000000000000693f0b3fbb30193f
+01:52:35 POLL len=42 2800b863233fe663233f00000000000000000000000000000000000000000000000040840c3faa5e1a3f
+01:52:36 POLL len=42 28002609263f3209263f000000000000000000000000000000000000000000000000ef1b0e3fbdf91b3f
+01:52:36 POLL len=42 2800d4c3273fe9c3273f00000000000000000000000000000000000000000000000078ed103f2ac01e3f
+01:52:36 POLL len=42 2800a095283fae95283f00000000000000000000000000000000000000000000000069b1113ff4901f3f
+01:52:36 POLL len=42 280078182b3f92182b3f000000000000000000000000000000000000000000000000024d133f9222213f
+01:52:36 POLL len=42 2800dc792c3fe3792c3f000000000000000000000000000000000000000000000000c894153fbb7e233f
+01:52:36 POLL len=42 2800728e2e3f8d8e2e3f000000000000000000000000000000000000000000000000a46e163f3951243f
+01:52:36 POLL len=42 28003f262f3f4d262f3f000000000000000000000000000000000000000000000000d139183ffb2d263f
+01:52:36 POLL len=42 2800841c303f9d1c303f000000000000000000000000000000000000000000000000ac34193f261a273f
+01:52:36 POLL len=42 2800e03c313fd13c313f0000000000000000000000000000000000000000000000007ae3193f11be273f
+01:52:37 POLL len=42 2800eb7d313ff67d313f000000000000000000000000000000000000000000000000a9901a3fa280283f
+01:52:37 POLL len=42 280041b4313f62b4313f00000000000000000000000000000000000000000000000087c71a3fe3b5283f
+01:52:37 POLL len=42 2800679d313f789d313f0000000000000000000000000000000000000000000000007ae41a3f64dc283f
+01:52:37 POLL len=42 28006ca3313f7fa3313f00000000000000000000000000000000000000000000000004b31a3fafa8283f
+01:52:37 POLL len=42 2800b14e303fac4e303f0000000000000000000000000000000000000000000000001e0c1a3faaeb273f
+01:52:37 POLL len=42 28004dcd2b3f76cd2b3f0000000000000000000000000000000000000000000000005dda143fa2d8223f
+01:52:37 POLL len=42 2800c6a32f3feaa32f3f00000000000000000000000000000000000000000000000098ba183f94a5263f
+01:52:37 POLL len=42 280017e12c3f18e12c3f0000000000000000000000000000000000000000000000001690173fc882253f
+01:52:37 POLL len=42 2800374e2b3f694e2b3f0000000000000000000000000000000000000000000000009266143ffa4c223f
+01:52:37 POLL len=42 280085262a3fa6262a3f000000000000000000000000000000000000000000000000ff3c133f6d2d213f
+01:52:38 POLL len=42 2800442f223f8b2f223f000000000000000000000000000000000000000000000000047d103f1e6a1e3f
+01:52:38 POLL len=42 280043a8243f51a8243f0000000000000000000000000000000000000000000000000dbe0d3f5bb31b3f
+01:52:38 POLL len=42 2800e965233fbb65233f00000000000000000000000000000000000000000000000043600c3fc5821a3f
+01:52:38 POLL len=42 2800dbcb243fcecb243f000000000000000000000000000000000000000000000000a6da0c3fd80e1b3f
+01:52:38 POLL len=42 28008d2c253f892c253f0000000000000000000000000000000000000000000000009d1d0e3f8f501c3f
+01:52:38 POLL len=42 28002d2a263f1e2a263f000000000000000000000000000000000000000000000000afa30e3f0dbd1c3f
+01:52:38 POLL len=42 28006bfe253f4dfe253f00000000000000000000000000000000000000000000000092f80e3fc01a1d3f
+01:52:38 POLL len=42 2800892e263f492e263f00000000000000000000000000000000000000000000000036160f3f184f1d3f
+01:52:39 POLL len=42 28008bdf253f58df253f000000000000000000000000000000000000000000000000b4230f3f77551d3f
+01:52:39 POLL len=42 2800bd7e253fc77e253f00000000000000000000000000000000000000000000000057730e3fbe12193f
+01:52:39 POLL len=42 28009fc2243f8cc2243f00000000000000000000000000000000000000000000000051a50d3ffa6b1c3f
+01:52:39 POLL len=42 28001f06243f1706243f000000000000000000000000000000000000000000000000e4b70d3f5efe1b3f
+01:52:39 POLL len=42 28005228233f6728233f00000000000000000000000000000000000000000000000017030c3f82561a3f
+01:52:39 POLL len=42 28003827223f1927223f00000000000000000000000000000000000000000000000087fc0a3f7d52193f
+01:52:39 POLL len=42 2800762d213f4c2d213f000000000000000000000000000000000000000000000000d7100a3f285a183f
+01:52:39 POLL len=42 280001ab1f3fccaa1f3f000000000000000000000000000000000000000000000000c479083f4ce0163f
+01:52:39 POLL len=42 2800f9c11c3fe4c11c3f000000000000000000000000000000000000000000000000baf7063fa66e153f
+01:52:39 POLL len=42 28003e4e1d3f544e1d3f0000000000000000000000000000000000000000000000006b70063f6d42143f
+01:52:40 POLL len=42 28003f611e3f6d611e3f0000000000000000000000000000000000000000000000006884073f145b153f
+01:52:40 POLL len=42 2800f375203ffe75203f000000000000000000000000000000000000000000000000af86083f1e54163f
+01:52:40 POLL len=42 2800ed11213fd811213f000000000000000000000000000000000000000000000000e8390a3fb504183f
+01:52:40 POLL len=42 280093f40f3f8ef40f3f00000000000000000000000000000000000000000000000021f7f13ee801073f
+01:52:40 POLL len=42 280040a9f23e38a9f23e000000000000000000000000000000000000000000000000903edb3e854bf73e
+01:52:40 POLL len=42 280053b8db3e4cb8db3e00000000000000000000000000000000000000000000000083c5ad3e0bd3c93e
+01:52:40 POLL len=42 28004e32c53e4532c53e000000000000000000000000000000000000000000000000de39973e234ab33e
+01:52:40 POLL len=42 2800b2ed973ea8ed973e0000000000000000000000000000000000000000000000008381803ec88d9c3e
+01:52:40 POLL len=42 2800b932813eaf32813e000000000000000000000000000000000000000000000000606f263e57945e3e
+01:52:41 POLL len=42 280032e8543e1ee8543e0000000000000000000000000000000000000000000000007108f23d9814313e
+01:52:41 POLL len=42 280036d0f43d08d0f43d0000000000000000000000000000000000000000000000001f18973d8cab033e
+01:52:41 POLL len=42 280015e9993de8e8993d00000000000000000000000000000000000000000000000000000000005b243d
+01:52:41 POLL len=42 280000000000000000000000000000000000000000000000000000000000000000000000000000000000
+01:52:58 LABEL 10 My synth is on 7 and 8
+01:52:58 END 10
+01:52:58 STEP 11 Stop input 1. Play the same sound into input 2 only, 10 seconds, then Enter.
+01:53:04 END 11
+01:53:04 STEP 12 Same sound into input 1 again but about 10 dB quieter (turn the SOURCE down,
+     not the fader), 10 seconds. Type the meter reading, then Enter.
+01:53:06 END 12
+01:53:06 STEP 13 Stop everything. Silence for 5 seconds, then Enter.
+01:53:07 END 13

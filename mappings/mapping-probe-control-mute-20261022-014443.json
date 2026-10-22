@@ -1,0 +1,72 @@
+{
+ "kind": "probe",
+ "created": "2026-10-22T01:44:43",
+ "mixer": "QSC JD HOME",
+ "host": "192.168.10.129",
+ "section": "Control",
+ "param": "Mute",
+ "band": 1,
+ "channels": [
+  "mute1",
+  "mute2",
+  "mute3",
+  "mute4",
+  "mute5",
+  "mute6",
+  "mute7",
+  "mute8"
+ ],
+ "points": [
+  {
+   "id": "0x0d6a",
+   "wire": 0.0,
+   "eng": 0.0
+  },
+  {
+   "id": "0x0d6f",
+   "wire": 0.25,
+   "eng": 0.0
+  },
+  {
+   "id": "0x0d73",
+   "wire": 0.5,
+   "eng": 1.0
+  },
+  {
+   "id": "0x0d77",
+   "wire": 0.75,
+   "eng": 1.0
+  },
+  {
+   "id": "0x0d7b",
+   "wire": 1.0,
+   "eng": 1.0
+  },
+  {
+   "id": "0x0d7f",
+   "wire": 0.0,
+   "eng": 0.0
+  },
+  {
+   "id": "0x0d83",
+   "wire": 0.25,
+   "eng": 0.0
+  },
+  {
+   "id": "0x0d87",
+   "wire": 0.5,
+   "eng": 1.0
+  }
+ ],
+ "originals": {
+  "0x0d6a": 0.0,
+  "0x0d6f": 0.0,
+  "0x0d73": 0.0,
+  "0x0d77": 0.0,
+  "0x0d7b": 0.0,
+  "0x0d7f": 0.0,
+  "0x0d83": 0.0,
+  "0x0d87": 0.0
+ },
+ "restored": true
+}
