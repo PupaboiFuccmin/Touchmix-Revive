@@ -53,7 +53,8 @@ def strip_path(target):
     """Map a short channel name to its path prefix in the table.
 
     1..16 -> 'In N', st17/st19 -> 'Stereo In 17/18' / 'Stereo In 19/20', main, aux1..aux6,
-    aux7 (or aux7/8), aux9 (or aux9/10), fx1..fx4, dca1..dca8.
+    aux7 (or aux7/8), aux9 (or aux9/10), fx1..fx4, dca1..dca8, pb -> '2-Trk PB',
+    talkback.
     """
     t = str(target).strip().lower().replace(' ', '')
     if t.isdigit() and 1 <= int(t) <= 16:
@@ -76,7 +77,7 @@ def strip_path(target):
                 if prefix == 'aux' and n in (9, 10):
                     return 'Aux 9/10'
                 return '%s %d' % (label, n)
-    raise ValueError('unknown channel %r (use 1-16, st17, st19, main, aux1-10, fx1-4, dca1-8)' % target)
+    raise ValueError('unknown channel %r (use 1-16, st17, st19, main, aux1-10, fx1-4, dca1-8, pb, talkback)' % target)
 
 
 # ---------------------------------------------------------------- scaling

@@ -1,7 +1,7 @@
 """Find TouchMix mixers on the local network.
 
-The control port is not fixed: it was 42217 for weeks, then 54596 after the
-mixer rebooted (2026-10-21). The mixer advertises it over mDNS / DNS-SD, which
+The control port is not fixed: it was 42217 in every capture and session until
+the mixer rebooted (2026-10-21), then 54596. The mixer advertises it over mDNS / DNS-SD, which
 is how the official app finds it:
 
     QSC JD HOME._ds2inet._tcp.local  SRV port=54596  A 192.168.10.129

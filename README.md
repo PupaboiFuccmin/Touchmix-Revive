@@ -1,155 +1,190 @@
 # Touchmix-Revive
 
-Control a QSC TouchMix-16 from a PC over the network, by reverse engineering
-the protocol the official TouchMix Control app uses.
+Control a **QSC TouchMix-16** from a PC over the network. QSC publishes no API,
+so this project reverse engineered the protocol the official TouchMix Control
+app uses, and mapped what the mixer's controls mean in real units.
 
-* [`touchmix/`](touchmix): Python client library and command-line tool
-* [`docs/PROTOCOL.md`](docs/PROTOCOL.md): wire format, message types, parameter layout, capture log
-* [`touchmix/data/params.csv`](touchmix/data/params.csv): all 5,694 parameter IDs with names, from the mixer's own config
-* [`tools/tmcap.py`](tools/tmcap.py): decoder for PCAPdroid captures
+* Every fader, mute, solo, pan, send, trim, EQ, gate, compressor, de-esser,
+  graphic EQ and feedback notch on the inputs, buses and FX returns, in dB, Hz
+  and ms
+* Finds the mixer on your network by itself
+* Watches everything that changes on the mixer, live, in real units
+* A Python library and a command-line tool, both pure standard library
+  (Python 3.8+, nothing to install)
 
-Everything is Python 3.8+ standard library. There is nothing to install. On
-Windows, use `py` in place of `python3`.
+> ⚠️ **This sends real commands to a live mixer.** Keep the amps down or the
+> outputs muted until you trust what a command does.
 
-> ⚠️ **This is experimental.** It sends real commands to a live mixer. Test with
-> the amps off or the volume down until you trust it.
+| Where | What |
+|-------|------|
+| [`touchmix/`](touchmix) | The client library and the `python -m touchmix` command line |
+| [`docs/PYTHON.md`](docs/PYTHON.md) | Using it from Python |
+| [`docs/MAPPING.md`](docs/MAPPING.md) | The mapping tools that measured every curve, and how to extend the map |
+| [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | The wire protocol, parameter layout, value scaling, and the capture log |
+| [`touchmix/data/params.csv`](touchmix/data/params.csv) | All 5,694 parameter IDs with names, from the mixer's own config |
+| [`mappings/`](mappings) | The raw measurements behind every curve |
+| [`tools/tmcap.py`](tools/tmcap.py) | Decoder for PCAPdroid captures of the official app |
 
-## 1. Put the mixer on your network
+Tested with a TouchMix-16 on firmware 3.0.9551 (`MicroX16`). The TouchMix-8
+probably speaks the same protocol with fewer channels, but nobody has tried
+it.
 
-Out of the box the TouchMix creates its own Wi-Fi network (mixer at
-192.168.1.1). To reach it from your PC without joining that network, have the
-mixer **join your existing Wi-Fi** instead. On the mixer, open the network /
-Wi-Fi settings, switch from creating a network to joining one, pick your
-router's network and enter its password. The mixer's config has settings for
-exactly this (`Create Network`, `Infra SSID`, `Infra PW`, `IP Assign Mode`,
-`Static IP`). The menu labels on screen may differ slightly. Use DHCP unless
-you want a fixed address.
+On Windows, type `py` instead of `python3` in the examples below.
 
-Your PC can then be on Wi-Fi or Ethernet, as long as it is connected to the
-same router.
+## Getting started
 
-## 2. Find it
+### 1. Put the mixer on your network
+
+Out of the box the TouchMix creates its own Wi-Fi network. To reach it from a
+PC on your normal network, have the mixer **join your Wi-Fi** instead: in the
+mixer's network settings, switch from creating a network to joining one, pick
+your router's network and enter its password. The PC can be on Wi-Fi or
+Ethernet, as long as it is on the same router.
+
+(You can also join the PC to the mixer's own network. The mixer is then at
+192.168.1.1.)
+
+### 2. Find it
 
 ```sh
 python3 -m touchmix discover
 ```
-
-This tries port 42217 on every address in your PC's local /24 subnet(s). A
-TouchMix greets every new connection with its name, so the scan just reads
-that greeting and hangs up. It never logs in. If your network is larger than a
-/24, or the mixer is on another subnet, add `--subnet 192.168.0.0/22`.
-
-All other commands auto-discover too. To skip the scan, pass `--host` or set
-`TOUCHMIX_HOST=192.168.x.y`.
-
-## 3. Control it
-
-```sh
-python3 -m touchmix info                     # name, firmware, channels, faders, mutes
-python3 -m touchmix monitor                  # print every change made on the mixer/app, in real units
-python3 -m touchmix mute 4 on --verify       # --verify reconnects and checks the mixer stored it
-python3 -m touchmix mute 4 off
-python3 -m touchmix solo 4 on
-python3 -m touchmix fader 4 -10db            # dB (-55..+12), off, or raw 0..1
-python3 -m touchmix pan 4 L50                # -100..100, L50, C, R
-python3 -m touchmix trim 4 -3                 # input trim (digital gain) in dB, ±15
-python3 -m touchmix send 4 aux1 -10db         # aux/FX send level: dB, off, or raw 0..1
-python3 -m touchmix send 4 fx1 -20db
-python3 -m touchmix gate 4 -40                # gate threshold in dB (-60..0), or on / off
-python3 -m touchmix param 4 Comp Thresh -20    # any mapped control in real units
-python3 -m touchmix param 4 EQ Q 2 --band 3
-python3 -m touchmix param 4 Control "Delay Time" 12
-python3 -m touchmix eq 4 1 gain -3           # EQ band 1..4 gain in dB (±15)
-python3 -m touchmix eq 4 1 freq 120          # EQ band frequency in Hz
-python3 -m touchmix find "aux 1 > control"   # search parameter names (offline)
-python3 -m touchmix set "In 4 > Control > Phase" 1
+```
+Asking the network (mDNS) for TouchMix mixers...
+  192.168.10.129  port 54596  QSC JD HOME              (MicroX16)
 ```
 
-Channels: `1`–`16`, `st17`, `st19`, `main`, `aux1`–`aux10`, `fx1`–`fx4`, `dca1`–`dca8`.
+The mixer announces itself over mDNS (Bonjour), the same way the official app
+finds it. **Its control port changes when it reboots**, so every command looks
+the port up this way. If mDNS is blocked on your network, `discover` falls
+back to scanning the local subnet on port 42217. Use `--subnet` for a larger
+or different network.
 
-From Python:
+Every other command discovers the mixer too. To skip that, pass `--host` or
+set the `TOUCHMIX_HOST` environment variable. Either can include the port,
+e.g. `--host 192.168.10.129:54596`.
+
+### 3. Give this PC access (once)
+
+```sh
+python3 -m touchmix info
+```
+```
+Mixer:    QSC JD HOME at 192.168.10.129
+Firmware: 3.0.09551
+Mixer IP: 192.168.10.129
+Client:   Revive-LAPTOP-4THKAI2Q, access: NONE: changes from this PC are ignored
+```
+
+The mixer keeps an access profile for every device that connects, and **a new
+device starts with no rights**. It still gets the full mixer state, but the
+mixer silently ignores every change it sends. On the mixer, open the Wi-Fi
+device access settings, find this PC's client name (the `Client:` line), and
+allow **All** (or just the mixes it needs). Run `info` again: it should say
+`access: all`.
+
+The profile is stored per client name, which defaults to `Revive-<computer
+name>`. If you pass `--name`, keep using the same one.
+
+### 4. Check that it works
+
+```sh
+python3 -m touchmix monitor          # move a fader on the mixer: it shows up here
+python3 -m touchmix mute 4 on --verify
+python3 -m touchmix mute 4 off
+```
+
+`--verify` reconnects and reads the value back from the mixer, and prints
+`CHANGED` when the mixer stored it.
+
+## Commands
+
+```sh
+python3 -m touchmix info                       # name, firmware, access, channel overview
+python3 -m touchmix monitor                    # every change on the mixer or the app, in real units
+python3 -m touchmix mute 4 on                  # on / off
+python3 -m touchmix solo 4 on                  # cue
+python3 -m touchmix fader 4 -10db              # -10db, +6db, 0db, unity, off (or a raw 0..1)
+python3 -m touchmix fader main 0db
+python3 -m touchmix pan 4 L50                  # -100..100, L50, C, R
+python3 -m touchmix trim 4 -3                  # dB: -15..+15, stereo inputs 0..+12
+python3 -m touchmix send 4 aux1 -10db          # input to aux1-aux10 or fx1-fx4
+python3 -m touchmix send 4 fx1 off
+python3 -m touchmix gate 4 -40                 # threshold in dB (-60..0), or on / off
+python3 -m touchmix eq 4 1 gain -3             # band 1-4 (1-6 on main/aux), gain in dB
+python3 -m touchmix eq 4 1 freq 120            # frequency in Hz
+python3 -m touchmix param 4 Comp Thresh -20    # any mapped control, in its own units
+python3 -m touchmix param 4 Comp Ratio 4
+python3 -m touchmix param 4 EQ Q 2 --band 3
+python3 -m touchmix param aux1 GEQ 1000 -6     # graphic EQ slider, by its band name
+python3 -m touchmix param main "Anti FB" Freq 2500 --band 2
+python3 -m touchmix find "aux 1 > comp"        # search parameter names (offline)
+python3 -m touchmix set "In 4 > Control > Phase" 1   # any parameter, raw 0..1 value
+```
+
+Every command that changes something accepts `--verify`.
+
+**Channels:** `1`–`16`, `st17` and `st19` (the stereo inputs), `main`,
+`aux1`–`aux10` (7/8 and 9/10 are stereo pairs, so `aux7` and `aux8` are the
+same bus), `fx1`–`fx4` (the effect returns), `dca1`–`dca8`, `pb` (2-track
+playback) and `talkback`.
+
+**`param`** takes a section and a name as they appear in
+[`params.csv`](touchmix/data/params.csv): sections are `Control`, `EQ`,
+`Lo-Cut`, `Hi-Cut`, `Gate`, `Comp`, `De-Esser`, `GEQ`, `Anti FB` and `HPF`.
+Values are in the control's own units (dB, Hz, ms, ratio, or on/off). See
+[Value scaling](docs/PROTOCOL.md#value-scaling) for every range.
+
+## From Python
 
 ```python
-from touchmix import TouchMix, discover
+from touchmix import TouchMix
 
-ip, name, _ = discover()[0]
-with TouchMix(ip) as tm:
-    tm.wait_ready()                      # mixer has sent its full state
-    print(tm.config_value('In 4 > Control > Fader'))
+with TouchMix('192.168.10.129') as tm:     # the port is looked up over mDNS
+    tm.wait_ready()                        # the mixer has sent its full state
+    if not tm.can_write():
+        raise SystemExit('grant this PC access on the mixer first')
+    tm.fader(4, '-10db')
+    tm.send(4, 'aux1', '-6db')
+    tm.set_value(4, 'Comp', 'Thresh', -20)
     tm.on_change(lambda pid, value, raw, tag, src: print(hex(pid), value))
-    tm.mute(4, True)
 ```
 
-## First test checklist
+See [`docs/PYTHON.md`](docs/PYTHON.md) for the whole API.
 
-1. `discover` finds the mixer.
-2. `info` shows your channel names, and `Client: ... access: all`.
-3. `monitor`, then move a fader on the mixer: changes appear.
-4. `mute 4 on --verify` prints `CHANGED`, and channel 4 shows muted on the mixer.
+## What's mapped
 
-**If `info` says `access: NONE`:** the mixer keeps an access profile for each
-connected device, and a new device starts with no rights. The mixer still
-sends it the full state, but ignores every change it sends back. On the
-mixer, open the Wi-Fi device access settings, find this PC's client name (the
-`Client:` line, default `Revive-<hostname>`), and allow All (or the mixes you
-need). This is needed only once per client name, so keep `--name` the same.
+About 2,600 of the mixer's ~5,000 settable parameters have a measured curve,
+which covers everything you need to run a mix:
 
-If step 4 fails even with access, the app's extra mute side batch might be
-needed (see "Open questions" in `docs/PROTOCOL.md`). Run `monitor` and send me
-the output.
+* **Inputs 1–16, stereo inputs:** fader, mute, solo, pan/width, trim, phase,
+  delay, low/high cut, 4-band EQ, gate, compressor, de-esser, all aux and FX
+  sends and their mutes, DCA and mute-group assignment, record arm, Channel
+  Safe
+* **Main, Aux 1–10:** fader, mute, output gain, delay, 6-band EQ, low/high cut,
+  compressor, 31-band graphic EQ, feedback notch filters (Main and Aux 1–6)
+* **FX 1–4 returns, 2-track playback, talkback, DCA 1–8:** faders, mutes, EQ,
+  HPF, width, balance, trim
 
-## Mapping assistant
+**Not mapped yet:** the effect engines' own settings (reverb time, delay time
+and so on), mode switches such as compressor mode and EQ band type, scene
+recall, recording transport, user buttons, the wizards, and the meters and
+RTA. [`docs/MAPPING.md`](docs/MAPPING.md) explains how to map more.
 
-Fills gaps in the parameter map without phone captures. There are two modes.
+## Troubleshooting
 
-**Probe** maps a curve with no hands. It writes a sweep of wire values, then
-reconnects and reads the mixer's own value (dB, Hz, ms) back from its config.
-It sweeps the same control on several channels at once, so each reconnect
-reads one point per channel. At the end it puts every control back where it
-was.
-
-```sh
-python3 -m touchmix map probe Fader --channels 1-16 --steps 33     # fader curve
-python3 -m touchmix map probe Trim --channels 1-16
-python3 -m touchmix map probe Thresh --section Gate --channels 1-8
-python3 -m touchmix map probe AuxSend1 --channels 1-16
-```
-
-`map probe-all` runs every control that hasn't been mapped yet, in order:
-delay, cut filters, EQ, gate, comp, de-esser, aux balance, stereo width/trim,
-and the Aux 7–10 masters. It asks once, saves one JSON per control in
-`mappings/`, and finishes with a table that fits each curve as linear,
-exponential (Hz, ms) or the fader law. If one control fails, it says so and
-carries on with the rest. Use `--only comp,gate` to run part of the list.
-
-```sh
-python3 -m touchmix map probe-all
-```
-
-> ⚠️ Probe moves **live** controls through their full range (faders to +12 dB).
-> Turn the amps down or unplug the outputs first.
-
-**Guided** prompts you to do one thing at a time on the mixer or in the app,
-and records every parameter that changes while you do it. Add `--readback` to
-also record the mixer's value in real units for each change. That costs a
-reconnect, a second or two, after each step.
-
-```sh
-python3 -m touchmix map list                      # built-in scripts
-python3 -m touchmix map run channel 9 --readback  # confirm strides on another channel
-python3 -m touchmix map run bus fx1
-python3 -m touchmix map run scenes
-python3 -m touchmix map run transport
-python3 -m touchmix map run free                  # you name each step yourself
-python3 -m touchmix map show mapping-channel-*.json
-```
-
-At each step, press Enter when done, `r` to redo, `s` to skip, `n <text>`
-to add a note, or `q` to save and quit. Each run writes a
-`mapping-*.json`. These files hold only IDs, names and values, never the raw
-config, so they are safe to share.
+| Symptom | Cause and fix |
+|---------|---------------|
+| `info` shows `access: NONE` | The mixer ignores this PC until you allow it. See step 3. |
+| `discover` finds nothing, but the app works | mDNS may be blocked between the PC and the mixer (guest networks often do this). Find the port with the app or your router, and pass `--host IP:PORT`. |
+| `Connection refused` | The control port changed (the mixer rebooted). Leave out `--port` so it is looked up again. |
+| `mixer did not send its config within 15s` | Another session from this PC may still be open. Close other `touchmix` commands and try again. |
+| A command runs but nothing changes | Check `info` for access. Then run `monitor` while you make the same change in the app, and compare. |
 
 ## Captures
+
+The protocol was decoded from captures of the official Android app (made with
+PCAPdroid). To decode your own:
 
 ```sh
 python3 tools/tmcap.py summary capture.pcap
@@ -157,12 +192,17 @@ python3 tools/tmcap.py params  capture.pcap          # every parameter change, w
 python3 tools/tmcap.py files   capture.pcap out/     # extract and inflate the .dscomp XML files
 ```
 
-Captures are not committed (see `.gitignore`). They include your network
-details and the mixer's full config, **including its Wi-Fi password in plain
-text**.
+> ⚠️ **Never publish raw captures or extracted config files.** The mixer sends
+> its full configuration, **including its Wi-Fi password in plain text**, to
+> every client that connects. `.gitignore` keeps captures out of the repo. The
+> files in `mappings/` hold only parameter IDs and values and are safe.
 
 ## Tests
 
 ```sh
 python3 -m unittest discover -s tests
 ```
+
+The tests run against a small fake mixer ([`tests/fake_mixer.py`](tests/fake_mixer.py)),
+so they need no hardware. They also check every curve against every
+measurement in `mappings/`.

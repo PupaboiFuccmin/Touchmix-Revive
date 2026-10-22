@@ -328,7 +328,8 @@ def cmd_map_probe(args):
     if warn_no_access(s.tm):
         s.close()
         return 1
-    rp = M.RESTORE_POINT
+    os.makedirs('mappings', exist_ok=True)
+    rp = os.path.join('mappings', M.RESTORE_POINT)
     checkpoint = lambda originals: M.save_restore_point(rp, s.host, s.tm.mixer_name, args.param, originals)
     try:
         result = M.probe(s, pids, values, restore=not args.no_restore, checkpoint=checkpoint)
@@ -339,7 +340,7 @@ def cmd_map_probe(args):
     print('\n  wire      value')
     for w, e in M.curve_table(result['points']):
         print('  %.4f    %s' % (w, e))
-    out = args.out or M.default_out('probe-%s' % args.param.lower().replace(' ', ''))
+    out = args.out or os.path.join('mappings', M.default_out('probe-%s' % args.param.lower().replace(' ', '')))
     M.save(out, 'probe', s.host, s.tm.mixer_name,
            dict(section=args.section, param=args.param, band=args.band, channels=chans, **result))
     print('\nSaved %s' % out)
@@ -452,7 +453,7 @@ def main(argv=None):
 
     def ctl(name, helptext, fn, *extra):
         p = sub.add_parser(name, help=helptext)
-        p.add_argument('channel', help='1-16, st17, st19, main, aux1-10, fx1-4, dca1-8')
+        p.add_argument('channel', help='1-16, st17, st19, main, aux1-10, fx1-4, dca1-8, pb (2-track), talkback')
         for a, kw in extra:
             p.add_argument(a, **kw)
         p.add_argument('--verify', action='store_true', help='reconnect and confirm the mixer stored the change')
@@ -462,7 +463,8 @@ def main(argv=None):
     ctl('solo', 'cue on/off', cmd_solo, ('state', dict(type=on_off)))
     ctl('fader', 'fader: -10db, +6db, 0db, off (or raw 0..1)', cmd_fader, ('value', dict()))
     ctl('pan', 'pan: -100..100, L50, C, R', cmd_pan, ('value', dict()))
-    ctl('trim', 'input trim (digital gain) in dB, -15..+15', cmd_trim, ('value', dict(type=float)))
+    ctl('trim', 'input trim (digital gain) in dB: -15..+15, stereo inputs 0..+12', cmd_trim,
+        ('value', dict(type=float)))
     ctl('send', 'aux/FX send level: -10db, 0db, off (or raw 0..1)', cmd_send,
         ('dest', dict(help='aux1-aux10 or fx1-fx4')), ('value', dict()))
     ctl('gate', 'gate on/off, or threshold in dB (-60..0)', cmd_gate, ('value', dict()))
@@ -472,7 +474,8 @@ def main(argv=None):
         ('value', dict(help='in the control\'s units (dB, Hz, ms, ratio); on/off for switches')),
         ('--band', dict(type=int, default=1, help='which one, for EQ bands (default 1)')))
     ctl('eq', 'EQ band gain (dB) or freq (Hz)', cmd_eq,
-        ('band', dict(type=int, choices=[1, 2, 3, 4])), ('what', dict(choices=['gain', 'freq'])),
+        ('band', dict(type=int, choices=[1, 2, 3, 4, 5, 6], help='1-4 on inputs, 1-6 on main/aux')),
+        ('what', dict(choices=['gain', 'freq'])),
         ('value', dict(type=float)))
 
     s = sub.add_parser('set', help='set any parameter by index or "Path > Name" to a raw 0..1 value')
@@ -505,9 +508,9 @@ def main(argv=None):
     pr.add_argument('--steps', type=int, default=21, help='number of values from 0 to 1 (default 21)')
     pr.add_argument('--yes', action='store_true', help='do not ask for confirmation')
     pr.add_argument('--no-restore', action='store_true', help='leave the controls where the sweep ends')
-    pr.add_argument('--out', help='output JSON')
+    pr.add_argument('--out', help='output JSON (default mappings/mapping-probe-<param>-<time>.json)')
     pr.set_defaults(fn=cmd_map_probe)
-    pa = msub.add_parser('probe-all', help='run every remaining curve probe in order (see mapping.PROBE_PLAN)')
+    pa = msub.add_parser('probe-all', help='run a whole plan of curve probes in order (see --plan)')
     pa.add_argument('--plan', default='inputs',
                     help='which plan(s): %s, comma-separated (default inputs)' % ', '.join(M.PLANS))
     pa.add_argument('--only', help='comma-separated filters on the control name, e.g. "comp,gate attack"')
