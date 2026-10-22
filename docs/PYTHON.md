@@ -106,6 +106,10 @@ tm.set_many([(0x021E, 0.5), (0x026A, 0.5)])      # one message, several paramete
 tm.set(0x00D4, ('int', 3))                       # a raw u32, for integer parameters
 ```
 
+Writes to network, security, device-access, Powerdown and `FileMan > Delete`
+parameters raise `TouchMixError` unless you set `tm.allow_risky = True` first.
+They can take the mixer off the network or lock every client out.
+
 Keep `set_many` batches small. **196 writes in one message made the mixer
 reboot**. 16 at a time has always been fine (`mapping.send_chunked` does the
 splitting).

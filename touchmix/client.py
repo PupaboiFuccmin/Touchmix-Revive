@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import zlib
 
 from . import protocol as P
-from .params import (ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
+from .params import (ParamTable, strip_path, risky, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
                      send_name, curve_for, transport_to_norm, int_to_norm, fx_type_number)
 
 # The full mixer state. Sent on connect as NH<n>-config (NH4 on some
@@ -58,6 +58,7 @@ class TouchMix:
         self.live = {}          # index -> normalized float last seen on the wire
         self.files = {}         # file name -> inflated bytes
         self.access = None      # 'All', 'Main Mix', 'Aux 1', ... -> bool, from this client's settings file
+        self.allow_risky = False   # writes to network/security/Powerdown/Delete are refused unless True
         self.listeners = []     # fn(pid, value, raw, tag, source)
         self.message_listeners = []   # fn(msg_type, payload), every message as received
 
@@ -154,10 +155,19 @@ class TouchMix:
 
     def set_many(self, changes):
         resolved = [(self.resolve(p), v) for p, v in changes]
+        for pid, _ in resolved:
+            self._check_safe(pid)
         self._send(P.encode_param_set(resolved))
         for pid, v in resolved:
             if not isinstance(v, tuple):
                 self.live[pid] = float(v)
+
+    def _check_safe(self, pid):
+        par = self.params.get(pid)
+        why = risky(par) if par else None
+        if why and not self.allow_risky:
+            raise TouchMixError('refusing to write %s: %s. Set allow_risky (or use set --force) '
+                                'if you really mean it.' % (par.full_name, why))
 
     def resolve(self, param):
         if isinstance(param, int):
@@ -241,6 +251,7 @@ class TouchMix:
     def set_text(self, param, text):
         """Set a text parameter, e.g. 'In 4 > Control > Name'. ASCII only."""
         pid = self.resolve(param)
+        self._check_safe(pid)
         self._send(P.encode_text(pid, text))
         self.config_text[pid] = text
 

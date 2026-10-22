@@ -437,6 +437,33 @@ def _lookup(table, section, name):
     return None
 
 
+# Parameters a client could use to take the mixer off the network, lock
+# everyone out, power it down or delete scenes. The client refuses to write
+# them unless allow_risky is set (`set --force` on the command line).
+RISKY_CHANNELS = ('Security', 'Auth')
+RISKY_PARAMS = {
+    'Global > Control': {
+        'Network Password', 'Mixer Password', 'Static IP', 'Static GW', 'Static NM', 'Current IP',
+        'Infra SSID', 'Infra PW', 'SSID list', 'IP Assign Mode', 'Net Security', 'Create Network',
+        'Create AP', 'Editing Wired', 'Serial Number', 'Version', 'Board Rev', 'Ignored Version',
+        'Upgrade Display', 'Demo Enabled'},
+    'Global > Misc Input': {'Powerdown'},
+    'Global > FileMan': {'Delete'},
+}
+
+
+def risky(par):
+    """Why writing this Param is risky, or None."""
+    if par.path.split(' > ')[0] in RISKY_CHANNELS:
+        return 'security and device-access settings can lock every client out'
+    if par.name.strip() in RISKY_PARAMS.get(par.path, ()):
+        if par.path == 'Global > Control':
+            return 'network and system settings can take the mixer off the network'
+        return {'Powerdown': 'it may switch the mixer off',
+                'Delete': 'it deletes a scene or preset'}[par.name.strip()]
+    return None
+
+
 def curve_for(path, name):
     """Curve for a parameter, e.g. curve_for('In 4 > Comp', 'Thresh'), or None if not mapped."""
     channel, _, section = path.rpartition(' > ')

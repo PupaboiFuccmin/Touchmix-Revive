@@ -473,6 +473,28 @@ class Client(unittest.TestCase):
         self.assertEqual(S.fx_type_number('Stereo Delay'), 2)
         self.assertRaises(ValueError, S.fx_type_number, 'flanger')
 
+    def test_risky_writes_refused(self):
+        from touchmix import TouchMixError
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            for param in ('Global > Control > Create Network', 'Global > Misc Input > Powerdown',
+                          'Global > FileMan > Delete', 'Security > Control > Auto Lock', 'Auth > Access > All'):
+                self.assertRaises(TouchMixError, tm.set, param, 1.0)
+            self.assertRaises(TouchMixError, tm.set_text, 'Global > Control > Infra SSID', 'x')
+            tm.set('Global > Misc Input > Test screen', 0.0)     # not risky: allowed
+            tm.allow_risky = True
+            tm.set('Global > FileMan > Delete', 0.0)            # allowed when asked for
+        err = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            with self.assertRaises(SystemExit):
+                main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'set', 'Global > Misc Input > Powerdown', '1'])
+        sent = [pid for t, p in self.mixer.received if t == P.PARAM_SET for pid, _, _, _ in P.decode_param_set(p)]
+        self.assertNotIn(0x00C5, sent)                          # Powerdown never left the PC
+        self.assertIn(0x00FA, sent)                             # Delete did, with allow_risky
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'set',
+                                   'Global > Control > Demo Enabled', '0', '--force']), 0)
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

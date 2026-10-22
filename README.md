@@ -134,6 +134,13 @@ python3 -m touchmix set "In 4 > Control > Phase" 1   # any parameter, raw 0..1 v
 
 Every command that changes something accepts `--verify`.
 
+**Protected settings.** The client refuses to write anything that could take
+the mixer off the network, lock clients out, power it down or delete scenes:
+the network and Wi-Fi settings, passwords, security and device-access
+settings, Powerdown, and `FileMan > Delete`. None of the commands above touch
+them. To write one deliberately, use `set ... --force` (or
+`tm.allow_risky = True` in Python).
+
 **Channels:** `1`–`16`, `st17` and `st19` (the stereo inputs), `main`,
 `aux1`–`aux10` (7/8 and 9/10 are stereo pairs, so `aux7` and `aux8` are the
 same bus), `fx1`–`fx4` (the effect returns), `dca1`–`dca8`, `pb` (2-track

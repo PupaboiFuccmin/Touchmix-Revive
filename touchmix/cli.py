@@ -336,7 +336,11 @@ def cmd_set(args):
     probe = TouchMix('-', params=table)
     pid = probe.resolve(args.param)
     value = ('int', int(args.value[4:], 0)) if args.value.startswith('int:') else float(args.value)
-    return apply_and_verify(args, lambda tm: tm.set(pid, value), pid)
+
+    def action(tm):
+        tm.allow_risky = args.force
+        tm.set(pid, value)
+    return apply_and_verify(args, action, pid)
 
 
 RECORD_CHANNELS = [str(n) for n in range(1, 17)] + ['st17', 'st19', '2trk']
@@ -819,6 +823,8 @@ def main(argv=None):
     s.add_argument('param')
     s.add_argument('value', help='normalized float, or int:N for integer parameters')
     s.add_argument('--verify', action='store_true')
+    s.add_argument('--force', action='store_true',
+                   help='allow network, security, Powerdown and Delete parameters (can lock you out)')
     s.set_defaults(fn=cmd_set)
 
     rec = sub.add_parser('record', help='USB recorder: status, arm/disarm tracks, start/stop/play/rtz')
