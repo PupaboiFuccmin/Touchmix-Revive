@@ -254,13 +254,13 @@ TOUR = collections.OrderedDict([
         ('Put FX 1 back to the processor it had at the start.', False, FX_WATCH),
     ]),
     ('buttons', [
-        ('Press MENU > touch "User Buttons" > touch "User Button 1" so it turns blue.', False),
+        ('Press MENU > touch "User Buttons" > touch "User Button 1" to select it.', False),
         ('Same screen: in the Action list touch "Mute", then pick channel 16 in the\n'
          '     Selection / Detail lists (whatever it offers), then touch "Assign".\n'
          '     Type what you picked, press Enter.', False),
         ('Press the physical U1 button on the mixer once (channel 16 should mute).', False),
         ('Press U1 again (unmute).', False),
-        ('Back on MENU > User Buttons, User Button 1 still blue: touch "Reset"\n'
+        ('Back on MENU > User Buttons, User Button 1 still selected: touch "Reset"\n'
          '     so it goes back to its factory job (Nav Left).', False),
     ]),
     ('recorder', [
