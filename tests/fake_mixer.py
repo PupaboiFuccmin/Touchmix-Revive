@@ -78,9 +78,6 @@ class FakeMixer:
         self.access = access     # like the real mixer, writes are ignored without it
         self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0}
         self.texts = {554: 'Vox'}
-        self.recall_trigger = 0.0        # the value of FileMan > Recall that makes it recall
-        self.scene_uuid = [0] * 8        # FileMan > Scene Uuid0-7, as words
-        self.recalled = []
         self.received = []
         self.clients = []
         self.srv = socket.socket()
@@ -179,13 +176,6 @@ class FakeMixer:
                         for pid, _, _, value in P.decode_param_set(payload):
                             if self.access:
                                 self.apply(pid, value)
-                            if self.access and 0x101 <= pid <= 0x108:
-                                self.scene_uuid[pid - 0x101] = round(value * 65536)
-                            if self.access and pid == 0x0FB and value == self.recall_trigger:
-                                self.recalled.append(bytes(struct.pack('<8H', *self.scene_uuid)).hex())
-                                name, self.config_name = self.config_name, 'all-config.xml.dscomp'
-                                c.sendall(self._config_file())
-                                self.config_name = name
                     elif msg_type == P.TEXT:
                         pid, text = P.decode_text(payload)
                         if self.access and pid in self.texts:

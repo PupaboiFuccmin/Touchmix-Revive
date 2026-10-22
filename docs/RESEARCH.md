@@ -180,6 +180,25 @@ UUID, behind its broken confirm) did not recall anything.
 The tour stopped at step 6 (saving a channel preset) when the mixer's screen
 froze. The mixer restarted, and its control port changed again (to 45262).
 
+## Scene recall from the PC: not working yet
+
+`touchmix scene list` works: it reads the file index and marks the scene in
+`FileMan > Scene Uuid0`–`7`. Recalling did not work in any of these attempts
+(2026-10-22). The test: channel 16 was named SCNA, saved as scene SCNA, then
+renamed SCNB from the PC. A working recall would have brought "SCNA" back.
+
+| Attempt | Result |
+|---------|--------|
+| `Scene Uuid0`–`7` = target scene, then `Recall` = 0 | UUID stored (the mixer then reports that scene as current), nothing recalled, no `all-config` |
+| same, `Recall` = 1 | nothing |
+| same, plus `FileMan > Type` = 0, `Location` = 1 (user), `Number` = position in the file index (n/1024), `Recall` = 0 or 1 | nothing; channel 16 stayed "SCNB" |
+
+What the app sends for a *confirmed* recall has never been captured: its
+confirm button didn't work. Its unconfirmed `Save As` / `Recall` writes
+carried tag `9229` where ours send 0, which may or may not matter. Next step:
+capture a confirmed recall from the app (another device, or after an app
+update) with `monitor --raw` running and PCAPdroid, then retry.
+
 ## Input EQ and dynamics buttons
 
 From `map tour comp,eq` on channel 16 (2026-10-22,

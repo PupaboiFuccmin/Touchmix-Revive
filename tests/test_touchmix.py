@@ -495,41 +495,29 @@ class Client(unittest.TestCase):
             self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'set',
                                    'Global > Control > Demo Enabled', '0', '--force']), 0)
 
-    def test_scene_list_and_recall(self):
+    def test_scene_list(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'list']), 0)
-            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'usr']), 0)
-        self.assertIn('TEST', out.getvalue())
-        self.assertIn('recalled', out.getvalue())
-        # the UUID words went out exactly as the mixer reported them for a scene save
-        self.assertEqual(self.mixer.recalled, ['af18348e0817414895e398710bf6f0bb'])
-        writes = [(pid, v) for t, p in self.mixer.received if t == P.PARAM_SET
-                  for pid, _, _, v in P.decode_param_set(p)]
-        self.assertEqual(writes[-1], (0x0FB, 0.0))
+        lines = out.getvalue().splitlines()
+        self.assertTrue(any('factory' in l and '(Default)' in l for l in lines))
+        self.assertTrue(any('user' in l and 'usr' in l and 'af18348e0817414895e398710bf6f0bb' in l for l in lines))
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            self.assertEqual(tm.find_scene('TEST')['number'], 0)
+            self.assertEqual(tm.find_scene('usr')['location'], 'user')
 
     def test_commands_keep_the_client_name(self):
         """The mixer keys access on the client name, so no command's own
-        arguments may change it (scene recall usr once connected as 'usr')."""
+        arguments may change it (a 'scene recall usr' once connected as 'usr')."""
         from touchmix.client import default_client_name
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'usr'])
+            main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'list'])
             main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'name', '4', 'Kick'])
             main(['--host', '127.0.0.1', '--port', str(self.mixer.port), '--name', 'Studio-PC', 'name', '4', 'Vox'])
         hellos = [P.decode_hello(p)[0] for t, p in self.mixer.received if t == P.HELLO]
         self.assertEqual(hellos, [default_client_name(), default_client_name(), 'Studio-PC'])
         self.assertEqual(self.mixer.texts[554], 'Vox')
-
-    def test_scene_recall_reports_no_answer(self):
-        self.mixer.recall_trigger = 1.0          # this mixer ignores Recall = 0
-        out = io.StringIO()
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
-            rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'TEST'])
-            self.assertEqual(rc, 2)
-            self.assertIn('--trigger 1', out.getvalue())
-            rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'TEST', '--trigger', '1'])
-        self.assertEqual(rc, 0)
-        self.assertEqual(self.mixer.recalled, ['790091c8bc2044e880d34b355d7bbd21'])
 
     def test_cli_mute_verify(self):
         out = io.StringIO()

@@ -70,7 +70,6 @@ class TouchMix:
         self._ready = threading.Event()
         self._access_known = threading.Event()
         self._index_known = threading.Event()
-        self._recalled = threading.Event()
         self._closed = threading.Event()
         self._file_buf = {}
         self._file_name = None
@@ -246,9 +245,9 @@ class TouchMix:
         self.set_many([('Global > Transport > Multi-track Enable', 0.0 if on else 1.0),
                        ('Global > Misc Input > Playback', int_to_norm(0 if on else 1))])
 
-    # Scenes. Recall from the PC is not confirmed yet: recall_scene() reports
-    # whether the mixer answered with all-config, which it does after every
-    # recall made on its own screen.
+    # Scenes. Listing works; recalling from the PC does not yet (UUID + Recall,
+    # with or without Type/Location/Number, did nothing on 2026-10-22). See
+    # docs/RESEARCH.md, "Scene recall from the PC".
 
     SCENE_LOCATIONS = {'0': 'factory', '1': 'user', '3': 'usb'}
 
@@ -285,26 +284,6 @@ class TouchMix:
             if key in (s['name'].lower(), s['file'].lower(), s['file'].lower().split('.')[0], s['uuid']):
                 return s
         raise KeyError('no scene %r (see scene list)' % name)
-
-    def recall_scene(self, name, trigger=0.0, timeout=6.0, select=False):
-        """Write the scene's UUID to FileMan > Scene Uuid0-7, then FileMan > Recall.
-        With select, also FileMan > Type (0 = scene), Location and Number (its
-        position in the file index), as n/1024. Returns True if the mixer sent
-        its post-recall state (all-config).
-
-        Not working yet: UUID + Recall alone did not recall (2026-10-22)."""
-        scene = self.find_scene(name)
-        words = struct.unpack('<8H', bytes.fromhex(scene['uuid']))
-        changes = [('Global > FileMan > Scene Uuid%d' % i, w / 65536.0) for i, w in enumerate(words)]
-        if select:
-            changes += [('Global > FileMan > Type', int_to_norm(0)),
-                        ('Global > FileMan > Location', int_to_norm(scene['location_code'])),
-                        ('Global > FileMan > Number', int_to_norm(scene['number']))]
-        self.set_many(changes)
-        time.sleep(0.3)
-        self._recalled.clear()
-        self.set('Global > FileMan > Recall', trigger)
-        return self._recalled.wait(timeout)
 
     def fx_type(self, fx, kind):
         """Pick FX 1-4's processor: 'none', 'chorus', 'delay', 'pitch', 'dense',
@@ -441,8 +420,6 @@ class TouchMix:
             if CONFIG_FILE.match(name):
                 self._load_config(raw)
                 self._ready.set()
-                if name.startswith('all-'):
-                    self._recalled.set()        # the full state the mixer sends after a recall
             elif name.startswith('fileIndex'):
                 self._index_known.set()
             elif name.endswith(SETTINGS_SUFFIX):

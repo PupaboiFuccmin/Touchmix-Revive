@@ -24,6 +24,7 @@ from . import protocol as P
 
 SERVICE = '_ds2inet._tcp.local'
 MDNS_ADDR = ('224.0.0.251', 5353)
+MDNS_TRIES = 3
 
 Mixer = collections.namedtuple('Mixer', 'ip name suffix port')
 
@@ -182,14 +183,19 @@ def probe(host, port=P.PORT, timeout=0.5, read_timeout=1.5):
     return Mixer(str(host), name, suffix, port)
 
 
-def discover(subnets=None, port=None, timeout=0.5, workers=128, mdns=True):
+def discover(subnets=None, port=None, timeout=0.5, workers=128, mdns=True, scan=True):
     """Find mixers. Without explicit subnets, ask mDNS first; if that finds
     nothing, scan the /24 around each local address on `port` (default 42217).
     Returns [Mixer(ip, name, suffix, port)]."""
     if mdns and not subnets:
-        found = [m for m in (probe(ip, p, timeout) for ip, p, _, _ in mdns_browse()) if m]
-        if found:
-            return found
+        # mDNS is UDP and an answer is sometimes lost; ask a few times before
+        # falling back to a scan, which only finds the mixer on its old port
+        for _ in range(MDNS_TRIES):
+            found = [m for m in (probe(ip, p, timeout) for ip, p, _, _ in mdns_browse()) if m]
+            if found:
+                return found
+    if not scan:
+        return []
     nets = [ipaddress.ip_network(n, strict=False) for n in subnets] if subnets else default_subnets()
     # hosts() of a /32 or /31 is empty before Python 3.9, so take every address there
     hosts = [h for n in nets for h in (n.hosts() if n.num_addresses > 2 else n)]

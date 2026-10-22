@@ -120,7 +120,7 @@ def cmd_discover(args):
     found = []
     if not args.subnet:
         print('Asking the network (mDNS) for TouchMix mixers...')
-        found = discover(mdns=True, subnets=None, port=args.port) if mdns_browse() else []
+        found = discover(mdns=True, subnets=None, port=args.port, scan=False)
     if not found:
         nets = args.subnet or [str(n) for n in default_subnets()]
         print('Scanning %s on port %d...' % (', '.join(map(str, nets)), args.port or P.PORT))
@@ -493,26 +493,12 @@ def cmd_collect(args):
 
 
 def cmd_scene(args):
-    """scene list | recall NAME"""
+    """scene list (recall from the PC is not working yet)"""
     tm = open_mixer(args)
     try:
-        if args.action == 'list':
-            for s in tm.scenes():
-                print('  %s %-8s %-24s %s' % ('*' if s['current'] else ' ', s['location'], s['name'], s['uuid']))
-            print('(* = last saved or recalled)')
-            return
-        if not args.scene:
-            sys.exit('scene recall needs a scene name (see scene list)')
-        warn_no_access(tm)
-        scene = tm.find_scene(args.scene)
-        print('Recalling %s scene %r ...' % (scene['location'], scene['name']))
-        if tm.recall_scene(args.scene, trigger=args.trigger, select=args.select):
-            print('The mixer sent its new state: recalled.')
-            return 0
-        print('No answer from the mixer within %d s: the recall probably did not happen.' % 6)
-        if args.trigger == 0:
-            print('Try again with --trigger 1.')
-        return 2
+        for s in tm.scenes():
+            print('  %s %-8s %-24s %s' % ('*' if s['current'] else ' ', s['location'], s['name'], s['uuid']))
+        print('(* = last saved or recalled)')
     finally:
         tm.close()
 
@@ -877,12 +863,8 @@ def main(argv=None):
     co.add_argument('--no-names', action='store_true', help="don't ask the mixer for channel names")
     co.set_defaults(fn=cmd_collect)
 
-    sc = sub.add_parser('scene', help='list scenes, or recall one: scene recall TEST')
-    sc.add_argument('action', choices=['list', 'recall'])
-    sc.add_argument('scene', nargs='?', help='scene name, file name or UUID')
-    sc.add_argument('--trigger', type=float, default=0.0, help='value written to FileMan > Recall (default 0)')
-    sc.add_argument('--select', action='store_true',
-                    help='also write FileMan Type, Location and Number for the scene (experiment)')
+    sc = sub.add_parser('scene', help='list the scenes on the mixer')
+    sc.add_argument('action', choices=['list'])
     sc.set_defaults(fn=cmd_scene)
 
     fx = sub.add_parser('fx', help='show or pick an FX processor: fx 1 type lush')
