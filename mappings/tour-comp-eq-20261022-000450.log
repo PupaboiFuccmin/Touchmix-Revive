@@ -1,0 +1,78 @@
+00:04:51 MSG 2.2 len=6 b49c01000000
+00:04:51 0x0696 0.0000                raw=00000000 tag=0000 Aux 1 > Control > Link
+00:04:51 0x0699 1.0000                raw=3f800000 tag=0000 Aux 1 > Comp > Mode
+00:04:51 0x0751 0.0000                raw=00000000 tag=0000 Aux 2 > Control > Link
+00:04:51 0x0754 1.0000                raw=3f800000 tag=0000 Aux 2 > Comp > Mode
+00:04:51 0x080c 0.0000                raw=00000000 tag=0000 Aux 3 > Control > Link
+00:04:51 0x080f 1.0000                raw=3f800000 tag=0000 Aux 3 > Comp > Mode
+00:04:51 0x08c7 0.0000                raw=00000000 tag=0000 Aux 4 > Control > Link
+00:04:51 0x08ca 1.0000                raw=3f800000 tag=0000 Aux 4 > Comp > Mode
+00:04:51 0x0982 0.0000                raw=00000000 tag=0000 Aux 5 > Control > Link
+00:04:51 0x0985 1.0000                raw=3f800000 tag=0000 Aux 5 > Comp > Mode
+00:04:51 0x0a3d 0.0000                raw=00000000 tag=0000 Aux 6 > Control > Link
+00:04:51 0x0a40 1.0000                raw=3f800000 tag=0000 Aux 6 > Comp > Mode
+00:04:51 0x000e 1.0000                raw=3f800000 tag=0000 Main > Comp > Mode
+00:04:51 0x0afb 1.0000                raw=3f800000 tag=0000 Aux 7/8 > Comp > Mode
+00:04:51 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
+00:04:52 FILE start NH4-config.xml.dscomp
+00:04:52 FILE end /usr/share/ds2i/tmp/NH4-config.xml.dscomp
+00:04:52 CONNECTED QSC JD HOME
+00:04:52 SECTION comp
+00:04:52 STEP 1 Channel 16 (HOME > Inputs 9-16 > touch channel 16's name button), Comp tab:
+     touch the "Simple" button so it lights (most controls disappear).
+00:04:52 FILE start fileIndex.xml.dscomp
+00:04:53 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+00:04:53 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:04:53 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:05:04 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
+00:05:24 0x012a 0.0001                raw=38800080 tag=46b0 Global > Control > Simple Mode 0
+00:05:27 0x012a 0.0002                raw=394000c0 tag=0000 Global > Control > Simple Mode 0
+00:05:34 END 1
+00:05:34 STEP 2 Same screen: touch "Simple" again so it goes dark (all controls back).
+00:05:38 0x012a 0.0001                raw=38800080 tag=0000 Global > Control > Simple Mode 0
+00:05:41 END 2
+00:05:41 STEP 3 Same screen: is there any Mode, Type or style selector on the Comp tab?
+     If yes, touch it and step through each option, typing its name after each.
+     If no, just press Enter on an empty line.
+00:06:05 0x00ce 0.9900                raw=3f7d70a4 tag=0000 Global > Misc Input > Wireless Strength
+00:06:21 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
+00:06:29 END 3
+00:06:29 SECTION eq
+00:06:29 STEP 4 Channel 16 (HOME > Inputs 9-16 > touch channel 16's name button), EQ tab:
+     touch the "Low Shelf" button (band 1 becomes a shelf; its Bandwidth knob disappears).
+00:06:58 0x05e3 0.0000    off         raw=00000000 tag=46b0 In 16 > EQ > BndEnbl
+00:07:03 END 4
+00:07:03 STEP 5 Same screen: touch "Low Shelf" again (band 1 back to a bell).
+00:07:06 0x05e3 1.0000    on          raw=3f800000 tag=0000 In 16 > EQ > BndEnbl
+00:07:09 END 5
+00:07:09 STEP 6 Same screen: touch the "High Shelf" button (band 4 becomes a shelf).
+00:07:14 0x05f2 0.0000    off         raw=00000000 tag=0000 In 16 > EQ > BndEnbl
+00:07:17 END 6
+00:07:17 STEP 7 Same screen: touch "High Shelf" again (band 4 back to a bell).
+00:07:22 0x05f2 1.0000    on          raw=3f800000 tag=0000 In 16 > EQ > BndEnbl
+00:07:25 END 7
+00:07:25 STEP 8 Same screen: touch the "Low Cut" button (low cut on).
+00:07:44 0x05cc 1.0000    on          raw=3f800000 tag=0000 In 16 > Lo-Cut > BndEnbl
+00:07:46 END 8
+00:07:46 STEP 9 Same screen: touch "Low Cut" again (off).
+00:07:52 0x05cc 0.0000    off         raw=00000000 tag=0000 In 16 > Lo-Cut > BndEnbl
+00:07:54 0x00ce 0.9900                raw=3f7d70a4 tag=0000 Global > Misc Input > Wireless Strength
+00:07:55 END 9
+00:07:55 STEP 10 Same screen: touch the "High Cut" button (on).
+00:07:58 0x05c6 1.0000    on          raw=3f800000 tag=0000 In 16 > Hi-Cut > BndEnbl
+00:08:00 END 10
+00:08:00 STEP 11 Same screen: touch "High Cut" again (off).
+00:08:03 0x05c6 0.0000    off         raw=00000000 tag=0000 In 16 > Hi-Cut > BndEnbl
+00:08:05 END 11
+00:08:05 STEP 12 Same screen: touch "Simple" (lights, cut and frequency controls disappear).
+00:08:09 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
+00:08:14 0x012a 0.0000                raw=00000000 tag=0000 Global > Control > Simple Mode 0
+00:08:22 0x012a 0.0001                raw=38800080 tag=0000 Global > Control > Simple Mode 0
+00:08:25 END 12
+00:08:25 STEP 13 Same screen: touch "Simple" again (all controls back).
+00:08:29 0x012a 0.0000                raw=00000000 tag=0000 Global > Control > Simple Mode 0
+00:08:31 END 13
+00:08:31 STEP 14 Channel 16 (HOME > Inputs 9-16 > touch channel 16's name button), Gate tab: touch "Simple" on, then off again.
+00:08:45 0x012a 0.0001                raw=38800080 tag=0000 Global > Control > Simple Mode 0
+00:08:48 0x012a 0.0000                raw=00000000 tag=0000 Global > Control > Simple Mode 0
+00:08:50 END 14

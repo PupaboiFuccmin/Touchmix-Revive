@@ -180,6 +180,25 @@ UUID, behind its broken confirm) did not recall anything.
 The tour stopped at step 6 (saving a channel preset) when the mixer's screen
 froze. The mixer restarted, and its control port changed again (to 45262).
 
+## Input EQ and dynamics buttons
+
+From `map tour comp,eq` on channel 16 (2026-10-22,
+`mappings/tour-comp-eq-20261022-000450.log`). Each button produced exactly one
+change:
+
+| Button | Parameter | Values |
+|--------|-----------|--------|
+| EQ "Low Shelf" | `In N > EQ > BndEnbl` of **band 1** | 0 = shelf, 1 = bell |
+| EQ "High Shelf" | `BndEnbl` of **band 4** | 0 = shelf, 1 = bell |
+| EQ "Low Cut" | `In N > Lo-Cut > BndEnbl` | 1 = on |
+| EQ "High Cut" | `In N > Hi-Cut > BndEnbl` | 1 = on |
+| "Simple" on the Comp, EQ or Gate tab | `Global > Control > Simple Mode 0` | a small integer (n/65536): 0, 4 and 12 seen, probably one bit per tab; screen only, no effect on the sound |
+
+So on bands 1 and 4, `BndEnbl` is the bell/shelf switch, not a band on/off.
+`eq N 1 shelf on` and `TouchMix.eq_shelf()` set it. The input compressor
+screen has **no mode selector** (confirmed on the mixer), so the `Comp > Mode`
+value the mixer reports on connect isn't a front-panel control for inputs.
+
 ## Pulling recordings over the network: no sign of it
 
 Brainstorm priority 2 asked whether recorded tracks can come off the mixer

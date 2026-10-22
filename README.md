@@ -113,6 +113,7 @@ python3 -m touchmix send 4 fx1 off
 python3 -m touchmix gate 4 -40                 # threshold in dB (-60..0), or on / off
 python3 -m touchmix eq 4 1 gain -3             # band 1-4 (1-6 on main/aux), gain in dB
 python3 -m touchmix eq 4 1 freq 120            # frequency in Hz
+python3 -m touchmix eq 4 1 shelf on            # band 1 or 4: shelf (on) or bell (off)
 python3 -m touchmix param 4 Comp Thresh -20    # any mapped control, in its own units
 python3 -m touchmix param 4 Comp Ratio 4
 python3 -m touchmix param 4 EQ Q 2 --band 3

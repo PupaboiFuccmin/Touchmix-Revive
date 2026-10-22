@@ -318,12 +318,15 @@ def cmd_param(args):
 
 
 def cmd_eq(args):
-    name = {'gain': 'Gain', 'freq': 'Freq'}[args.what]
+    name = {'gain': 'Gain', 'freq': 'Freq', 'shelf': 'BndEnbl'}[args.what]
     pid = ParamTable().find('%s > EQ' % strip_path(args.channel), name, args.band - 1).index
-    if args.what == 'gain':
-        act = lambda tm: tm.eq_gain(args.channel, args.band, args.value)
+    if args.what == 'shelf':
+        on = on_off(args.value)
+        act = lambda tm: tm.eq_shelf(args.channel, args.band, on)
+    elif args.what == 'gain':
+        act = lambda tm: tm.eq_gain(args.channel, args.band, float(args.value))
     else:
-        act = lambda tm: tm.eq_freq(args.channel, args.band, args.value)
+        act = lambda tm: tm.eq_freq(args.channel, args.band, float(args.value))
     return apply_and_verify(args, act, pid)
 
 
@@ -749,10 +752,10 @@ def main(argv=None):
         ('param', dict(help='name in that section, e.g. Thresh, Ratio, "Delay Time"')),
         ('value', dict(help='in the control\'s units (dB, Hz, ms, ratio); on/off for switches')),
         ('--band', dict(type=int, default=1, help='which one, for EQ bands (default 1)')))
-    ctl('eq', 'EQ band gain (dB) or freq (Hz)', cmd_eq,
+    ctl('eq', 'EQ band gain (dB), freq (Hz), or shelf on/off (bands 1 and 4)', cmd_eq,
         ('band', dict(type=int, choices=[1, 2, 3, 4, 5, 6], help='1-4 on inputs, 1-6 on main/aux')),
-        ('what', dict(choices=['gain', 'freq'])),
-        ('value', dict(type=float)))
+        ('what', dict(choices=['gain', 'freq', 'shelf'])),
+        ('value', dict(help='dB, Hz, or on/off for shelf')))
 
     s = sub.add_parser('set', help='set any parameter by index or "Path > Name" to a raw 0..1 value')
     s.add_argument('param')

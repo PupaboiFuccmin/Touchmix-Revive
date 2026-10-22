@@ -435,6 +435,20 @@ class Client(unittest.TestCase):
         self.assertIn('LABEL 2.2 Plate', log)
         self.assertIn('END 3', log)
 
+    def test_cli_eq_shelf(self):
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'eq', '16', '1', 'shelf', 'on']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'eq', '16', '4', 'shelf', 'off']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'eq', '4', '2', 'gain', '-3']), 0)
+        writes = [(pid, v) for t, p in self.mixer.received if t == P.PARAM_SET
+                  for pid, _, _, v in P.decode_param_set(p)]
+        # what the mixer reported for the Low/High Shelf buttons on channel 16
+        self.assertEqual(writes[:2], [(0x05E3, 0.0), (0x05F2, 1.0)])
+        self.assertAlmostEqual(writes[2][1], S.eq_gain_to_norm(-3))
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            self.assertRaises(ValueError, tm.eq_shelf, 16, 2)
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

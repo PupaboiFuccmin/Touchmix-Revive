@@ -238,6 +238,13 @@ class TouchMix:
     def eq_freq(self, channel, band, hz):
         self.set(self.channel_param(channel, 'Freq', 'EQ', band - 1), eq_freq_to_norm(hz))
 
+    def eq_shelf(self, channel, band, on=True):
+        """Bands 1 and 4 on an input: shelf (on) or bell (off). The Low/High
+        Shelf buttons write the band's BndEnbl: 0 = shelf, 1 = bell."""
+        if band not in (1, 4):
+            raise ValueError('only bands 1 and 4 can be shelves')
+        self.set(self.channel_param(channel, 'BndEnbl', 'EQ', band - 1), 0.0 if on else 1.0)
+
     # ------------------------------------------------------------ reading
 
     def config_value(self, param):
