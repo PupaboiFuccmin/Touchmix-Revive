@@ -83,7 +83,7 @@ class TouchMix:
         early = []
         msg = self._read_one()
         while msg[0] != P.HELLO:
-            if msg[0] not in (P.STATUS, P.PARAM_SET, P.TEXT) or len(early) > 50:
+            if msg[0] not in (P.STATUS, P.PARAM_SET, P.TEXT, P.TEXT_ALT) or len(early) > 50:
                 raise TouchMixError('expected hello from mixer, got type %d.%d' % msg[0])
             early.append(msg)
             msg = self._read_one()
@@ -315,7 +315,7 @@ class TouchMix:
             pid, raw, value = P.decode_status(payload)
             self.live[pid] = value
             self._notify(pid, value, raw, 0, 'status')
-        elif msg_type == P.TEXT:
+        elif msg_type in (P.TEXT, P.TEXT_ALT):
             pid, text = P.decode_text(payload)
             self.config_text[pid] = text
             self._notify(pid, 0.0, 0, 0, 'text')

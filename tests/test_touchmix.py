@@ -407,8 +407,9 @@ class Client(unittest.TestCase):
         mixer = self.mixer
 
         class Typing(io.StringIO):
-            # fx section: step 1 cycles options (two labels, then empty), step 2 is plain
-            lines = ['Hall\n', 'Plate\n', '\n', '\n']
+            # fx section: step 1 takes a note, step 2 cycles options (two labels,
+            # then empty), step 3 is plain
+            lines = ['Lush Reverb\n', 'Hall\n', 'Plate\n', '\n', '\n']
 
             def readline(self, *a):
                 line = self.lines.pop(0)
@@ -428,10 +429,11 @@ class Client(unittest.TestCase):
             log = f.read()
         kinds = [l.split()[1] for l in log.splitlines()]
         markers = [k for k in kinds if k in ('CONNECTED', 'SECTION', 'STEP', 'END')]
-        self.assertEqual(markers, ['CONNECTED', 'SECTION', 'STEP', 'END', 'STEP', 'END'])
-        self.assertLess(log.index('In 4 > Control > Mute'), log.index('LABEL 1.1 Hall'))
-        self.assertIn('LABEL 1.2 Plate', log)
-        self.assertIn('END 2', log)
+        self.assertEqual(markers, ['CONNECTED', 'SECTION'] + ['STEP', 'END'] * 3)
+        self.assertIn('LABEL 1 Lush Reverb', log)
+        self.assertLess(log.index('In 4 > Control > Mute'), log.index('LABEL 2.1 Hall'))
+        self.assertIn('LABEL 2.2 Plate', log)
+        self.assertIn('END 3', log)
 
     def test_cli_mute_verify(self):
         out = io.StringIO()

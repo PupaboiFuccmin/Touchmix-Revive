@@ -12,6 +12,7 @@ PARAM_SET = (5, 1)
 POLL_REQ = (6, 1)
 POLL_RESP = (7, 1)
 TEXT = (9, 1)        # a text parameter's value, e.g. the current MP3 title
+TEXT_ALT = (9, 9)    # same layout; seen for Rta Local > Used by device (the mixer's name)
 
 PRODUCT = 'MicroX16'
 FILE_START = 0xFFFFFFFF

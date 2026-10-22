@@ -34,7 +34,7 @@ MSG_NAMES = {
     7: 'poll-resp',
     9: 'text',
 }
-KNOWN = {(1, 3), (2, 2), (3, 4), (4, 2), (5, 1), (6, 1), (7, 1), (9, 1)}
+KNOWN = {(1, 3), (2, 2), (3, 4), (4, 2), (5, 1), (6, 1), (7, 1), (9, 1), (9, 9)}
 HELLO = struct.pack('<HH', 1, 3)       # type 1.3, the first message on every connection
 
 

@@ -1,0 +1,45 @@
+23:53:45 MSG 2.2 len=6 b49c01000000
+23:53:45 0x0696 0.0000                raw=00000000 tag=0000 Aux 1 > Control > Link
+23:53:45 0x0699 1.0000                raw=3f800000 tag=0000 Aux 1 > Comp > Mode
+23:53:45 0x0751 0.0000                raw=00000000 tag=0000 Aux 2 > Control > Link
+23:53:45 0x0754 1.0000                raw=3f800000 tag=0000 Aux 2 > Comp > Mode
+23:53:45 0x080c 0.0000                raw=00000000 tag=0000 Aux 3 > Control > Link
+23:53:45 0x080f 1.0000                raw=3f800000 tag=0000 Aux 3 > Comp > Mode
+23:53:45 0x08c7 0.0000                raw=00000000 tag=0000 Aux 4 > Control > Link
+23:53:45 0x08ca 1.0000                raw=3f800000 tag=0000 Aux 4 > Comp > Mode
+23:53:45 0x0982 0.0000                raw=00000000 tag=0000 Aux 5 > Control > Link
+23:53:45 0x0985 1.0000                raw=3f800000 tag=0000 Aux 5 > Comp > Mode
+23:53:45 0x0a3d 0.0000                raw=00000000 tag=0000 Aux 6 > Control > Link
+23:53:45 0x0a40 1.0000                raw=3f800000 tag=0000 Aux 6 > Comp > Mode
+23:53:45 0x000e 1.0000                raw=3f800000 tag=0000 Main > Comp > Mode
+23:53:45 0x0afb 1.0000                raw=3f800000 tag=0000 Aux 7/8 > Comp > Mode
+23:53:45 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
+23:53:46 FILE start NH4-config.xml.dscomp
+23:53:46 FILE end /usr/share/ds2i/tmp/NH4-config.xml.dscomp
+23:53:46 CONNECTED QSC JD HOME
+23:53:46 SECTION modes
+23:53:46 STEP 1 Channel 16 compressor: switch the compressor mode / type
+23:53:46 FILE start fileIndex.xml.dscomp
+23:53:46 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+23:53:46 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+23:53:46 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+23:54:02 0x05dd 1.0000    on          raw=3f800000 tag=45e5 In 16 > Comp > Enable
+23:54:06 0x05b0 1.0000    on          raw=3f800000 tag=44af In 16 > Control > Phase
+23:54:08 0x05b0 0.0000    off         raw=00000000 tag=0000 In 16 > Control > Phase
+23:54:16 0x012a 0.0001                raw=39000080 tag=4992 Global > Control > Simple Mode 0
+23:54:23 END 1
+23:54:23 STEP 2 Channel 16 EQ band 1: switch the band type (bell, shelf, ...)
+23:54:32 0x00ce 0.9900                raw=3f7d70a4 tag=0000 Global > Misc Input > Wireless Strength
+23:54:39 0x05e3 0.0000    off         raw=00000000 tag=0000 In 16 > EQ > BndEnbl
+23:54:40 0x05e3 1.0000    on          raw=3f800000 tag=0000 In 16 > EQ > BndEnbl
+23:54:54 0x05e6 0.4370    1.094       raw=3edfbecb tag=0000 In 16 > EQ > Q
+23:55:03 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
+23:55:04 0x05e3 0.0000    off         raw=00000000 tag=46b0 In 16 > EQ > BndEnbl
+23:55:04 0x05e3 1.0000    on          raw=3f800000 tag=0000 In 16 > EQ > BndEnbl
+23:55:06 0x012a 0.0002                raw=394000c0 tag=0000 Global > Control > Simple Mode 0
+23:55:07 MSG 9.9 len=17 800f00000b00515343204a4420484f4d45
+23:55:07 0x0f80 0.0000                raw=00000000 tag=44af Rta Local > Control > Used by device
+23:55:07 0x0f7e 0.0435                raw=3d321643 tag=0000 Rta Local > Control > Source Type
+23:55:07 0x0f7f 0.0586                raw=3d700000 tag=0000 Rta Local > Control > Source Inst
+23:55:13 END 2
+23:55:13 STEP 3 Channel 16 low cut: switch the filter type or slope, if it has one

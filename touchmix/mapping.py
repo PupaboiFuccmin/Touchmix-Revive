@@ -171,58 +171,113 @@ def script_mutes(table, target=None):
 # ---------------------------------------------------------------- tour
 # Steps for `map tour`: done on the mixer's own screen while the PC logs what the
 # mixer reports. (prompt, repeat): repeat steps cycle through a setting's options
-# and ask for each label. Channel 16 is used throughout, so leave it unused.
-# Nothing here deletes anything or powers the mixer down.
+# and ask for each label. Screen paths are from the TouchMix-8/16 user guide.
+# Channel 16 is used throughout, so leave it unused. Nothing here deletes
+# anything or powers the mixer down. Saving a channel preset froze the mixer's
+# screen once (2026-10-21), so the tour no longer does it.
 
-TOUR_INTRO = """Do each step on the TouchMix's own touchscreen, then press Enter.
-Leave a few seconds between steps. Everything uses channel 16: pick nothing
-plugged into it, or note its settings first."""
+TOUR_INTRO = """How this works
+  - Each step says exactly where to go on the TouchMix's touchscreen and what to touch.
+  - Do it, wait a second, then press Enter here.
+  - If the screen doesn't have what a step describes, type "none" (or what you see
+    instead) and press Enter. That is useful too.
+  - Channel 16 is the test channel: nothing should be plugged into it.
+  - Nothing here deletes anything or powers the mixer down.
+
+Getting to channel 16 (used a lot below):
+  press HOME > touch the "Inputs 9-16" bank > touch channel 16's name button
+  at the top of its strip. Its screen opens with tabs along the top
+  (EQ, Gate, Comp, FX, Aux, Setup ...)."""
+
+CH16 = 'Channel 16 (HOME > Inputs 9-16 > touch channel 16\'s name button)'
 
 TOUR = collections.OrderedDict([
     ('scenes', [
-        ('Open the Scenes screen (just look, change nothing)', False),
-        ('Save the current mix as a NEW user scene named TEST (Save As, confirm)', False),
-        ('Recall the scene TEST (confirm). Same mix, so nothing should change audibly', False),
-        ('Recall TEST again, this time with "omit levels" (or the closest option) ticked', False),
+        ('Open the scenes screen: press MENU > touch "Scenes". Just look, change nothing.', False),
+        ('Save the current mix as a new scene: touch "Save As", type TEST2 on the keyboard,\n'
+         '     touch Enter / Save, and confirm with Yes.', False),
+        ('Recall it: in the scene list touch TEST2 > "Recall" > "Yes".\n'
+         '     It is the same mix, so nothing should change audibly.', False),
     ]),
     ('presets', [
-        ('Channel 16: recall any factory input preset (confirm)', False),
-        ('Channel 16: save its settings as a user preset named TEST16', False),
-        ('Channel 16: recall the "Default" / reset preset, or reset the channel', False),
+        (CH16 + ':\n'
+         '     touch the Preset name (top of the channel screen) > pick any factory preset\n'
+         '     (e.g. Vocals > any) > "Recall" > "Yes".', False),
+        (CH16 + ':\n'
+         '     open the Preset list again and recall the "Default" (or "Reset") preset > "Yes".', False),
     ]),
-    ('modes', [
-        ('Channel 16 compressor: switch the compressor mode / type', True),
-        ('Channel 16 EQ band 1: switch the band type (bell, shelf, ...)', True),
-        ('Channel 16 low cut: switch the filter type or slope, if it has one', True),
-        ('Channel 16: switch the input source (analog, track/USB, ...)', True),
+    ('comp', [
+        (CH16 + ', Comp tab:\n'
+         '     touch the "Simple" button so it lights (most controls disappear).', False),
+        ('Same screen: touch "Simple" again so it goes dark (all controls back).', False),
+        ('Same screen: is there any Mode, Type or style selector on the Comp tab?\n'
+         '     If yes, touch it and step through each option, typing its name after each.\n'
+         '     If no, just press Enter on an empty line.', True),
+    ]),
+    ('eq', [
+        (CH16 + ', EQ tab:\n'
+         '     touch the "Low Shelf" button (band 1 becomes a shelf; its Bandwidth knob disappears).', False),
+        ('Same screen: touch "Low Shelf" again (band 1 back to a bell).', False),
+        ('Same screen: touch the "High Shelf" button (band 4 becomes a shelf).', False),
+        ('Same screen: touch "High Shelf" again (band 4 back to a bell).', False),
+        ('Same screen: touch the "Low Cut" button (low cut on).', False),
+        ('Same screen: touch "Low Cut" again (off).', False),
+        ('Same screen: touch the "High Cut" button (on).', False),
+        ('Same screen: touch "High Cut" again (off).', False),
+        ('Same screen: touch "Simple" (lights, cut and frequency controls disappear).', False),
+        ('Same screen: touch "Simple" again (all controls back).', False),
+        (CH16 + ', Gate tab: touch "Simple" on, then off again.', False),
+    ]),
+    ('source', [
+        ('Press RECORD/PLAY > touch the "Inputs 9-16" bank.\n'
+         '     For channel 16, touch its "Track" button (source becomes the recorder).', False),
+        ('Same screen: touch channel 16\'s "Track" button again (or "Input" / "Live")\n'
+         '     so it is back on its normal input.', False),
     ]),
     ('names', [
-        ('Rename channel 16 to TEST16', False),
-        ('Rename channel 16 back to what it was', False),
+        (CH16 + ', Setup tab:\n'
+         '     touch the Name field > type TEST16 on the keyboard > Enter.', False),
+        ('Same screen: touch the Name field again > type the old name back\n'
+         '     (or "In 16") > Enter.', False),
     ]),
     ('fx', [
-        ('FX 1: switch the effect type', True),
-        ('FX 1: put the effect type back to what it was', False),
+        ('Press HOME > touch the "FX Masters" bank > touch FX 1\'s name button > Effect tab.\n'
+         '     Note the processor name shown (e.g. "Lush Reverb"), type it here, press Enter.', False),
+        ('Same screen: touch the processor name to open the list, touch the next processor,\n'
+         '     and type its name. Repeat for every processor in the list.', True),
+        ('Same screen: put FX 1 back to the processor it had at the start.', False),
     ]),
     ('buttons', [
-        ('Open the User Buttons setup and assign button 1 to "Mute" of channel 16', False),
-        ('Press user button 1 once (channel 16 mutes)', False),
-        ('Press user button 1 again (unmute)', False),
-        ('Put user button 1 back to its old assignment', False),
+        ('Press MENU > touch "User Buttons" > touch "User Button 1" so it turns blue.', False),
+        ('Same screen: in the Action list touch "Mute", then pick channel 16 in the\n'
+         '     Selection / Detail lists (whatever it offers), then touch "Assign".\n'
+         '     Type what you picked, press Enter.', False),
+        ('Press the physical U1 button on the mixer once (channel 16 should mute).', False),
+        ('Press U1 again (unmute).', False),
+        ('Back on MENU > User Buttons, User Button 1 still blue: touch "Reset"\n'
+         '     so it goes back to its factory job (Nav Left).', False),
     ]),
     ('recorder', [
-        ('Recorder (multitrack, USB drive in): press Play on the last session', False),
-        ('Set a locate point', False),
-        ('Go to the locate point', False),
-        ('Press any other transport buttons the recorder has (pause, rewind, fast forward), one at a time', True),
-        ('Stop', False),
+        ('Press RECORD/PLAY. If it shows MP3 mode, switch it back to Multitrack.\n'
+         '     Make sure the session with your test recording is loaded ("New / Recall").', False),
+        ('Touch Play (the session plays), wait about 3 seconds.', False),
+        ('Touch Stop.', False),
+        ('Drag the play pointer on the time line to about the middle.', False),
+        ('Touch "Set" (the locate pointer moves there).', False),
+        ('Drag the play pointer back to the start.', False),
+        ('Touch "Go To" (the play pointer jumps to the locate point).', False),
+        ('Touch any other transport buttons you see (rewind, fast forward, pause, ...),\n'
+         '     one at a time, typing each name. Empty Enter when done.', True),
     ]),
     ('meters', [
-        ('Silence: nothing playing into any input, 10 seconds', False),
-        ('Play a steady sound into input 1 only, 10 seconds', False),
-        ('Stop it. Play the same sound into input 2 only, 10 seconds', False),
-        ('Same sound into input 1 again, but 10 dB quieter (lower the source, not the fader), 10 seconds', False),
-        ('Stop. Silence, 5 seconds', False),
+        ('Silence: nothing playing into any input. Wait 10 seconds, then Enter.', False),
+        ('Play a steady sound (a held synth note, or a tone) into input 1 only.\n'
+         '     Keep it going 10 seconds. Type roughly what channel 1\'s meter shows\n'
+         '     (e.g. "-12"), then Enter.', False),
+        ('Stop input 1. Play the same sound into input 2 only, 10 seconds, then Enter.', False),
+        ('Same sound into input 1 again but about 10 dB quieter (turn the SOURCE down,\n'
+         '     not the fader), 10 seconds. Type the meter reading, then Enter.', False),
+        ('Stop everything. Silence for 5 seconds, then Enter.', False),
     ]),
 ])
 

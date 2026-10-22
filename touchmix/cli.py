@@ -187,7 +187,7 @@ def attach_logger(tm, out, status=False, raw=False, polls=False):
             time.strftime('%H:%M:%S'), pid, value, curve.format(value) if curve else '',
             raw_u32, tag, par.full_name if par else '?'))
 
-    known = (P.PARAM_SET, P.STATUS, P.POLL_RESP, P.FILE, P.TEXT)
+    known = (P.PARAM_SET, P.STATUS, P.POLL_RESP, P.FILE, P.TEXT, P.TEXT_ALT)
     last_poll = {}
 
     @tm.on_message
