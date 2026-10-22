@@ -54,6 +54,13 @@ tm.eq_gain(4, 2, -3)          # channel, band, dB
 tm.eq_freq(4, 2, 250)         # channel, band, Hz
 ```
 
+**The USB recorder** (needs a drive in the mixer):
+
+```python
+tm.arm(1)                     # or tm.arm(1, False); 'st17', 'st19', '2trk'
+tm.transport('record')        # 'play', 'stop', 'rtz' (return to zero)
+```
+
 **Any mapped control, in real units:**
 
 ```python

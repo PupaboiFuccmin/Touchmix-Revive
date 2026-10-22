@@ -11,6 +11,9 @@ Examples:
   python -m touchmix send 4 aux1 -10db
   python -m touchmix send 4 fx1 -20db
   python -m touchmix gate 4 -40
+  python -m touchmix record status
+  python -m touchmix record arm 1-8
+  python -m touchmix record start
   python -m touchmix param 4 Comp Thresh -20
   python -m touchmix param 4 EQ Q 2 --band 3
   python -m touchmix eq 4 1 gain -3
@@ -30,7 +33,7 @@ from . import protocol as P
 from . import mapping as M
 from .mapping import parse_channels
 from .client import TouchMix, TouchMixError
-from .params import ParamTable, strip_path, send_name, curve_for
+from .params import ParamTable, strip_path, send_name, curve_for, TRANSPORT_STATES, transport_name
 
 
 def pick_host(args):
@@ -265,6 +268,52 @@ def cmd_set(args):
     return apply_and_verify(args, lambda tm: tm.set(pid, value), pid)
 
 
+RECORD_CHANNELS = [str(n) for n in range(1, 17)] + ['st17', 'st19', '2trk']
+
+
+def record_status(tm):
+    p = tm.params
+    val = lambda path, name: tm.config.get(p.find(path, name).index)
+    armed = [ch for ch in RECORD_CHANNELS
+             if val('2-Trk Rec > Control' if ch == '2trk' else '%s > Control' % strip_path(ch),
+                    '2-Track Arm' if ch == '2trk' else 'Arm') not in ('0', '0.0', None)]
+    print('USB drive:  %s' % ('present' if val('Global > Misc Input', 'USB present') not in ('0', None) else 'NOT present'))
+    print('Transport:  %s' % transport_name(val('Global > Transport', 'Transport') or 0))
+    print('Multitrack: %s' % ('on' if val('Global > Transport', 'Multi-track Enable') not in ('0', None) else 'off'))
+    print('Armed:      %s' % (', '.join(armed) or 'nothing'))
+    print('Busy:       %s' % val('Global > Transport', 'Busy'))
+
+
+def cmd_record(args):
+    """record status | arm CH... | disarm CH... | start | stop | play | rtz"""
+    tm = open_mixer(args)
+    try:
+        if args.action == 'status':
+            record_status(tm)
+            return
+        warn_no_access(tm)
+        if args.action in ('arm', 'disarm'):
+            chans = RECORD_CHANNELS if args.channels in (['all'], []) else \
+                [c for part in args.channels for c in parse_channels(part)]
+            for ch in chans:
+                tm.arm(ch, args.action == 'arm')
+            print('%s %s' % (args.action, ', '.join(chans)))
+        else:
+            state = {'start': 'record'}.get(args.action, args.action)
+            tm.transport(state)
+            print('transport -> %s' % state)
+        time.sleep(0.5)
+    finally:
+        tm.close()
+    if args.verify:
+        time.sleep(0.5)
+        check = open_mixer(args)
+        try:
+            record_status(check)
+        finally:
+            check.close()
+
+
 def cmd_find(args):
     for p in ParamTable().search(args.text):
         print('%5d 0x%04x  %s' % (p.index, p.index, p.full_name))
@@ -483,6 +532,12 @@ def main(argv=None):
     s.add_argument('value', help='normalized float, or int:N for integer parameters')
     s.add_argument('--verify', action='store_true')
     s.set_defaults(fn=cmd_set)
+
+    rec = sub.add_parser('record', help='USB recorder: status, arm/disarm tracks, start/stop/play/rtz')
+    rec.add_argument('action', choices=['status', 'arm', 'disarm', 'start', 'stop', 'play', 'rtz'])
+    rec.add_argument('channels', nargs='*', help='for arm/disarm: 1-16, st17, st19, 2trk, ranges like 1-8, or all')
+    rec.add_argument('--verify', action='store_true', help='reconnect and show the recorder status afterwards')
+    rec.set_defaults(fn=cmd_record)
 
     f = sub.add_parser('find', help='search parameter names (offline)')
     f.add_argument('text')

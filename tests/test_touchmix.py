@@ -289,6 +289,32 @@ class Client(unittest.TestCase):
         self.assertAlmostEqual(sent[0x260], 1.0, places=6)            # EQ band 3 Q = 4
         self.assertAlmostEqual(sent[0x5FE], 0.5, places=6)            # stereo trim 6 of 0..12 dB
 
+    def test_cli_record(self):
+        port = str(self.mixer.port)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'record', 'arm', '1-2', '2trk']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'record', 'start']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'record', 'stop']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'record', 'status']), 0)
+        writes = [(pid, v) for t, p in self.mixer.received if t == P.PARAM_SET
+                  for pid, _, _, v in P.decode_param_set(p)]
+        # values the app sent in `map run transport`: Arm 1/0, Transport n/7
+        self.assertIn((0x142, 1.0), writes)                 # In 1 > Control > Arm
+        self.assertIn((0x18E, 1.0), writes)                 # In 2
+        self.assertIn((0xDA6, 1.0), writes)                 # 2-Trk Rec > 2-Track Arm
+        transport = [v for pid, v in writes if pid == 0xB8]
+        self.assertEqual(len(transport), 2)
+        self.assertAlmostEqual(transport[0], 2 / 7.0, places=6)
+        self.assertEqual(transport[1], 0.0)
+        self.assertIn('Transport:', out.getvalue())
+
+    def test_transport_values(self):
+        self.assertAlmostEqual(S.transport_to_norm('play'), 0.142857, places=6)
+        self.assertAlmostEqual(S.transport_to_norm('rtz'), 0.714286, places=6)
+        self.assertEqual(S.transport_name('2.0'), 'record')
+        self.assertEqual(S.transport_name(3), '3')
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

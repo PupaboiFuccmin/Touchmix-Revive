@@ -8,7 +8,7 @@ import zlib
 
 from . import protocol as P
 from .params import (ParamTable, strip_path, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
-                     send_name, curve_for)
+                     send_name, curve_for, transport_to_norm)
 
 # The number varies: NH4 on some connections, NH8 on others (seen 2026-10-21)
 CONFIG_FILE = re.compile(r'NH\d+-config\.xml\.dscomp$')
@@ -196,6 +196,21 @@ class TouchMix:
 
     def gate_threshold(self, channel, db):
         self.set_value(channel, 'Gate', 'Thresh', db)
+
+    # USB recorder (needs a drive in the mixer)
+
+    def arm(self, channel, on=True):
+        """Arm an input (1-16, st17, st19) for multitrack recording, or '2trk'
+        for the 2-track recorder."""
+        if str(channel).lower() in ('2trk', '2-trk', '2track'):
+            pid = self.params.find('2-Trk Rec > Control', '2-Track Arm').index
+        else:
+            pid = self.channel_param(channel, 'Arm')
+        self.set(pid, 1.0 if on else 0.0)
+
+    def transport(self, state):
+        """'record', 'play', 'stop' or 'rtz' (return to zero)."""
+        self.set('Global > Transport > Transport', transport_to_norm(state))
 
     def eq_gain(self, channel, band, db):
         self.set(self.channel_param(channel, 'Gain', 'EQ', band - 1), eq_gain_to_norm(db))

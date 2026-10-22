@@ -169,6 +169,22 @@ def fader_db_to_norm(db):
 FADER_0DB = fader_db_to_norm(0.0)   # 0.7512; the app sends 0.75 (-0.06 dB)
 
 
+# Recorder transport (Global > Transport > Transport): an integer state sent
+# as n/7, from `map run transport` (2026-10-21). 3, 4, 6 and 7 are unknown.
+TRANSPORT_STATES = {'stop': 0, 'play': 1, 'record': 2, 'rtz': 5}
+TRANSPORT_STEPS = 7
+
+
+def transport_to_norm(state):
+    return TRANSPORT_STATES[state] / float(TRANSPORT_STEPS)
+
+
+def transport_name(n):
+    """Config value (0, 1, 2, ...) -> 'stop', 'play', 'record', or the number."""
+    n = int(float(n))
+    return next((k for k, v in TRANSPORT_STATES.items() if v == n), str(n))
+
+
 def fader_to_norm(value):
     """Fader position. Accepts a 0..1 float, 'off' / '-inf', or dB as
     '-10db', '+6dB', 'unity' (-55 dB and below is off, +12 dB is the top)."""

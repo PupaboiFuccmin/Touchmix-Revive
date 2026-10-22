@@ -1,0 +1,1209 @@
+{
+ "kind": "guided",
+ "created": "2026-10-21T21:47:27",
+ "mixer": "QSC JD HOME",
+ "host": "192.168.10.129",
+ "script": "transport",
+ "target": null,
+ "readback": true,
+ "steps": [
+  {
+   "step": 1,
+   "prompt": "Open the recorder screen (USB drive in)",
+   "changes": []
+  },
+  {
+   "step": 2,
+   "prompt": "Arm In 1 for recording",
+   "changes": [
+    {
+     "id": "0x0141",
+     "index": 321,
+     "name": "In 1 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0142",
+     "index": 322,
+     "name": "In 1 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    }
+   ],
+   "expect": [
+    "0x0142"
+   ],
+   "expect_seen": true
+  },
+  {
+   "step": 3,
+   "prompt": "Disarm In 1",
+   "changes": [
+    {
+     "id": "0x0141",
+     "index": 321,
+     "name": "In 1 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0142",
+     "index": 322,
+     "name": "In 1 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    }
+   ],
+   "expect": [
+    "0x0142"
+   ],
+   "expect_seen": true
+  },
+  {
+   "step": 4,
+   "prompt": "Arm all tracks",
+   "changes": [
+    {
+     "id": "0x0141",
+     "index": 321,
+     "name": "In 1 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0142",
+     "index": 322,
+     "name": "In 1 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x018d",
+     "index": 397,
+     "name": "In 2 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x018e",
+     "index": 398,
+     "name": "In 2 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "44b3"
+     ],
+     "config": 1.0
+    },
+    {
+     "id": "0x01d9",
+     "index": 473,
+     "name": "In 3 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x01da",
+     "index": 474,
+     "name": "In 3 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0225",
+     "index": 549,
+     "name": "In 4 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0226",
+     "index": 550,
+     "name": "In 4 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0271",
+     "index": 625,
+     "name": "In 5 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0272",
+     "index": 626,
+     "name": "In 5 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x02bd",
+     "index": 701,
+     "name": "In 6 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x02be",
+     "index": 702,
+     "name": "In 6 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0309",
+     "index": 777,
+     "name": "In 7 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x030a",
+     "index": 778,
+     "name": "In 7 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0355",
+     "index": 853,
+     "name": "In 8 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 3,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0356",
+     "index": 854,
+     "name": "In 8 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 3,
+     "tags": [
+      "486a"
+     ],
+     "config": 1.0
+    },
+    {
+     "id": "0x03a1",
+     "index": 929,
+     "name": "In 9 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x03a2",
+     "index": 930,
+     "name": "In 9 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "486a"
+     ],
+     "config": 1.0
+    },
+    {
+     "id": "0x03ed",
+     "index": 1005,
+     "name": "In 10 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x03ee",
+     "index": 1006,
+     "name": "In 10 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0439",
+     "index": 1081,
+     "name": "In 11 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x043a",
+     "index": 1082,
+     "name": "In 11 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0485",
+     "index": 1157,
+     "name": "In 12 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0486",
+     "index": 1158,
+     "name": "In 12 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x04d1",
+     "index": 1233,
+     "name": "In 13 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x04d2",
+     "index": 1234,
+     "name": "In 13 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x051d",
+     "index": 1309,
+     "name": "In 14 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x051e",
+     "index": 1310,
+     "name": "In 14 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0569",
+     "index": 1385,
+     "name": "In 15 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x056a",
+     "index": 1386,
+     "name": "In 15 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x05b5",
+     "index": 1461,
+     "name": "In 16 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x05b6",
+     "index": 1462,
+     "name": "In 16 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0600",
+     "index": 1536,
+     "name": "Stereo In 17/18 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0601",
+     "index": 1537,
+     "name": "Stereo In 17/18 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0647",
+     "index": 1607,
+     "name": "Stereo In 19/20 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0648",
+     "index": 1608,
+     "name": "Stereo In 19/20 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x0da6",
+     "index": 3494,
+     "name": "2-Trk Rec > Control > 2-Track Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "486a"
+     ],
+     "config": 1.0
+    }
+   ]
+  },
+  {
+   "step": 5,
+   "prompt": "Disarm all tracks",
+   "changes": [
+    {
+     "id": "0x0141",
+     "index": 321,
+     "name": "In 1 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0142",
+     "index": 322,
+     "name": "In 1 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x018d",
+     "index": 397,
+     "name": "In 2 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x018e",
+     "index": 398,
+     "name": "In 2 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x01d9",
+     "index": 473,
+     "name": "In 3 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x01da",
+     "index": 474,
+     "name": "In 3 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0225",
+     "index": 549,
+     "name": "In 4 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0226",
+     "index": 550,
+     "name": "In 4 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0271",
+     "index": 625,
+     "name": "In 5 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0272",
+     "index": 626,
+     "name": "In 5 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x02bd",
+     "index": 701,
+     "name": "In 6 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x02be",
+     "index": 702,
+     "name": "In 6 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0309",
+     "index": 777,
+     "name": "In 7 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x030a",
+     "index": 778,
+     "name": "In 7 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0355",
+     "index": 853,
+     "name": "In 8 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0356",
+     "index": 854,
+     "name": "In 8 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x03a1",
+     "index": 929,
+     "name": "In 9 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x03a2",
+     "index": 930,
+     "name": "In 9 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "486a"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x03ed",
+     "index": 1005,
+     "name": "In 10 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x03ee",
+     "index": 1006,
+     "name": "In 10 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0439",
+     "index": 1081,
+     "name": "In 11 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x043a",
+     "index": 1082,
+     "name": "In 11 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0485",
+     "index": 1157,
+     "name": "In 12 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0486",
+     "index": 1158,
+     "name": "In 12 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x04d1",
+     "index": 1233,
+     "name": "In 13 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x04d2",
+     "index": 1234,
+     "name": "In 13 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x051d",
+     "index": 1309,
+     "name": "In 14 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x051e",
+     "index": 1310,
+     "name": "In 14 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0569",
+     "index": 1385,
+     "name": "In 15 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x056a",
+     "index": 1386,
+     "name": "In 15 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x05b5",
+     "index": 1461,
+     "name": "In 16 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x05b6",
+     "index": 1462,
+     "name": "In 16 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0600",
+     "index": 1536,
+     "name": "Stereo In 17/18 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0601",
+     "index": 1537,
+     "name": "Stereo In 17/18 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0647",
+     "index": 1607,
+     "name": "Stereo In 19/20 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0648",
+     "index": 1608,
+     "name": "Stereo In 19/20 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    },
+    {
+     "id": "0x0da6",
+     "index": 3494,
+     "name": "2-Trk Rec > Control > 2-Track Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "486a"
+     ],
+     "config": 0.0
+    }
+   ]
+  },
+  {
+   "step": 6,
+   "prompt": "Arm In 1 again, then press RECORD",
+   "changes": [
+    {
+     "id": "0x00b8",
+     "index": 184,
+     "name": "Global > Transport > Transport",
+     "first": 0.285714,
+     "last": 0.285714,
+     "raw_last": "3e924925",
+     "count": 1,
+     "tags": [],
+     "config": 2.0
+    },
+    {
+     "id": "0x0141",
+     "index": 321,
+     "name": "In 1 > Control > Tracking",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 2.0
+    },
+    {
+     "id": "0x0142",
+     "index": 322,
+     "name": "In 1 > Control > Arm",
+     "first": 1.0,
+     "last": 1.0,
+     "raw_last": "3f800000",
+     "count": 1,
+     "tags": [
+      "486a"
+     ],
+     "config": 1.0
+    }
+   ],
+   "expect": [
+    "0x00b8"
+   ],
+   "expect_seen": true
+  },
+  {
+   "step": 7,
+   "prompt": "Press STOP",
+   "changes": [
+    {
+     "id": "0x00b8",
+     "index": 184,
+     "name": "Global > Transport > Transport",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    }
+   ],
+   "expect": [
+    "0x00b8"
+   ],
+   "expect_seen": true
+  },
+  {
+   "step": 8,
+   "prompt": "Press PLAY",
+   "changes": [
+    {
+     "id": "0x00b8",
+     "index": 184,
+     "name": "Global > Transport > Transport",
+     "first": 0.142857,
+     "last": 0.142857,
+     "raw_last": "3e124925",
+     "count": 19,
+     "tags": [],
+     "config": 1.0
+    },
+    {
+     "id": "0x00b9",
+     "index": 185,
+     "name": "Global > Transport > Song Position (edit)",
+     "first": 0.992188,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 7,
+     "tags": [
+      "ffff"
+     ],
+     "config": 0.23076923191547394
+    }
+   ],
+   "expect": [
+    "0x00b8"
+   ],
+   "expect_seen": true
+  },
+  {
+   "step": 9,
+   "prompt": "Press STOP",
+   "changes": [
+    {
+     "id": "0x00b8",
+     "index": 184,
+     "name": "Global > Transport > Transport",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    }
+   ],
+   "expect": [
+    "0x00b8"
+   ],
+   "expect_seen": true
+  },
+  {
+   "step": 10,
+   "prompt": "Rewind / go to start",
+   "changes": [
+    {
+     "id": "0x00b8",
+     "index": 184,
+     "name": "Global > Transport > Transport",
+     "first": 0.714286,
+     "last": 0.714286,
+     "raw_last": "3f36db6e",
+     "count": 1,
+     "tags": [],
+     "config": 0.0
+    }
+   ],
+   "expect": [
+    "0x00b9"
+   ],
+   "expect_seen": false
+  },
+  {
+   "step": 11,
+   "prompt": "Set a locate point, then go to it",
+   "changes": [
+    {
+     "id": "0x00be",
+     "index": 190,
+     "name": "Global > Transport > Goto Locate",
+     "first": 1.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 2,
+     "tags": [
+      "44b3",
+      "486a"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x00bf",
+     "index": 191,
+     "name": "Global > Transport > Locate",
+     "first": 0.007812,
+     "last": 0.484375,
+     "raw_last": "3ef80000",
+     "count": 11,
+     "tags": [
+      "4395",
+      "44b3"
+     ],
+     "config": 0.484375
+    }
+   ],
+   "expect": [
+    "0x00bd",
+    "0x00be"
+   ],
+   "expect_seen": true
+  },
+  {
+   "step": 12,
+   "prompt": "Disarm In 1",
+   "changes": [
+    {
+     "id": "0x0141",
+     "index": 321,
+     "name": "In 1 > Control > Tracking",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "001c"
+     ],
+     "config": 0.0
+    },
+    {
+     "id": "0x0142",
+     "index": 322,
+     "name": "In 1 > Control > Arm",
+     "first": 0.0,
+     "last": 0.0,
+     "raw_last": "00000000",
+     "count": 1,
+     "tags": [
+      "486a"
+     ],
+     "config": 0.0
+    }
+   ]
+  }
+ ]
+}
