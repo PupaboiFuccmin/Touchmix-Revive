@@ -172,18 +172,18 @@ class MDNS(unittest.TestCase):
     def test_parse_mixer_answer(self):
         """Same records the TouchMix-16 sent for _ds2inet._tcp (2026-10-21)."""
         from touchmix.discover import parse_dns, dns_query
-        inst = 'QSC JD HOME._ds2inet._tcp.local'
+        inst = 'QSC TouchMix._ds2inet._tcp.local'
         txt = b''.join(bytes([len(t)]) + t for t in
                        (b'ProtocolVersion=1', b'SWVersion=196608', b'DeviceType=MicroX16'))
         pkt = (struct.pack('>HHHHHH', 0, 0x8400, 0, 4, 0, 0)
                + self.rr('_ds2inet._tcp.local', 12, self.name(inst))
                + self.rr(inst, 16, txt)
-               + self.rr(inst, 33, struct.pack('>HHH', 0, 0, 54596) + self.name('QSC JD HOME.local'))
-               + self.rr('QSC JD HOME.local', 1, bytes([192, 168, 10, 129])))
+               + self.rr(inst, 33, struct.pack('>HHH', 0, 0, 54596) + self.name('QSC TouchMix.local'))
+               + self.rr('QSC TouchMix.local', 1, bytes([192, 168, 10, 129])))
         recs = {(n, t): v for n, t, v in parse_dns(pkt)}
-        self.assertEqual(recs[(inst, 33)], (54596, 'QSC JD HOME.local'))
+        self.assertEqual(recs[(inst, 33)], (54596, 'QSC TouchMix.local'))
         self.assertEqual(recs[(inst, 16)]['DeviceType'], 'MicroX16')
-        self.assertEqual(recs[('QSC JD HOME.local', 1)], '192.168.10.129')
+        self.assertEqual(recs[('QSC TouchMix.local', 1)], '192.168.10.129')
         self.assertEqual(recs[('_ds2inet._tcp.local', 12)], inst)
         self.assertTrue(dns_query('_ds2inet._tcp.local').endswith(b'\x08_ds2inet\x04_tcp\x05local\x00\x00\x0c\x00\x01'))
 
@@ -536,14 +536,16 @@ class Client(unittest.TestCase):
         self.assertEqual(self.mixer.texts[554], 'Vox')
 
     def test_meters(self):
-        # values seen with a held synth note on inputs 7/8: Main L/R and the input pair
+        # values seen with a held synth note on inputs 7/8 (sent to Aux 7/8 and 9/10)
         self.mixer.meters = [0.676, 0.676, 0, 0, 0, 0, 0, 0, 0.596, 0.631]
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
             tm.wait_ready(5)
             time.sleep(0.4)
             m = tm.meters()
         self.assertAlmostEqual(m['main'][0], 0.676, places=3)
-        self.assertAlmostEqual(m['input_pair'][1], 0.631, places=3)
+        self.assertAlmostEqual(m['aux7/8'], 0.596, places=3)
+        self.assertAlmostEqual(m['aux9/10'], 0.631, places=3)
+        self.assertEqual(m['aux'], [0.0] * 6)
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'meters',

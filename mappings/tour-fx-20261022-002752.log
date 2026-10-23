@@ -16,23 +16,23 @@
 00:27:53 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
 00:27:54 FILE start NH4-config.xml.dscomp
 00:27:54 FILE end /usr/share/ds2i/tmp/NH4-config.xml.dscomp
-00:27:54 CONNECTED QSC JD HOME
+00:27:54 CONNECTED QSC TouchMix
 00:27:54 SECTION fx
 00:27:54 STEP 1 Press HOME > touch the "FX Masters" bank > touch FX 1.
      A window opens listing the effect processors. Type the one that is
      selected now (e.g. "Mono Delay"), press Enter. Change nothing yet.
 00:27:54 FILE start fileIndex.xml.dscomp
 00:27:55 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:27:55 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:27:55 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:27:55 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:27:55 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:27:57 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
 00:28:31 LABEL 1 Mono Delay
 00:28:32 READ 1 0x0b96 FX 1 > Editor > FX type value=6 text=''
 00:28:32 READ 1 0x0b84 FX 1 > Control > Preset value=0 text=''
 00:28:32 FILE start fileIndex.xml.dscomp
 00:28:32 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:28:32 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:28:32 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:28:32 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:28:32 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:28:33 END 1
 00:28:33 STEP 2 In that window, touch a different processor. Type its name, press Enter.
      (The PC then reads FX 1 back, which takes a couple of seconds.)
@@ -45,8 +45,8 @@
 00:29:01 READ 2.1 0x0b84 FX 1 > Control > Preset value=0 text='ST Med Delay'
 00:29:01 FILE start fileIndex.xml.dscomp
 00:29:01 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:29:01 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:29:01 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:29:01 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:29:01 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:30:28 0x0b96 0.0010                raw=3a800000 tag=0000 FX 1 > Editor > FX type
 00:30:28 0x0b84 text 'Chorus Med'  FX 1 > Control > Preset
 00:30:28 0x0b84 0.0000                raw=37800000 tag=001b FX 1 > Control > Preset
@@ -55,8 +55,8 @@
 00:30:37 READ 2.2 0x0b84 FX 1 > Control > Preset value=0 text='Chorus Med'
 00:30:37 FILE start fileIndex.xml.dscomp
 00:30:37 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:30:37 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:30:37 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:30:37 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:30:37 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:30:39 0x0b96 0.0029                raw=3b400000 tag=0000 FX 1 > Editor > FX type
 00:30:39 0x0b84 text 'Pitch-Light Detune'  FX 1 > Control > Preset
 00:30:39 0x0b84 0.0000                raw=37800000 tag=001b FX 1 > Control > Preset
@@ -65,8 +65,8 @@
 00:30:49 READ 2.3 0x0b84 FX 1 > Control > Preset value=0 text='Pitch-Light Detune'
 00:30:49 FILE start fileIndex.xml.dscomp
 00:30:49 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:30:49 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:30:49 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:30:49 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:30:49 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:30:52 0x0b96 0.0039                raw=3b800000 tag=0000 FX 1 > Editor > FX type
 00:30:52 0x0b84 text 'D Live Plate Med'  FX 1 > Control > Preset
 00:30:52 0x0b84 0.0000                raw=37800000 tag=001b FX 1 > Control > Preset
@@ -75,8 +75,8 @@
 00:31:06 READ 2.4 0x0b84 FX 1 > Control > Preset value=0 text='D Live Plate Med'
 00:31:06 FILE start fileIndex.xml.dscomp
 00:31:06 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:31:06 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:31:06 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:31:06 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:31:06 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:31:12 0x0b96 0.0049                raw=3ba00000 tag=0000 FX 1 > Editor > FX type
 00:31:12 0x0b84 text 'L Med Hall'  FX 1 > Control > Preset
 00:31:12 0x0b84 0.0000                raw=37800000 tag=001b FX 1 > Control > Preset
@@ -85,16 +85,16 @@
 00:31:24 READ 2.5 0x0b84 FX 1 > Control > Preset value=0 text='L Med Hall'
 00:31:24 FILE start fileIndex.xml.dscomp
 00:31:24 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:31:24 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:31:24 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:31:24 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:31:24 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:31:28 0x0b96 0.0000                raw=00000000 tag=0000 FX 1 > Editor > FX type
 00:31:38 LABEL 2.6 None
 00:31:39 READ 2.6 0x0b96 FX 1 > Editor > FX type value=0 text=''
 00:31:39 READ 2.6 0x0b84 FX 1 > Control > Preset value=0 text='L Med Hall'
 00:31:39 FILE start fileIndex.xml.dscomp
 00:31:39 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:31:39 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:31:39 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:31:39 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:31:39 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:31:42 END 2
 00:31:42 STEP 3 Put FX 1 back to the processor it had at the start.
 00:31:52 0x0b96 0.0059                raw=3bc00000 tag=0000 FX 1 > Editor > FX type
@@ -104,6 +104,6 @@
 00:32:01 READ 3 0x0b84 FX 1 > Control > Preset value=0 text='Mono 250 Delay'
 00:32:01 FILE start fileIndex.xml.dscomp
 00:32:02 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:32:02 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:32:02 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:32:02 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:32:02 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:32:02 END 3

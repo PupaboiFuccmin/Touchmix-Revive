@@ -362,15 +362,13 @@ class TouchMix:
         return self.config.get(pid), self.config_text.get(pid)
 
     def meters(self):
-        """Latest meter levels as linear amplitude (1.0 = full scale), updated
-        about 10 times a second from the poll replies:
-        {'main': (L, R), 'input_pair': (a, b), 'raw': [10 values]}, or None
-        before the first reply. 'input_pair' followed a synth on inputs 7/8
-        before mute and fader; which inputs it always shows is unconfirmed."""
+        """The output meters as linear amplitude (1.0 = full scale), updated
+        about 10 times a second from the poll replies, or None before the first:
+        {'main': (L, R), 'aux': [Aux 1..6], 'aux7/8': x, 'aux9/10': x, 'raw': [10 values]}."""
         v = self.meter_values
         if v is None:
             return None
-        return {'main': (v[0], v[1]), 'input_pair': (v[8], v[9]), 'raw': list(v)}
+        return {'main': (v[0], v[1]), 'aux': list(v[2:8]), 'aux7/8': v[8], 'aux9/10': v[9], 'raw': list(v)}
 
     def on_change(self, fn):
         self.listeners.append(fn)

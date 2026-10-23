@@ -1,7 +1,7 @@
 {
  "kind": "probe",
  "created": "2026-10-22T01:44:18",
- "mixer": "QSC JD HOME",
+ "mixer": "QSC TouchMix",
  "host": "192.168.10.129",
  "section": "Mono Delay",
  "param": "HpfL",

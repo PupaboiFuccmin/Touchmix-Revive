@@ -83,10 +83,9 @@ def decode_text(payload):
 
 
 # The reply to POLL_ALL: u32 seq, then u16 0x0028 and 10 little-endian floats,
-# meter levels as linear amplitude (1.0 = full scale). From a held synth note
-# on inputs 7/8 (2026-10-22): 0-1 are Main L/R (after mutes and faders), 8-9
-# an input pair before mute and fader (they followed the synth on 7/8, whatever
-# channel was selected), 2-7 never moved.
+# the output meters as linear amplitude (1.0 = full scale): Main L, Main R,
+# Aux 1-6, Aux 7/8, Aux 9/10. From a held synth note on inputs 7/8, which were
+# sent pre-fader to Aux 7/8 and Aux 9/10 (2026-10-22).
 METER_COUNT = 10
 
 

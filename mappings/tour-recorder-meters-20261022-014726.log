@@ -16,14 +16,14 @@
 01:47:27 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
 01:47:28 FILE start NH4-config.xml.dscomp
 01:47:28 FILE end /usr/share/ds2i/tmp/NH4-config.xml.dscomp
-01:47:28 CONNECTED QSC JD HOME
+01:47:28 CONNECTED QSC TouchMix
 01:47:28 SECTION recorder
 01:47:28 STEP 1 Press RECORD/PLAY. If it shows MP3 mode, switch it back to Multitrack.
      Make sure the session with your test recording is loaded ("New / Recall").
 01:47:28 FILE start fileIndex.xml.dscomp
 01:47:28 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-01:47:28 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-01:47:28 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+01:47:28 FILE start REVIVE-MYPC.settings.dqx.dscomp
+01:47:28 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 01:47:42 0x00ce 0.9400                raw=3f70a3d7 tag=0000 Global > Misc Input > Wireless Strength
 01:47:57 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
 01:48:15 0x00fb 0.0000                raw=00000000 tag=0000 Global > FileMan > Recall

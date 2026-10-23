@@ -51,7 +51,7 @@ python3 -m touchmix discover
 ```
 ```
 Asking the network (mDNS) for TouchMix mixers...
-  192.168.10.129  port 54596  QSC JD HOME              (MicroX16)
+  192.168.10.129  port 54596  QSC TouchMix              (MicroX16)
 ```
 
 The mixer announces itself over mDNS (Bonjour), the same way the official app
@@ -70,10 +70,10 @@ e.g. `--host 192.168.10.129:54596`.
 python3 -m touchmix info
 ```
 ```
-Mixer:    QSC JD HOME at 192.168.10.129
+Mixer:    QSC TouchMix at 192.168.10.129
 Firmware: 3.0.09551
 Mixer IP: 192.168.10.129
-Client:   Revive-LAPTOP-4THKAI2Q, access: NONE: changes from this PC are ignored
+Client:   Revive-MyPC, access: NONE: changes from this PC are ignored
 ```
 
 The mixer keeps an access profile for every device that connects, and **a new
@@ -102,7 +102,7 @@ python3 -m touchmix mute 4 off
 ```sh
 python3 -m touchmix info                       # name, firmware, access, channel overview
 python3 -m touchmix monitor                    # every change on the mixer or the app, in real units
-python3 -m touchmix meters                     # Main L/R level, live
+python3 -m touchmix meters                     # output meters live: Main, Aux 7/8, Aux 9/10 (--raw: Aux 1-6)
 python3 -m touchmix mute 4 on                  # on / off
 python3 -m touchmix solo 4 on                  # cue
 python3 -m touchmix fader 4 -10db              # -10db, +6db, 0db, unity, off (or a raw 0..1)
@@ -174,7 +174,7 @@ Then plug the drive into the PC and run:
 python3 -m touchmix collect
 ```
 ```
-Channel names from QSC JD HOME
+Channel names from QSC TouchMix
 Session DEFAULT: 2 tracks, 2 files, 3.2 MB -> C:\Users\you\Music\TouchMix\DEFAULT 2026-10-22 0322
   copy  01 Kick.wav
   copy  02 Snare.wav

@@ -16,14 +16,14 @@
 00:11:36 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
 00:11:37 FILE start NH4-config.xml.dscomp
 00:11:37 FILE end /usr/share/ds2i/tmp/NH4-config.xml.dscomp
-00:11:37 CONNECTED QSC JD HOME
+00:11:37 CONNECTED QSC TouchMix
 00:11:37 SECTION source
 00:11:37 STEP 1 Press RECORD/PLAY > touch the "Inputs 9-16" bank.
      For channel 16, touch its "Track" button (source becomes the recorder).
 00:11:37 FILE start fileIndex.xml.dscomp
 00:11:37 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
-00:11:37 FILE start REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
-00:11:37 FILE end /usr/share/ds2i/user/settings/REVIVE-LAPTOP-4THKAI2Q.settings.dqx.dscomp
+00:11:37 FILE start REVIVE-MYPC.settings.dqx.dscomp
+00:11:37 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
 00:11:54 END 1
 00:11:54 STEP 2 Same screen: touch channel 16's "Track" button again (or "Input" / "Live")
      so it is back on its normal input.

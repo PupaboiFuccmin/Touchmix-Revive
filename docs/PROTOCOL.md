@@ -25,10 +25,10 @@ The mixer advertises its control port as the DNS-SD service `_ds2inet._tcp`
 the official app finds it on a shared network:
 
 ```
-_ds2inet._tcp.local              PTR  QSC JD HOME._ds2inet._tcp.local
-QSC JD HOME._ds2inet._tcp.local  SRV  port 54596, target QSC JD HOME.local
-QSC JD HOME._ds2inet._tcp.local  TXT  ProtocolVersion=1 SWVersion=196608 DeviceType=MicroX16
-QSC JD HOME.local                A    192.168.10.129
+_ds2inet._tcp.local              PTR  QSC TouchMix._ds2inet._tcp.local
+QSC TouchMix._ds2inet._tcp.local  SRV  port 54596, target QSC TouchMix.local
+QSC TouchMix._ds2inet._tcp.local  TXT  ProtocolVersion=1 SWVersion=196608 DeviceType=MicroX16
+QSC TouchMix.local                A    192.168.10.129
 ```
 
 `SWVersion=196608` is `0x30000`, i.e. 3.0.0. The instance name is the mixer's
@@ -87,7 +87,7 @@ The **mixer sends its hello first**, as soon as the TCP connection opens. The
 client answers with its own. `touchmix discover` relies on this: it reads the
 greeting and disconnects without logging in.
 
-* Mixer: name `QSC JD HOME` (the mixer's configured name) + suffix `MicroX16`.
+* Mixer: name `QSC TouchMix` (the mixer's configured name) + suffix `MicroX16`.
 * App: name `Lenovo-Tab-P11-Plus` + suffix `MicroX16-AndroidTablet`.
 
 The suffix seems to identify the product and the client type. The mixer saves a
@@ -189,8 +189,8 @@ shows the wire value × 1024. `Transport` is the exception: n/7.
 The app cycles through three request shapes (24/32/52-byte messages), one
 roughly every 80 ms, and each reply echoes `seq`. **The replies are meters.**
 The reply to the 52-byte request (the one the client sends) is `u16 40` plus
-10 floats, linear amplitude: 0–1 Main L/R, 8–9 an input pair before mute and
-fader, 2–7 unknown (see RESEARCH.md, "Meters"). The 24- and 32-byte requests
+10 floats, the output meters as linear amplitude: Main L, Main R, Aux 1–6,
+Aux 7/8, Aux 9/10 (see RESEARCH.md, "Meters"). The 24- and 32-byte requests
 are not decoded yet.
 
 ## Per-client access ✅
@@ -204,7 +204,7 @@ after the config. Its `Access` effect has one flag per area, matching the
 
 **A new client gets every flag at 0.** It still receives the full config and
 all live changes, but the mixer **silently drops its 5.1 writes**. No error
-comes back. Confirmed 2026-10-21: a probe from `Revive-LAPTOP-4THKAI2Q`
+comes back. Confirmed 2026-10-21: a probe from `Revive-MyPC`
 wrote In 4 fader values 0…1, and the config read back unchanged. Its profile
 showed all zeros. Access is granted on the mixer, in its Wi-Fi device access
 settings. After the grant, the same probe worked. The client library exposes the flags as `TouchMix.access` and

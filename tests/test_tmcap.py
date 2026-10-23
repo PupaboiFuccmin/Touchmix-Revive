@@ -50,7 +50,7 @@ class Capture(unittest.TestCase):
             seq[src] += len(data)
             return p
         write_pcap(self.path, [
-            send(MIXER, APP, hello('QSC JD HOME', 'MicroX16')),
+            send(MIXER, APP, hello('QSC TouchMix', 'MicroX16')),
             send(APP, MIXER, hello('Lenovo-Tab-P11-Plus', 'MicroX16-AndroidTablet')),
             send(APP, MIXER, P.encode_param_set([(0x221, 0.0)])),
             send(MIXER, APP, P.frame(P.TEXT, bytes.fromhex('180100001200') + b'ERN FULL SONG (tw)')),

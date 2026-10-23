@@ -343,14 +343,22 @@ From `map tour meters` with a held synth note on inputs 7/8 (2026-10-22,
 | ch 8 fader down | −5.5 | silent | unchanged |
 | synth quieter | −6.8 | silent | **−8.4 / −7.6** |
 
-* **0–1: Main L/R** (after mutes and faders). Confirmed.
-* **8–9: an input pair before mute and fader.** It followed the synth on 7/8
-  whatever channel was selected (an FX channel, channel 7, channel 8).
-  Whether it always shows inputs 7/8 needs a sound on other inputs.
-* **2–7** never moved: nothing was routed to them (aux outputs?).
+**They are the output meters: Main L, Main R, Aux 1–6, Aux 7/8, Aux 9/10.**
+In this setup input 7 was sent only to Aux 7/8 and input 8 only to Aux 9/10,
+both at 0 dB and pre-fader (the synth's left and right go to the interface
+that way):
 
-The mixer's screen read −12 and −40 at the two moments the user checked, so
-its meter scale isn't plain dBFS of these values. The app's two other poll
+* 0–1 (Main L/R) fell silent with the channel mutes and the Main fader, and
+  dropped with each channel fader.
+* 8 (Aux 7/8, from input 7) and 9 (Aux 9/10, from input 8) ignored the channel
+  faders (pre-fader sends) and the mutes. That fits the mute side batch, which
+  touches only Aux 1–6. They differ slightly because they carry the synth's
+  two sides.
+* 2–7 (Aux 1–6) never moved: nothing was sent there.
+
+The values are dBFS as linear amplitude. Full synth volume read about −3,
+matching the user's volume tool. The mixer screen shows meters as bars only,
+no numbers. The app's two other poll
 shapes (24 and 32 bytes) probably fetch per-channel meters; they haven't been
 sent yet. `touchmix meters` and `TouchMix.meters()` read the reply above.
 
