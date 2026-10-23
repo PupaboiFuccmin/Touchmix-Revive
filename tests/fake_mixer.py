@@ -79,7 +79,8 @@ class FakeMixer:
         self.access = access     # like the real mixer, writes are ignored without it
         self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0, 0x0B96: 6}
         self.texts = {554: 'Vox'}
-        self.meters = [0.0] * 10
+        self.main_meter = (0.0, 0.0)
+        self.input_meters = {}           # input number -> linear level
         self.received = []
         self.clients = []
         self.srv = socket.socket()
@@ -174,9 +175,12 @@ class FakeMixer:
                                   + self._file('fileIndex.xml.dscomp', FILE_INDEX, 'tmp')
                                   + self._settings_file(P.decode_hello(payload)[0]))
                     elif msg_type == P.POLL_REQ:
-                        seq = payload[:4]
-                        # like the real reply to POLL_ALL: u16 40 + 10 meter floats
-                        c.sendall(P.frame(P.POLL_RESP, seq + struct.pack('<H10f', 40, *self.meters)))
+                        # like the real mixer: Main L/R, then one level per (0, k, 1, 0) entry
+                        seq, entries = payload[:4], payload[8 + 6:]
+                        levels = list(self.main_meter) + [self.input_meters.get(entries[i + 1] + 1, 0.0)
+                                                          for i in range(0, len(entries), 4)]
+                        c.sendall(P.frame(P.POLL_RESP, seq + struct.pack('<H%df' % len(levels), 4 * len(levels),
+                                                                            *levels)))
                     elif msg_type == P.PARAM_SET:
                         for pid, _, _, value in P.decode_param_set(payload):
                             if self.access:

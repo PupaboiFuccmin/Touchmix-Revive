@@ -536,26 +536,35 @@ class Client(unittest.TestCase):
         self.assertEqual(self.mixer.texts[554], 'Vox')
 
     def test_meters(self):
-        # values seen with a held synth note on inputs 7/8 (sent to Aux 7/8 and 9/10)
-        self.mixer.meters = [0.676, 0.676, 0, 0, 0, 0, 0, 0, 0.596, 0.631]
-        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+        # a held synth note on inputs 7/8, and a test tone on input 12
+        self.mixer.main_meter = (0.676, 0.676)
+        self.mixer.input_meters = {7: 0.398, 8: 0.437, 12: 0.1}
+        with TouchMix('127.0.0.1', port=self.mixer.port, poll_interval=0.05) as tm:
             tm.wait_ready(5)
-            time.sleep(0.4)
+            time.sleep(0.5)
             m = tm.meters()
         self.assertAlmostEqual(m['main'][0], 0.676, places=3)
-        self.assertAlmostEqual(m['aux7/8'], 0.596, places=3)
-        self.assertAlmostEqual(m['aux9/10'], 0.631, places=3)
-        self.assertEqual(m['aux'], [0.0] * 6)
+        self.assertEqual(sorted(m['inputs']), list(range(1, 17)))      # both polls answered
+        self.assertAlmostEqual(m['inputs'][7], 0.398, places=3)
+        self.assertAlmostEqual(m['inputs'][12], 0.1, places=3)
+        self.assertEqual(m['inputs'][1], 0.0)
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'meters',
-                                   '--seconds', '0.8', '--interval', '0.2']), 0)
+                                   '--seconds', '0.8', '--interval', '0.3']), 0)
         self.assertIn('Main L   -3.4', out.getvalue())
-        # the real 42-byte reply body from the log decodes to the same layout
-        body = bytes.fromhex('280003807b3f06807b3f' + '00' * 24 + '84706d3f73f87a3f')
-        levels = P.decode_meters(b'\0\0\0\0' + body)
+        self.assertIn('In 7 -8.0', out.getvalue())
+
+    def test_meter_requests_match_the_app(self):
+        self.assertEqual(P.POLL_ALL, bytes.fromhex('03000a000300' '00000100' '00010100' '00020100' '00030100'
+                                                   '00040100' '00050100' '00060100' '00070100'))
+        self.assertEqual(P.meter_request([7, 8]), bytes.fromhex('03000a000300' '00060100' '00070100'))
+        # a real reply to POLL_ALL (synth on 7/8): Main L/R, then inputs 1-8
+        reply = bytes.fromhex('2a000000' '2800' '03807b3f06807b3f' + '00' * 24 + '84706d3f73f87a3f')
+        seq, levels = P.decode_meters(reply)
+        self.assertEqual((seq, len(levels)), (42, 10))
         self.assertAlmostEqual(levels[0], 0.9824, places=3)
-        self.assertEqual(P.decode_meters(b'\0' * 30), None)
+        self.assertEqual(P.decode_meters(b'\0' * 3), None)
 
     def test_cli_mute_verify(self):
         out = io.StringIO()

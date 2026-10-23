@@ -595,20 +595,20 @@ def level_bar(x, width=30):
 
 
 def cmd_meters(args):
-    """Show the output meters live (Ctrl+C to stop)."""
+    """Show the meters live (Ctrl+C to stop)."""
     tm = open_mixer(args)
-    print('Output meters on %s, in dBFS. Ctrl+C stops.\n' % tm.mixer_name)
+    print('Meters on %s, in dBFS. Inputs are before fader and mute. Ctrl+C stops.\n' % tm.mixer_name)
     end = time.time() + args.seconds if args.seconds else None
     try:
         while tm.connected and (end is None or time.time() < end):
             m = tm.meters()
             if m:
                 l, r = m['main']
-                line = 'Main L %s %s  R %s %s   Aux 7/8 %s   Aux 9/10 %s' % (
+                ins = m['inputs']
+                shown = sorted(ins) if args.all else [n for n in sorted(ins) if ins[n] > 1e-6]
+                line = 'Main L %s %s  R %s %s   %s' % (
                     level_db(l), level_bar(l, 20), level_db(r), level_bar(r, 20),
-                    level_db(m['aux7/8']), level_db(m['aux9/10']))
-                if args.raw:
-                    line += '   Aux 1-6 ' + ' '.join(level_db(x) for x in m['aux'])
+                    '  '.join('In %d %s' % (n, level_db(ins[n]).strip()) for n in shown) or '(inputs silent)')
                 print(line, flush=True)
             time.sleep(args.interval)
     except KeyboardInterrupt:
@@ -930,10 +930,10 @@ def main(argv=None):
     mp.add_argument('value', nargs='?', help='mode: on/off; select or play: song number, 1 = first')
     mp.set_defaults(fn=cmd_mp3)
 
-    me = sub.add_parser('meters', help='show the output meters live (Main, Aux 7/8, Aux 9/10)')
+    me = sub.add_parser('meters', help='show the meters live: Main L/R and the inputs that have signal')
     me.add_argument('--seconds', type=float, help='stop after this long (default: until Ctrl+C)')
     me.add_argument('--interval', type=float, default=0.5, help='seconds between lines (default 0.5)')
-    me.add_argument('--raw', action='store_true', help='also show Aux 1-6')
+    me.add_argument('--all', action='store_true', help='show all 16 inputs, silent ones too')
     me.set_defaults(fn=cmd_meters)
 
     co = sub.add_parser('collect', help='copy the newest recording off the USB drive, one file per channel')

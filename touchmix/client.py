@@ -59,8 +59,10 @@ class TouchMix:
         self.live = {}          # index -> normalized float last seen on the wire
         self.files = {}         # file name -> inflated bytes
         self.access = None      # 'All', 'Main Mix', 'Aux 1', ... -> bool, from this client's settings file
-        self.meter_values = None   # latest 10 meter levels (linear), see meters()
+        self.meter_main = None     # (L, R) linear, see meters()
+        self.meter_inputs = {}     # input number -> linear level, before fader and mute
         self.meter_time = 0.0
+        self._poll_entries = {}    # seq -> inputs asked for in that poll
         self.allow_risky = False   # writes to network/security/Powerdown/Delete are refused unless True
         self.listeners = []     # fn(pid, value, raw, tag, source)
         self.message_listeners = []   # fn(msg_type, payload), every message as received
@@ -362,13 +364,13 @@ class TouchMix:
         return self.config.get(pid), self.config_text.get(pid)
 
     def meters(self):
-        """The output meters as linear amplitude (1.0 = full scale), updated
-        about 10 times a second from the poll replies, or None before the first:
-        {'main': (L, R), 'aux': [Aux 1..6], 'aux7/8': x, 'aux9/10': x, 'raw': [10 values]}."""
-        v = self.meter_values
-        if v is None:
+        """Meter levels as linear amplitude (1.0 = full scale), updated about 10
+        times a second, or None before the first reply: {'main': (L, R),
+        'inputs': {1: level, ..., 16: level}}. Input levels are before the
+        fader and mute."""
+        if self.meter_main is None:
             return None
-        return {'main': (v[0], v[1]), 'aux': list(v[2:8]), 'aux7/8': v[8], 'aux9/10': v[9], 'raw': list(v)}
+        return {'main': self.meter_main, 'inputs': dict(self.meter_inputs)}
 
     def on_change(self, fn):
         self.listeners.append(fn)
@@ -394,10 +396,17 @@ class TouchMix:
             self._pending.extend(self._reader.feed(data))
         return self._pending.pop(0)
 
+    # alternate between inputs 1-8 (the app's own request) and 9-16, as the
+    # app alternates its requests
+    POLLS = ((P.POLL_ALL, list(range(1, 9))), (P.POLL_INPUTS_9_16, list(range(9, 17))))
+
     def _poll_loop(self):
         while not self._closed.wait(self.poll_interval):
             try:
-                self._send(P.encode_poll(self._seq))
+                body, inputs = self.POLLS[self._seq % len(self.POLLS)]
+                self._poll_entries[self._seq] = inputs
+                self._poll_entries.pop(self._seq - 50, None)
+                self._send(P.encode_poll(self._seq, body))
                 self._seq += 1
             except OSError:
                 break
@@ -441,9 +450,12 @@ class TouchMix:
             self.live[pid] = value
             self._notify(pid, value, raw, 0, 'status')
         elif msg_type == P.POLL_RESP:
-            levels = P.decode_meters(payload)
-            if levels is not None:
-                self.meter_values, self.meter_time = levels, time.time()
+            got = P.decode_meters(payload)
+            if got and len(got[1]) >= 2:
+                seq, levels = got
+                self.meter_main, self.meter_time = (levels[0], levels[1]), time.time()
+                for n, v in zip(self._poll_entries.get(seq, ()), levels[2:]):
+                    self.meter_inputs[n] = v
         elif msg_type in (P.TEXT, P.TEXT_ALT):
             pid, text = P.decode_text(payload)
             self.config_text[pid] = text

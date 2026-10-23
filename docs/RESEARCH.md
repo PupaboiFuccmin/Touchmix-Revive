@@ -329,38 +329,35 @@ name, the scene UUID and the MP3 playlist (as text). `record ff`, `rew`,
 
 ## Meters
 
-The reply to the poll the client sends every 100 ms (`POLL_ALL`) is
-`u16 0x0028` plus 10 little-endian floats: meter levels as linear amplitude.
-From `map tour meters` with a held synth note on inputs 7/8 (2026-10-22,
-`mappings/tour-meters-20261022-195825.log`), median dBFS per step:
+**Poll requests are meter requests.** After a 6-byte header (`03 00 0a 00 03
+00`), each 4-byte entry `(0, k, 1, 0)` asks for **input k+1's meter, before
+fader and mute**. The reply is `u16 n_bytes`, then **Main L/R** and one value
+per entry, in request order, as linear amplitude (1.0 = 0 dBFS). The app's
+52-byte request (`POLL_ALL`, the one the client always sent) asks for inputs
+1–8. The app also sends an empty request (Main only) and one with entries
+`(0, 0, 15, 0)` and `(10, 0, 15, 0)` (not decoded).
 
-| Step | 0–1 | 2–7 | 8–9 |
-|------|-----|-----|-----|
-| held note | −3.4 / −3.4 | silent | −4.5 / −4.0 |
-| mute 7 and 8 | **silent** | silent | unchanged |
-| Main fader down | **silent** | silent | unchanged |
-| ch 7 fader down | −4.1 | silent | unchanged |
-| ch 8 fader down | −5.5 | silent | unchanged |
-| synth quieter | −6.8 | silent | **−8.4 / −7.6** |
+Worked out in three steps (2026-10-22/23):
 
-**They are the output meters: Main L, Main R, Aux 1–6, Aux 7/8, Aux 9/10.**
-In this setup input 7 was sent only to Aux 7/8 and input 8 only to Aux 9/10,
-both at 0 dB and pre-fader (the synth's left and right go to the interface
-that way):
+1. `map tour meters`, held synth note on inputs 7/8
+   (`mappings/tour-meters-20261022-195825.log`): of the 10 values, 0–1 went
+   silent with the channel mutes and the Main fader and dropped with each
+   channel fader (**Main L/R**). Values 8–9 ignored mutes and channel faders
+   and followed only the synth's own volume. 2–7 stayed silent.
+2. Changing inputs 7/8's sends to Aux 7/8 and 9/10 did not move 8–9, so they
+   are not aux outputs (an earlier commit guessed that).
+3. Requests sent from the PC while the synth held a note: entries 6 and 7
+   alone returned −8.0 and −7.2 dBFS (inputs 7 and 8). Entries 7, 6, 15, 0
+   returned −7.2, −8.0, silence, silence, so each value follows its entry. 16
+   entries returned 2 + 16 values. Entries 16–23 were silent except 23
+   (+9.9 dB, not an input level; unknown).
 
-* 0–1 (Main L/R) fell silent with the channel mutes and the Main fader, and
-  dropped with each channel fader.
-* 8 (Aux 7/8, from input 7) and 9 (Aux 9/10, from input 8) ignored the channel
-  faders (pre-fader sends) and the mutes. That fits the mute side batch, which
-  touches only Aux 1–6. They differ slightly because they carry the synth's
-  two sides.
-* 2–7 (Aux 1–6) never moved: nothing was sent there.
-
-The values are dBFS as linear amplitude. Full synth volume read about −3,
-matching the user's volume tool. The mixer screen shows meters as bars only,
-no numbers. The app's two other poll
-shapes (24 and 32 bytes) probably fetch per-channel meters; they haven't been
-sent yet. `touchmix meters` and `TouchMix.meters()` read the reply above.
+Inputs 7/8 are confirmed with sound; 1–6 read silent with nothing plugged in;
+9–16 use the same numbering but had no signal to prove it. The client now
+alternates two requests (inputs 1–8, inputs 9–16), as the app alternates its
+own. `touchmix meters` and `TouchMix.meters()` show Main L/R and inputs 1–16.
+Full synth volume read about −3 dBFS, matching the user's volume tool; the
+mixer's screen shows meters as bars only.
 
 ## Pulling recordings over the network: no sign of it
 

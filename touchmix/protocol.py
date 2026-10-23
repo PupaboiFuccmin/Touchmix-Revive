@@ -18,12 +18,21 @@ PRODUCT = 'MicroX16'
 FILE_START = 0xFFFFFFFF
 FILE_END = 0xFFFFFFFE
 
-# The three poll request bodies the Android app cycles through. The meaning of
-# the entries is not decoded yet; the 52-byte one is not tied to the selected
-# channel, so it is the one we send to keep the session alive.
-POLL_ALL = bytes.fromhex('03000a000300'
-                         '00000100' '00010100' '00020100' '00030100'
-                         '00040100' '00050100' '00060100' '00070100')
+# Poll requests are meter requests: a 6-byte header, then 4-byte entries.
+# Entry (0, k, 1, 0) asks for input k+1's meter (before fader and mute). The
+# reply is Main L/R plus one value per entry, in request order (2026-10-22,
+# synth on inputs 7/8). POLL_ALL is the app's 52-byte request, inputs 1-8;
+# the app also sends (0, 0, 15, 0) + (10, 0, 15, 0) and an empty request.
+METER_HEADER = bytes.fromhex('03000a000300')
+
+
+def meter_request(inputs):
+    """Poll body asking for the meters of these inputs (1-based)."""
+    return METER_HEADER + b''.join(bytes((0, n - 1, 1, 0)) for n in inputs)
+
+
+POLL_ALL = meter_request(range(1, 9))
+POLL_INPUTS_9_16 = meter_request(range(9, 17))
 
 
 def frame(msg_type, payload):
@@ -82,19 +91,16 @@ def decode_text(payload):
     return pid, payload[6:6 + ln].decode('utf-8', errors='replace')
 
 
-# The reply to POLL_ALL: u32 seq, then u16 0x0028 and 10 little-endian floats,
-# the output meters as linear amplitude (1.0 = full scale): Main L, Main R,
-# Aux 1-6, Aux 7/8, Aux 9/10. From a held synth note on inputs 7/8, which were
-# sent pre-fader to Aux 7/8 and Aux 9/10 (2026-10-22).
-METER_COUNT = 10
-
-
 def decode_meters(payload):
-    """10 meter levels from a 7.1 poll reply to POLL_ALL, or None for other shapes."""
-    body = payload[4:]
-    if len(body) != 2 + 4 * METER_COUNT or struct.unpack('<H', body[:2])[0] != 4 * METER_COUNT:
+    """(seq, [levels]) from a 7.1 poll reply: Main L, Main R, then one value per
+    requested entry, linear amplitude. None if the reply doesn't parse."""
+    if len(payload) < 6:
         return None
-    return list(struct.unpack('<%df' % METER_COUNT, body[2:]))
+    seq, n_bytes = struct.unpack('<IH', payload[:6])
+    body = payload[6:6 + n_bytes]
+    if n_bytes % 4 or len(body) != n_bytes:
+        return None
+    return seq, list(struct.unpack('<%df' % (n_bytes // 4), body))
 
 
 def decode_status(payload):

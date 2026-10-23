@@ -188,10 +188,11 @@ shows the wire value × 1024. `Transport` is the exception: n/7.
 
 The app cycles through three request shapes (24/32/52-byte messages), one
 roughly every 80 ms, and each reply echoes `seq`. **The replies are meters.**
-The reply to the 52-byte request (the one the client sends) is `u16 40` plus
-10 floats, the output meters as linear amplitude: Main L, Main R, Aux 1–6,
-Aux 7/8, Aux 9/10 (see RESEARCH.md, "Meters"). The 24- and 32-byte requests
-are not decoded yet.
+Requests: a 6-byte header `03 00 0a 00 03 00`, then 4-byte entries.
+`(0, k, 1, 0)` asks for input k+1's meter (before fader and mute). Replies:
+Main L/R, then one value per entry in request order, as linear amplitude.
+The 52-byte request asks for inputs 1–8. See RESEARCH.md, "Meters". The
+app's `(0, 0, 15, 0)` / `(10, 0, 15, 0)` request is not decoded.
 
 ## Per-client access ✅
 
