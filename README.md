@@ -102,6 +102,7 @@ python3 -m touchmix mute 4 off
 ```sh
 python3 -m touchmix info                       # name, firmware, access, channel overview
 python3 -m touchmix monitor                    # every change on the mixer or the app, in real units
+python3 -m touchmix meters                     # Main L/R level, live
 python3 -m touchmix mute 4 on                  # on / off
 python3 -m touchmix solo 4 on                  # cue
 python3 -m touchmix fader 4 -10db              # -10db, +6db, 0db, unity, off (or a raw 0..1)

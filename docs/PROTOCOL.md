@@ -187,9 +187,11 @@ shows the wire value × 1024. `Transport` is the exception: n/7.
 ```
 
 The app cycles through three request shapes (24/32/52-byte messages), one
-roughly every 80 ms, and each reply echoes `seq`. The replies are mostly zero
-with an occasional 1.0. That fits **meters** (no audio was connected during
-the capture). To confirm, capture again with a signal on a channel.
+roughly every 80 ms, and each reply echoes `seq`. **The replies are meters.**
+The reply to the 52-byte request (the one the client sends) is `u16 40` plus
+10 floats, linear amplitude: 0–1 Main L/R, 8–9 an input pair before mute and
+fader, 2–7 unknown (see RESEARCH.md, "Meters"). The 24- and 32-byte requests
+are not decoded yet.
 
 ## Per-client access ✅
 

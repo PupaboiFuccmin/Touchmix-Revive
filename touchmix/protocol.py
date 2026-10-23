@@ -82,6 +82,22 @@ def decode_text(payload):
     return pid, payload[6:6 + ln].decode('utf-8', errors='replace')
 
 
+# The reply to POLL_ALL: u32 seq, then u16 0x0028 and 10 little-endian floats,
+# meter levels as linear amplitude (1.0 = full scale). From a held synth note
+# on inputs 7/8 (2026-10-22): 0-1 are Main L/R (after mutes and faders), 8-9
+# an input pair before mute and fader (they followed the synth on 7/8, whatever
+# channel was selected), 2-7 never moved.
+METER_COUNT = 10
+
+
+def decode_meters(payload):
+    """10 meter levels from a 7.1 poll reply to POLL_ALL, or None for other shapes."""
+    body = payload[4:]
+    if len(body) != 2 + 4 * METER_COUNT or struct.unpack('<H', body[:2])[0] != 4 * METER_COUNT:
+        return None
+    return list(struct.unpack('<%df' % METER_COUNT, body[2:]))
+
+
 def decode_status(payload):
     """Type 4: u16 id + f32, no count and no tag."""
     pid, raw = struct.unpack('<HI', payload[:6])

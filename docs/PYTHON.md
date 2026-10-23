@@ -126,6 +126,9 @@ name = tm.config_text[tm.resolve('In 4 > Control > Name')]
   change. Reconnect for a fresh copy.
 * **`tm.live`**: index → latest wire value (0..1) seen on the connection,
   including your own writes.
+* **`tm.meters()`**: the latest levels as linear amplitude, updated about 10
+  times a second: `{'main': (L, R), 'input_pair': (a, b), 'raw': [10 values]}`.
+  Main L/R is confirmed; see RESEARCH.md for the rest.
 * **`tm.on_change(fn)`**: `fn(pid, value, raw, tag, source)` runs for every
   change the mixer reports. `value` is the wire float, `raw` the same 4 bytes
   as an integer, and `source` is `'set'` (a 5.1 parameter change) or

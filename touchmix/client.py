@@ -59,6 +59,8 @@ class TouchMix:
         self.live = {}          # index -> normalized float last seen on the wire
         self.files = {}         # file name -> inflated bytes
         self.access = None      # 'All', 'Main Mix', 'Aux 1', ... -> bool, from this client's settings file
+        self.meter_values = None   # latest 10 meter levels (linear), see meters()
+        self.meter_time = 0.0
         self.allow_risky = False   # writes to network/security/Powerdown/Delete are refused unless True
         self.listeners = []     # fn(pid, value, raw, tag, source)
         self.message_listeners = []   # fn(msg_type, payload), every message as received
@@ -359,6 +361,17 @@ class TouchMix:
         pid = self.resolve(param)
         return self.config.get(pid), self.config_text.get(pid)
 
+    def meters(self):
+        """Latest meter levels as linear amplitude (1.0 = full scale), updated
+        about 10 times a second from the poll replies:
+        {'main': (L, R), 'input_pair': (a, b), 'raw': [10 values]}, or None
+        before the first reply. 'input_pair' followed a synth on inputs 7/8
+        before mute and fader; which inputs it always shows is unconfirmed."""
+        v = self.meter_values
+        if v is None:
+            return None
+        return {'main': (v[0], v[1]), 'input_pair': (v[8], v[9]), 'raw': list(v)}
+
     def on_change(self, fn):
         self.listeners.append(fn)
         return fn
@@ -429,6 +442,10 @@ class TouchMix:
             pid, raw, value = P.decode_status(payload)
             self.live[pid] = value
             self._notify(pid, value, raw, 0, 'status')
+        elif msg_type == P.POLL_RESP:
+            levels = P.decode_meters(payload)
+            if levels is not None:
+                self.meter_values, self.meter_time = levels, time.time()
         elif msg_type in (P.TEXT, P.TEXT_ALT):
             pid, text = P.decode_text(payload)
             self.config_text[pid] = text

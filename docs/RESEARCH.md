@@ -327,15 +327,32 @@ recalling the recording session reported `FileMan > Recall` = 0, the session
 name, the scene UUID and the MP3 playlist (as text). `record ff`, `rew`,
 `set`, `goto` and `locate F` send these. **They are untested on the mixer.**
 
-## Meters: lead
+## Meters
 
-While a synth played into inputs 7/8, the 42-byte poll reply (to the poll the
-client sends) changed continuously: `u16 0x0028`, then 10 little-endian
-floats. Floats 1–2 (nearly equal, about 0.98 → 0.07 as the note decayed) and
-9–10 moved; 3–8 stayed 0. Probably linear-amplitude meters in stereo pairs,
-but not yet which meters. The rewritten `map tour meters` (held note on 7/8;
-mute, Main fader down, channel faders down, source quieter) should tell them
-apart.
+The reply to the poll the client sends every 100 ms (`POLL_ALL`) is
+`u16 0x0028` plus 10 little-endian floats: meter levels as linear amplitude.
+From `map tour meters` with a held synth note on inputs 7/8 (2026-10-22,
+`mappings/tour-meters-20261022-195825.log`), median dBFS per step:
+
+| Step | 0–1 | 2–7 | 8–9 |
+|------|-----|-----|-----|
+| held note | −3.4 / −3.4 | silent | −4.5 / −4.0 |
+| mute 7 and 8 | **silent** | silent | unchanged |
+| Main fader down | **silent** | silent | unchanged |
+| ch 7 fader down | −4.1 | silent | unchanged |
+| ch 8 fader down | −5.5 | silent | unchanged |
+| synth quieter | −6.8 | silent | **−8.4 / −7.6** |
+
+* **0–1: Main L/R** (after mutes and faders). Confirmed.
+* **8–9: an input pair before mute and fader.** It followed the synth on 7/8
+  whatever channel was selected (an FX channel, channel 7, channel 8).
+  Whether it always shows inputs 7/8 needs a sound on other inputs.
+* **2–7** never moved: nothing was routed to them (aux outputs?).
+
+The mixer's screen read −12 and −40 at the two moments the user checked, so
+its meter scale isn't plain dBFS of these values. The app's two other poll
+shapes (24 and 32 bytes) probably fetch per-channel meters; they haven't been
+sent yet. `touchmix meters` and `TouchMix.meters()` read the reply above.
 
 ## Pulling recordings over the network: no sign of it
 

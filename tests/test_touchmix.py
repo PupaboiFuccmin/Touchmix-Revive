@@ -535,6 +535,26 @@ class Client(unittest.TestCase):
         self.assertEqual(hellos, [default_client_name(), default_client_name(), 'Studio-PC'])
         self.assertEqual(self.mixer.texts[554], 'Vox')
 
+    def test_meters(self):
+        # values seen with a held synth note on inputs 7/8: Main L/R and the input pair
+        self.mixer.meters = [0.676, 0.676, 0, 0, 0, 0, 0, 0, 0.596, 0.631]
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            time.sleep(0.4)
+            m = tm.meters()
+        self.assertAlmostEqual(m['main'][0], 0.676, places=3)
+        self.assertAlmostEqual(m['input_pair'][1], 0.631, places=3)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'meters',
+                                   '--seconds', '0.8', '--interval', '0.2']), 0)
+        self.assertIn('Main L   -3.4', out.getvalue())
+        # the real 42-byte reply body from the log decodes to the same layout
+        body = bytes.fromhex('280003807b3f06807b3f' + '00' * 24 + '84706d3f73f87a3f')
+        levels = P.decode_meters(b'\0\0\0\0' + body)
+        self.assertAlmostEqual(levels[0], 0.9824, places=3)
+        self.assertEqual(P.decode_meters(b'\0' * 30), None)
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

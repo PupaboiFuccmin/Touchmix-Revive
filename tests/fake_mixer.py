@@ -79,6 +79,7 @@ class FakeMixer:
         self.access = access     # like the real mixer, writes are ignored without it
         self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0, 0x0B96: 6}
         self.texts = {554: 'Vox'}
+        self.meters = [0.0] * 10
         self.received = []
         self.clients = []
         self.srv = socket.socket()
@@ -174,7 +175,8 @@ class FakeMixer:
                                   + self._settings_file(P.decode_hello(payload)[0]))
                     elif msg_type == P.POLL_REQ:
                         seq = payload[:4]
-                        c.sendall(P.frame(P.POLL_RESP, seq + payload[4:8] + b'\0' * (len(payload) - 8)))
+                        # like the real reply to POLL_ALL: u16 40 + 10 meter floats
+                        c.sendall(P.frame(P.POLL_RESP, seq + struct.pack('<H10f', 40, *self.meters)))
                     elif msg_type == P.PARAM_SET:
                         for pid, _, _, value in P.decode_param_set(payload):
                             if self.access:

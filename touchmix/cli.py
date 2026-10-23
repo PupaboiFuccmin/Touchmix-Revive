@@ -24,6 +24,7 @@ Examples:
   python -m touchmix map probe Fader --channels 1-16
 """
 import argparse
+import math
 import os
 import re
 import struct
@@ -582,6 +583,40 @@ def cmd_name(args):
         return 0 if now == args.new_name else 2
 
 
+def level_db(x):
+    return '%6.1f' % (20 * math.log10(x)) if x > 1e-6 else '  -inf'
+
+
+def level_bar(x, width=30):
+    """A bar from -60 to 0 dBFS."""
+    db = 20 * math.log10(x) if x > 1e-6 else -120
+    n = int(round(width * min(1.0, max(0.0, (db + 60) / 60.0))))
+    return '#' * n + '.' * (width - n)
+
+
+def cmd_meters(args):
+    """Show the Main L/R meter live (Ctrl+C to stop)."""
+    tm = open_mixer(args)
+    print('Meters on %s, in dBFS (linear amplitude from the mixer). Ctrl+C stops.' % tm.mixer_name)
+    print('"pair" is an input pair before mute and fader (inputs 7/8 in testing).\n')
+    end = time.time() + args.seconds if args.seconds else None
+    try:
+        while tm.connected and (end is None or time.time() < end):
+            m = tm.meters()
+            if m:
+                (l, r), (a, b) = m['main'], m['input_pair']
+                line = 'Main L %s %s  R %s %s   pair %s %s' % (level_db(l), level_bar(l, 20), level_db(r),
+                                                                 level_bar(r, 20), level_db(a), level_db(b))
+                if args.raw:
+                    line += '   raw ' + ' '.join(level_db(x) for x in m['raw'])
+                print(line, flush=True)
+            time.sleep(args.interval)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        tm.close()
+
+
 def cmd_find(args):
     for p in ParamTable().search(args.text):
         print('%5d 0x%04x  %s' % (p.index, p.index, p.full_name))
@@ -894,6 +929,12 @@ def main(argv=None):
     mp.add_argument('action', choices=['status', 'mode', 'play', 'stop', 'next', 'previous', 'top', 'select'])
     mp.add_argument('value', nargs='?', help='mode: on/off; select or play: song number, 1 = first')
     mp.set_defaults(fn=cmd_mp3)
+
+    me = sub.add_parser('meters', help='show the Main L/R level meters live')
+    me.add_argument('--seconds', type=float, help='stop after this long (default: until Ctrl+C)')
+    me.add_argument('--interval', type=float, default=0.5, help='seconds between lines (default 0.5)')
+    me.add_argument('--raw', action='store_true', help='also show all 10 meter values')
+    me.set_defaults(fn=cmd_meters)
 
     co = sub.add_parser('collect', help='copy the newest recording off the USB drive, one file per channel')
     co.add_argument('--drive', help='drive or folder holding the sessions (default: find it)')
