@@ -8,6 +8,7 @@ dB value by the real fader law, like the mixer's config.
 import socket
 import struct
 import threading
+import time
 import zlib
 
 from touchmix import protocol as P
@@ -22,6 +23,16 @@ CONFIG = '''<?xml version="1.0" encoding="UTF-8"?>
       <Parameter Type="4" Instance="0" name="Pan" value="{v[545]}" Index="545"/>
       <Parameter Type="165" Instance="0" name="Name" value="0" Index="554" text="{t[554]}"/>
       <Parameter Type="140" Instance="0" name="FX type" value="{v[2966]}" Index="2966"/>
+    </Effect>
+  </Channel>
+  <Channel Type="5" Instance="0" Version="0" Name="Global">
+    <Effect Type="1" Instance="0" Version="0" Name="Transport">
+      <Parameter Type="101" Instance="0" name="Transport" value="{v[184]}" Index="184"/>
+      <Parameter Type="105" Instance="0" name="Multi-track Enable" value="{v[186]}" Index="186"/>
+      <Parameter Type="139" Instance="0" name="Locate" value="{v[191]}" Index="191"/>
+    </Effect>
+    <Effect Type="2" Instance="0" Version="0" Name="Misc Input">
+      <Parameter Type="175" Instance="0" name="USB present" value="{v[202]}" Index="202"/>
     </Effect>
   </Channel>
   <Channel Type="0" Instance="4" Version="0" Name="In 5">
@@ -77,7 +88,10 @@ class FakeMixer:
         self.config_name = config_name
         self.status_before_hello = False   # the real mixer does this while playing MP3s
         self.access = access     # like the real mixer, writes are ignored without it
-        self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0, 0x0B96: 6}
+        self.values = {542: -55.0, 543: 0, 545: 'C', 618: -6.0, 0x0B96: 6,
+                       184: 0, 186: 1, 191: 0.0, 202: 1}
+        self.position = 0.0           # play pointer, a fraction of the session
+        self.speed = 0.0              # fraction per second: play, ff, rew
         self.texts = {554: 'Vox'}
         self.main_meter = (0.0, 0.0)
         self.input_meters = {}           # input number -> linear level
@@ -108,7 +122,48 @@ class FakeMixer:
             except OSError:
                 pass
 
+    RECORDER_SPEEDS = {0: 0.0, 1: 0.02, 3: 0.12, 4: -0.12}   # stop, play, ff, rew
+
+    def _recorder(self, pid, value):
+        """A simulated recorder: transport, locate, Set and Go To, reporting the
+        play position (0x00B9) as the real mixer does while it moves."""
+        if pid == 184:
+            state = round(value * 7)
+            self.values[184] = state
+            if state == 5:
+                self._move_to(0.0)
+            else:
+                self.speed = self.RECORDER_SPEEDS.get(state, 0.0)
+                if self.speed:
+                    threading.Thread(target=self._run, daemon=True).start()
+        elif pid == 191:
+            self.values[191] = round(value, 4)
+        elif pid == 189 and value >= 0.5:      # Set Locate
+            self.values[191] = round(self.position, 4)
+        elif pid == 190 and value >= 0.5:      # Goto Locate
+            self._move_to(self.values[191])
+
+    def _move_to(self, p):
+        self.speed = 0.0
+        self.position = p
+        self._report()
+
+    def _report(self):
+        msg = P.frame(P.STATUS, struct.pack('<Hf', 0x00B9, self.position))
+        self.push_frame(msg)
+
+    def _run(self):
+        speed = self.speed
+        while self.speed == speed and speed:
+            time.sleep(0.2)
+            if self.speed != speed:
+                return
+            self.position = min(1.0, max(0.0, self.position + speed * 0.2))
+            self._report()
+
     def apply(self, pid, value):
+        if pid in (184, 189, 190, 191):
+            return self._recorder(pid, value)
         if pid in FADERS:
             self.values[pid] = fader_db(value)
         elif pid == 543:

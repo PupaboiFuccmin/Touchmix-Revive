@@ -772,6 +772,191 @@ def cmd_map_restore(args):
     return 0 if ok else 2
 
 
+class PositionWatch:
+    """Collects the play position the mixer reports while the pointer moves
+    (Global > Transport > Song Position, a fraction of the session)."""
+
+    PID = 0x00B9
+
+    def __init__(self):
+        self.points = []            # (time, fraction)
+
+    def attach(self, tm):
+        tm.on_change(lambda pid, value, raw, tag, source:
+                     self.points.append((time.time(), value)) if pid == self.PID else None)
+
+    def since(self, t0):
+        return [(t, v) for t, v in self.points if t >= t0]
+
+
+def _rate(points):
+    """Fraction of the session per second over the points, or None."""
+    if len(points) < 2 or points[-1][0] - points[0][0] < 0.5:
+        return None
+    return (points[-1][1] - points[0][1]) / (points[-1][0] - points[0][0])
+
+
+def cmd_map_verify(args):
+    """Run each recorder command and check, from what the mixer reports, that it
+    did what it should. Asks you to confirm against the screen unless --auto."""
+    host = pick_host(args)
+    port = args.port
+    watch = PositionWatch()
+    path = args.out or 'verify-recorder-%s.log' % time.strftime('%Y%m%d-%H%M%S')
+    out = make_writer(path, echo=True)
+    state = {}
+
+    def connect():
+        tm = TouchMix(host, port=port, name=args.name)
+        tm.connect()
+        tm.wait_ready()
+        watch.attach(tm)
+        return tm
+
+    def reread(param):
+        """Reconnect and read one value from the mixer's config."""
+        state['tm'].close()
+        time.sleep(0.3)
+        state['tm'] = connect()
+        return _float(state['tm'].config.get(state['tm'].resolve(param)))
+
+    def _float(v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
+
+    tm = state['tm'] = connect()
+    g = lambda p: tm.config.get(tm.resolve(p))
+    if g('Global > Misc Input > USB present') in ('0', None):
+        sys.exit('No USB drive in the mixer: plug one in with a recorded session first.')
+    if g('Global > Transport > Multi-track Enable') in ('0', '0.0'):
+        sys.exit('The recorder is in MP3 mode: switch it to Multitrack first (mp3 mode off).')
+    armed = [ch for ch in RECORD_CHANNELS
+             if g('2-Trk Rec > Control > 2-Track Arm' if ch == '2trk' else '%s > Control > Arm' % strip_path(ch))
+             not in ('0', '0.0', None)]
+    if armed:
+        sys.exit('Tracks are armed (%s): run "record disarm all" first, so nothing gets recorded.' % ', '.join(armed))
+    warn_no_access(tm)
+    out('%s VERIFY recorder on %s' % (time.strftime('%H:%M:%S'), tm.mixer_name))
+    print('Watch the Record/Play screen. Each step runs by itself and checks what the mixer reports.')
+    if not args.auto:
+        print('After each step: Enter = the screen agrees, n = it does not, or type a note.')
+
+    def last_pos():
+        return watch.points[-1][1] if watch.points else None
+
+    def step_rtz():
+        state['tm'].transport('rtz')
+        time.sleep(2)
+        p = last_pos()
+        return ('PASS' if p is not None and p <= 0.01 else '?'), 'position now %s' % _fmt(p)
+
+    def step_play():
+        t0 = time.time()
+        state['tm'].transport('play')
+        time.sleep(4)
+        r = _rate(watch.since(t0 + 0.5))
+        state['play_rate'] = r
+        return ('PASS' if r and r > 0 else 'FAIL'), 'position moving at %s of the session per second' % _fmt(r)
+
+    def step_ff():
+        t0 = time.time()
+        state['tm'].transport('ff')
+        time.sleep(3)
+        r, play = _rate(watch.since(t0 + 0.5)), state.get('play_rate')
+        if r is None:
+            return 'FAIL', 'no movement reported'
+        if play and r > 1.5 * play:
+            return 'PASS', 'moving %.1fx faster than play' % (r / play)
+        return '?', 'moving at %s per second (play was %s)' % (_fmt(r), _fmt(play))
+
+    def step_rew():
+        t0 = time.time()
+        state['tm'].transport('rew')
+        time.sleep(3)
+        r = _rate(watch.since(t0 + 0.5))
+        return ('PASS' if r is not None and r < 0 else 'FAIL'), 'moving at %s per second' % _fmt(r)
+
+    def step_stop():
+        state['tm'].transport('stop')
+        time.sleep(1.0)
+        t0 = time.time()
+        time.sleep(1.5)
+        moving = watch.since(t0)
+        still = len({round(v, 4) for _, v in moving}) <= 1
+        return ('PASS' if still else 'FAIL'), 'position %s' % ('steady at %s' % _fmt(last_pos()) if still else 'still changing')
+
+    def step_locate():
+        state['tm'].locate(0.5)
+        time.sleep(0.5)
+        v = reread('Global > Transport > Locate')
+        return ('PASS' if v is not None and abs(v - 0.5) < 0.02 else 'FAIL'), 'mixer stores Locate = %s' % _fmt(v)
+
+    def step_goto():
+        state['tm'].locate_goto()
+        time.sleep(2)
+        p = last_pos()
+        return ('PASS' if p is not None and abs(p - 0.5) < 0.03 else 'FAIL'), 'position now %s' % _fmt(p)
+
+    def step_set():
+        state['tm'].transport('rtz')
+        time.sleep(2)
+        state['tm'].locate_set()
+        time.sleep(0.5)
+        v = reread('Global > Transport > Locate')
+        return ('PASS' if v is not None and v <= 0.02 else 'FAIL'), 'after going to the start, Locate = %s' % _fmt(v)
+
+    steps = [
+        ('record rtz', 'back to the start', step_rtz),
+        ('record play', 'plays for 4 seconds', step_play),
+        ('record ff', 'fast forward for 3 seconds', step_ff),
+        ('record rew', 'rewind for 3 seconds', step_rew),
+        ('record stop', 'stops', step_stop),
+        ('record locate 0.5', 'locate marker to the middle', step_locate),
+        ('record goto', 'play pointer jumps to the marker', step_goto),
+        ('record set', 'back to the start, then the marker moves there', step_set),
+    ]
+    results = []
+    try:
+        for i, (cmd, what, fn) in enumerate(steps, 1):
+            print('\n%d/%d  %s: %s ...' % (i, len(steps), cmd, what))
+            out('%s STEP %d %s' % (time.strftime('%H:%M:%S'), i, cmd))
+            try:
+                verdict, detail = fn()
+            except Exception as e:          # one failing step must not stop the rest
+                verdict, detail = 'FAIL', 'error: %s' % e
+            out('%s %s %s: %s' % (time.strftime('%H:%M:%S'), verdict, cmd, detail))
+            note = ''
+            if not args.auto:
+                note = input('     screen agrees? [Enter / n / note] > ').strip()
+                if note.lower() in ('n', 'no'):
+                    verdict = 'FAIL (screen)'
+                if note:
+                    out('%s NOTE %d %s' % (time.strftime('%H:%M:%S'), i, note))
+            results.append((cmd, verdict, detail))
+    except (KeyboardInterrupt, EOFError):
+        print('\nStopped.')
+    finally:
+        try:
+            state['tm'].transport('stop')
+        except Exception:
+            pass
+        state['tm'].close()
+    print('\nResults:')
+    for cmd, verdict, detail in results:
+        line = '  %-8s %-18s %s' % (verdict, cmd, detail)
+        print(line)
+        out('%s RESULT%s' % (time.strftime('%H:%M:%S'), line))
+    out.close()
+    print('\nSaved %s' % path)
+    return 0 if results and all(v == 'PASS' for _, v, _ in results) else 2
+
+
+def _fmt(v):
+    return '-' if v is None else '%.3f' % v
+
+
 def cmd_map_tour(args):
     """Walk through actions on the mixer's own screen, logging everything it reports."""
     wanted = [s.strip() for s in args.sections.split(',')] if args.sections else list(M.TOUR)
@@ -1004,6 +1189,11 @@ def main(argv=None):
                     help='restore point or probe file (default mappings/%s)' % M.RESTORE_POINT)
     rs.add_argument('--yes', action='store_true', help='do not ask for confirmation')
     rs.set_defaults(fn=cmd_map_restore)
+    vf = msub.add_parser('verify', help='run commands and check what the mixer reports: verify recorder')
+    vf.add_argument('what', choices=['recorder'])
+    vf.add_argument('--auto', action='store_true', help="don't ask after each step")
+    vf.add_argument('--out', help='log file (default verify-recorder-<time>.log)')
+    vf.set_defaults(fn=cmd_map_verify)
     tr = msub.add_parser('tour', help='walk through actions on the mixer screen, logging what it reports')
     tr.add_argument('sections', nargs='?', help='comma-separated: %s (default: all)' % ', '.join(M.TOUR))
     tr.add_argument('--out', help='log file (default tour-<sections>-<time>.log)')

@@ -566,6 +566,26 @@ class Client(unittest.TestCase):
         self.assertAlmostEqual(levels[0], 0.9824, places=3)
         self.assertEqual(P.decode_meters(b'\0' * 3), None)
 
+    def test_map_verify_recorder(self):
+        import tempfile
+        path = os.path.join(tempfile.mkdtemp(), 'verify.log')
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'map', 'verify', 'recorder',
+                       '--auto', '--out', path])
+        self.assertEqual(rc, 0, out.getvalue())
+        with open(path, encoding='utf-8') as f:
+            log = f.read()
+        self.assertEqual(log.count('RESULT  PASS'), 8, log)
+        self.assertIn('faster than play', log)
+
+    def test_map_verify_refuses_when_armed(self):
+        self.mixer.values[186] = 0                   # MP3 mode
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as e:
+                main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'map', 'verify', 'recorder', '--auto'])
+        self.assertIn('MP3 mode', str(e.exception))
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
