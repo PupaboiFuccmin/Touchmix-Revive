@@ -846,8 +846,13 @@ def cmd_map_verify(args):
         return before, last_pos()
 
     def step_rtz():
+        # move away first: the mixer only reports the position when it changes
+        run('play', 1.5)
+        run('stop', 1.5)
+        away = last_pos()
         _, p = run('rtz')
-        return ('PASS' if p is not None and p <= 0.01 else 'FAIL'), 'position now %s' % _fmt(p)
+        ok = p is not None and p <= 0.01 and away is not None and away > p
+        return ('PASS' if ok else 'FAIL'), 'from %s back to %s' % (_fmt(away), _fmt(p))
 
     def step_play():
         t0 = time.time()
@@ -902,7 +907,7 @@ def cmd_map_verify(args):
         return ('PASS' if ok else 'FAIL'), 'played to %s, Go To came back to %s' % (_fmt(away), _fmt(p))
 
     steps = [
-        ('record rtz', 'back to the start', step_rtz),
+        ('record rtz', 'play a moment, then back to the start', step_rtz),
         ('record play', 'plays for 4 seconds', step_play),
         ('record ff', 'play 1 s, fast forward 4 s, stop', lambda: wind('ff', +1)),
         ('record rew', 'play 1 s, rewind 4 s, stop', lambda: wind('rew', -1)),
