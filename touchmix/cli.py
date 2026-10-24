@@ -857,19 +857,24 @@ def cmd_map_verify(args):
         return ('PASS' if r and r > 0 else 'FAIL'), 'position moving at %s of the session per second' % _fmt(r)
 
     def wind(transport, direction):
-        t0 = time.time()
-        before, after = run(transport, 3)
-        moves = watch.since(t0)
-        how = 'in %d report(s)' % len(moves)
+        """Stop and settle, play 1 s, wind 4 s, stop and settle again, then compare
+        the distance with what 5 s of plain playing covers. The mixer reports the
+        position about once a second, so only settled positions are trusted."""
+        run('stop', 1.5)
+        before = last_pos()
+        run('play', 1)
+        run(transport, 4)
+        run('stop', 1.5)
+        after = last_pos()
         if before is None or after is None:
             return 'FAIL', 'no position reported'
-        play = (state.get('play_rate') or 0) * 3       # what 3 s of plain playing would add
+        play = (state.get('play_rate') or 0) * 5
         moved = after - before
-        if direction > 0 and moved > play + 0.005:
-            return 'PASS', 'moved forward %s -> %s %s' % (_fmt(before), _fmt(after), how)
+        if direction > 0 and play and moved > 1.2 * play:
+            return 'PASS', 'moved %s -> %s, %.1fx plain playing' % (_fmt(before), _fmt(after), moved / play)
         if direction < 0 and moved < -0.005:
-            return 'PASS', 'moved back %s -> %s %s' % (_fmt(before), _fmt(after), how)
-        return 'FAIL', 'position %s -> %s %s' % (_fmt(before), _fmt(after), how)
+            return 'PASS', 'moved back %s -> %s' % (_fmt(before), _fmt(after))
+        return 'FAIL', 'position %s -> %s (plain playing would be %s)' % (_fmt(before), _fmt(after), _fmt(play))
 
     def step_stop():
         state['tm'].transport('stop')
@@ -899,8 +904,8 @@ def cmd_map_verify(args):
     steps = [
         ('record rtz', 'back to the start', step_rtz),
         ('record play', 'plays for 4 seconds', step_play),
-        ('record ff', 'fast forward', lambda: wind('ff', +1)),
-        ('record rew', 'rewind', lambda: wind('rew', -1)),
+        ('record ff', 'play 1 s, fast forward 4 s, stop', lambda: wind('ff', +1)),
+        ('record rew', 'play 1 s, rewind 4 s, stop', lambda: wind('rew', -1)),
         ('record stop', 'stops', step_stop),
         ('record locate 0.5 + goto', 'marker to the middle, then Go To', step_locate_goto),
         ('record set', 'Set at the start, play a little, Go To comes back', step_set),

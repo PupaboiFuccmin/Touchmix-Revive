@@ -19,7 +19,8 @@ def register(mixer_name=None, client_name=None):
         for real, placeholder in ((mixer_name, MIXER_PLACEHOLDER), (client_name, CLIENT_PLACEHOLDER)):
             if real and real != placeholder:
                 _names[real] = placeholder
-                _names[real.upper()] = placeholder.upper()   # settings file names are upper case
+                if real.upper() != real:                   # settings file names are upper case
+                    _names.setdefault(real.upper(), placeholder.upper())
 
 
 def redact(text):

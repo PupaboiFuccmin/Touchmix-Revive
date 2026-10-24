@@ -577,8 +577,14 @@ class Client(unittest.TestCase):
         with open(path, encoding='utf-8') as f:
             log = f.read()
         self.assertEqual(log.count('RESULT  PASS'), 7, log)
-        self.assertIn('moved forward', log)
+        self.assertIn('x plain playing', log)
         self.assertIn('POSITIONS', log)
+
+    def test_redact_keeps_placeholder_case(self):
+        from touchmix import privacy
+        privacy.register('MY MIXER', 'Revive-Box1')
+        self.assertEqual(privacy.redact('on MY MIXER as Revive-Box1 (REVIVE-BOX1.settings)'),
+                         'on QSC TouchMix as Revive-MyPC (REVIVE-MYPC.settings)')
 
     def test_logs_hide_device_names(self):
         """Saved logs and mapping files replace the mixer's and this PC's names."""
