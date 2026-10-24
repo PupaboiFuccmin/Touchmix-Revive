@@ -7,6 +7,7 @@ import time
 import xml.etree.ElementTree as ET
 import zlib
 
+from . import privacy
 from . import protocol as P
 from .params import (ParamTable, strip_path, risky, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
                      send_name, curve_for, transport_to_norm, int_to_norm, fx_type_number, FX_SECTIONS)
@@ -101,6 +102,7 @@ class TouchMix:
             msg = self._read_one()
         self._pending[:0] = early
         self.mixer_name, self.mixer_suffix = P.decode_hello(msg[1])
+        privacy.register(self.mixer_name, self.name)   # keep both names out of saved logs
         if not self.mixer_suffix.startswith('MicroX'):
             raise TouchMixError('unexpected device %r%r' % (self.mixer_name, self.mixer_suffix))
         self._send(P.encode_hello(self.name, self.device_type))

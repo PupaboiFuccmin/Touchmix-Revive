@@ -24,6 +24,7 @@ import re
 import threading
 import time
 
+from . import privacy
 from .client import TouchMix
 from .params import ParamTable, strip_path, norm_to_fader_db, curve_for, int_to_norm, FX_TYPES
 
@@ -900,7 +901,7 @@ def save(path, kind, host, mixer_name, body):
                mixer=mixer_name, host=host)
     doc.update(body)
     with open(path, 'w') as f:
-        json.dump(doc, f, indent=1)
+        f.write(privacy.redact(json.dumps(doc, indent=1)))     # no custom device names in shared files
     return path
 
 

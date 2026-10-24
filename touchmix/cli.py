@@ -35,6 +35,7 @@ import time
 from .discover import discover, default_subnets, lookup_port, mdns_browse
 from . import protocol as P
 from . import collect as C
+from . import privacy
 from . import mapping as M
 from .mapping import parse_channels
 from .client import TouchMix, TouchMixError
@@ -162,7 +163,7 @@ def make_writer(path, echo=True):
     def out(line):
         with lock:
             if log:
-                log.write(line + '\n')
+                log.write(privacy.redact(line) + '\n')     # no custom device names in shared logs
                 log.flush()
             if not log or echo:
                 print(line, flush=True)
@@ -813,19 +814,6 @@ def cmd_map_verify(args):
         watch.attach(tm)
         return tm
 
-    def reread(param):
-        """Reconnect and read one value from the mixer's config."""
-        state['tm'].close()
-        time.sleep(0.3)
-        state['tm'] = connect()
-        return _float(state['tm'].config.get(state['tm'].resolve(param)))
-
-    def _float(v):
-        try:
-            return float(v)
-        except (TypeError, ValueError):
-            return None
-
     tm = state['tm'] = connect()
     g = lambda p: tm.config.get(tm.resolve(p))
     if g('Global > Misc Input > USB present') in ('0', None):
@@ -839,93 +827,98 @@ def cmd_map_verify(args):
         sys.exit('Tracks are armed (%s): run "record disarm all" first, so nothing gets recorded.' % ', '.join(armed))
     warn_no_access(tm)
     out('%s VERIFY recorder on %s' % (time.strftime('%H:%M:%S'), tm.mixer_name))
-    print('Watch the Record/Play screen. Each step runs by itself and checks what the mixer reports.')
+    print('Watch the Record/Play screen. Each step runs by itself and checks the play position')
+    print('the mixer reports.')
     if not args.auto:
         print('After each step: Enter = the screen agrees, n = it does not, or type a note.')
 
     def last_pos():
         return watch.points[-1][1] if watch.points else None
 
+    def run(transport=None, wait=2.0, then=None):
+        """Optionally send a transport state, wait, and return (position before, after)."""
+        before = last_pos()
+        if transport:
+            state['tm'].transport(transport)
+        if then:
+            then()
+        time.sleep(wait)
+        return before, last_pos()
+
     def step_rtz():
-        state['tm'].transport('rtz')
-        time.sleep(2)
-        p = last_pos()
-        return ('PASS' if p is not None and p <= 0.01 else '?'), 'position now %s' % _fmt(p)
+        _, p = run('rtz')
+        return ('PASS' if p is not None and p <= 0.01 else 'FAIL'), 'position now %s' % _fmt(p)
 
     def step_play():
         t0 = time.time()
-        state['tm'].transport('play')
-        time.sleep(4)
+        run('play', 4)
         r = _rate(watch.since(t0 + 0.5))
         state['play_rate'] = r
         return ('PASS' if r and r > 0 else 'FAIL'), 'position moving at %s of the session per second' % _fmt(r)
 
-    def step_ff():
+    def wind(transport, direction):
         t0 = time.time()
-        state['tm'].transport('ff')
-        time.sleep(3)
-        r, play = _rate(watch.since(t0 + 0.5)), state.get('play_rate')
-        if r is None:
-            return 'FAIL', 'no movement reported'
-        if play and r > 1.5 * play:
-            return 'PASS', 'moving %.1fx faster than play' % (r / play)
-        return '?', 'moving at %s per second (play was %s)' % (_fmt(r), _fmt(play))
-
-    def step_rew():
-        t0 = time.time()
-        state['tm'].transport('rew')
-        time.sleep(3)
-        r = _rate(watch.since(t0 + 0.5))
-        return ('PASS' if r is not None and r < 0 else 'FAIL'), 'moving at %s per second' % _fmt(r)
+        before, after = run(transport, 3)
+        moves = watch.since(t0)
+        how = 'in %d report(s)' % len(moves)
+        if before is None or after is None:
+            return 'FAIL', 'no position reported'
+        play = (state.get('play_rate') or 0) * 3       # what 3 s of plain playing would add
+        moved = after - before
+        if direction > 0 and moved > play + 0.005:
+            return 'PASS', 'moved forward %s -> %s %s' % (_fmt(before), _fmt(after), how)
+        if direction < 0 and moved < -0.005:
+            return 'PASS', 'moved back %s -> %s %s' % (_fmt(before), _fmt(after), how)
+        return 'FAIL', 'position %s -> %s %s' % (_fmt(before), _fmt(after), how)
 
     def step_stop():
         state['tm'].transport('stop')
         time.sleep(1.0)
         t0 = time.time()
         time.sleep(1.5)
-        moving = watch.since(t0)
-        still = len({round(v, 4) for _, v in moving}) <= 1
+        still = len({round(v, 4) for _, v in watch.since(t0)}) <= 1
         return ('PASS' if still else 'FAIL'), 'position %s' % ('steady at %s' % _fmt(last_pos()) if still else 'still changing')
 
-    def step_locate():
+    def step_locate_goto():
         state['tm'].locate(0.5)
         time.sleep(0.5)
-        v = reread('Global > Transport > Locate')
-        return ('PASS' if v is not None and abs(v - 0.5) < 0.02 else 'FAIL'), 'mixer stores Locate = %s' % _fmt(v)
-
-    def step_goto():
-        state['tm'].locate_goto()
-        time.sleep(2)
-        p = last_pos()
-        return ('PASS' if p is not None and abs(p - 0.5) < 0.03 else 'FAIL'), 'position now %s' % _fmt(p)
+        _, p = run(then=state['tm'].locate_goto)
+        return ('PASS' if p is not None and abs(p - 0.5) < 0.03 else 'FAIL'), 'position after Go To: %s' % _fmt(p)
 
     def step_set():
-        state['tm'].transport('rtz')
-        time.sleep(2)
-        state['tm'].locate_set()
+        run('rtz')
+        state['tm'].locate_set()                 # the marker should now be at the start
         time.sleep(0.5)
-        v = reread('Global > Transport > Locate')
-        return ('PASS' if v is not None and v <= 0.02 else 'FAIL'), 'after going to the start, Locate = %s' % _fmt(v)
+        run('play', 2)
+        run('stop', 1)
+        away = last_pos()
+        _, p = run(then=state['tm'].locate_goto)
+        ok = p is not None and p <= 0.02 and away is not None and away > p
+        return ('PASS' if ok else 'FAIL'), 'played to %s, Go To came back to %s' % (_fmt(away), _fmt(p))
 
     steps = [
         ('record rtz', 'back to the start', step_rtz),
         ('record play', 'plays for 4 seconds', step_play),
-        ('record ff', 'fast forward for 3 seconds', step_ff),
-        ('record rew', 'rewind for 3 seconds', step_rew),
+        ('record ff', 'fast forward', lambda: wind('ff', +1)),
+        ('record rew', 'rewind', lambda: wind('rew', -1)),
         ('record stop', 'stops', step_stop),
-        ('record locate 0.5', 'locate marker to the middle', step_locate),
-        ('record goto', 'play pointer jumps to the marker', step_goto),
-        ('record set', 'back to the start, then the marker moves there', step_set),
+        ('record locate 0.5 + goto', 'marker to the middle, then Go To', step_locate_goto),
+        ('record set', 'Set at the start, play a little, Go To comes back', step_set),
     ]
     results = []
     try:
         for i, (cmd, what, fn) in enumerate(steps, 1):
             print('\n%d/%d  %s: %s ...' % (i, len(steps), cmd, what))
             out('%s STEP %d %s' % (time.strftime('%H:%M:%S'), i, cmd))
+            t_step = time.time()
             try:
                 verdict, detail = fn()
             except Exception as e:          # one failing step must not stop the rest
                 verdict, detail = 'FAIL', 'error: %s' % e
+            pts = watch.since(t_step)
+            if pts:
+                out('%s POSITIONS %s' % (time.strftime('%H:%M:%S'), ' '.join(
+                    '%+.1fs:%.4f' % (t - t_step, v) for t, v in pts[:60])))
             out('%s %s %s: %s' % (time.strftime('%H:%M:%S'), verdict, cmd, detail))
             note = ''
             if not args.auto:

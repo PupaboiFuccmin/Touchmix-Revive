@@ -576,8 +576,26 @@ class Client(unittest.TestCase):
         self.assertEqual(rc, 0, out.getvalue())
         with open(path, encoding='utf-8') as f:
             log = f.read()
-        self.assertEqual(log.count('RESULT  PASS'), 8, log)
-        self.assertIn('faster than play', log)
+        self.assertEqual(log.count('RESULT  PASS'), 7, log)
+        self.assertIn('moved forward', log)
+        self.assertIn('POSITIONS', log)
+
+    def test_logs_hide_device_names(self):
+        """Saved logs and mapping files replace the mixer's and this PC's names."""
+        import tempfile
+        d = tempfile.mkdtemp()
+        log, js = os.path.join(d, 'v.log'), os.path.join(d, 'p.json')
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            main(['--host', '127.0.0.1', '--port', str(self.mixer.port), '--name', 'Revive-SECRETBOX',
+                  'map', 'verify', 'recorder', '--auto', '--out', log])
+            main(['--host', '127.0.0.1', '--port', str(self.mixer.port), '--name', 'Revive-SECRETBOX',
+                  'map', 'probe', 'Fader', '--steps', '2', '--yes', '--out', js])
+        for path in (log, js):
+            with open(path, encoding='utf-8') as f:
+                text = f.read()
+            self.assertNotIn('Test Mixer', text)
+            self.assertNotIn('SECRETBOX', text)
+            self.assertIn('QSC TouchMix', text)
 
     def test_map_verify_refuses_when_armed(self):
         self.mixer.values[186] = 0                   # MP3 mode
@@ -847,7 +865,7 @@ class Mapping(unittest.TestCase):
         self.assertEqual(rc, 0)
         with open(path) as f:
             doc = json.load(f)
-        self.assertEqual((doc['kind'], doc['mixer'], doc['param']), ('probe', 'Test Mixer', 'Fader'))
+        self.assertEqual((doc['kind'], doc['mixer'], doc['param']), ('probe', 'QSC TouchMix', 'Fader'))   # name hidden
         self.assertEqual(len(doc['points']), 5)
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
