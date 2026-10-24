@@ -196,9 +196,14 @@ renamed SCNB from the PC. A working recall would have brought "SCNA" back.
 **Why it failed (from the app's code, 2026-10-24):** a confirmed recall is not a
 parameter write at all. The app sends a separate *action* message, type 8.3,
 with action code 3 and the scene packed into its fields (PROTOCOL.md, "8.3
-action"). The FileMan parameter writes only drive the dialog. Next step: send
-an 8.3 recall from the PC with the mixer in front of you, on a scene you don't
-mind loading.
+action"). The FileMan parameter writes only drive the dialog.
+
+`touchmix scene recall NAME` now builds and sends that 8.3 message. It is marked
+UNTESTED: it prints exactly what it will send and asks for confirmation first,
+because the field packing is a best guess from the app's code. Next step: run it
+with the mixer in front of you, on a scene you don't mind loading, and record
+what the mixer does (nothing / wrong scene / right scene) so the format can be
+pinned down.
 
 What the app sends for a *confirmed* recall has never been captured: its
 confirm button didn't work. Its unconfirmed `Save As` / `Recall` writes

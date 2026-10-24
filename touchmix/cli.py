@@ -506,8 +506,21 @@ def cmd_collect(args):
     print('Done: %d copied, %d already there.' % (copied, skipped))
 
 
+SCENE_RECALL_NOTICE = """\
+*** UNTESTED COMMAND ***
+Scene recall from the PC has never worked and has never been confirmed. This
+sends an 8.3 "action" message built from the official app's code (see
+docs/PROTOCOL.md, "8.3 action"); the exact format is a best guess. It may do
+nothing, or it may load a DIFFERENT scene than you asked for, changing every
+fader, mute and routing on the mixer at once. Keep the amps down. Have the
+mixer in front of you and be ready to reload your session by hand.
+"""
+
+
 def cmd_scene(args):
-    """scene list (recall from the PC is not working yet)"""
+    """scene list | scene recall NAME (recall is UNTESTED)"""
+    if getattr(args, 'action', 'list') == 'recall':
+        return cmd_scene_recall(args)
     tm = open_mixer(args)
     try:
         for s in tm.scenes():
@@ -515,6 +528,36 @@ def cmd_scene(args):
         print('(* = last saved or recalled)')
     finally:
         tm.close()
+
+
+def cmd_scene_recall(args):
+    """UNTESTED: recall a scene via an 8.3 action message. Shows what it will
+    send and asks for confirmation first."""
+    if not args.scene:
+        sys.exit('scene recall needs a scene name (see scene list)')
+    tm = open_mixer(args)
+    try:
+        scene = tm.find_scene(args.scene)
+        number = P.file_specifier(scene['location_code'], 0, scene['number'])
+        text = '%s,%d,,0,%s' % (scene['uuid'], scene['number'], scene['name'])
+        msg = tm.action_bytes(P.ACTION_RECALL, number, text)
+        print(SCENE_RECALL_NOTICE)
+        print('Would recall %s scene %r (uuid %s)' % (scene['location'], scene['name'], scene['uuid']))
+        print('  action code 3 (recall), number 0x%08x, text %r' % (number, text))
+        print('  %d bytes on the wire: %s' % (len(msg), msg.hex()))
+        if warn_no_access(tm):
+            print('(this PC has no write access, so the mixer will probably ignore it anyway)')
+        if not args.yes and input('\nType yes to send it > ').strip().lower() != 'yes':
+            return 1
+        ok = tm.recall_scene(args.scene)
+    finally:
+        tm.close()
+    if ok:
+        print('The mixer sent a fresh config: it looks like the recall happened. Check the mixer.')
+        return 0
+    print('No new config from the mixer within 6 s: the recall probably did not happen.')
+    print('Please note what the mixer did (nothing / wrong scene / right scene) in docs/RESEARCH.md.')
+    return 2
 
 
 def cmd_fx(args):
@@ -1132,8 +1175,10 @@ def main(argv=None):
     co.add_argument('--no-names', action='store_true', help="don't ask the mixer for channel names")
     co.set_defaults(fn=cmd_collect)
 
-    sc = sub.add_parser('scene', help='list the scenes on the mixer')
-    sc.add_argument('action', choices=['list'])
+    sc = sub.add_parser('scene', help='list scenes, or recall one (recall is UNTESTED)')
+    sc.add_argument('action', choices=['list', 'recall'])
+    sc.add_argument('scene', nargs='?', help='scene name, file name or UUID (for recall)')
+    sc.add_argument('--yes', action='store_true', help='skip the confirmation prompt')
     sc.set_defaults(fn=cmd_scene)
 
     fx = sub.add_parser('fx', help='FX processor: fx 1 type lush | fx 1 show | fx 1 set "Rev Time" 2.5')
