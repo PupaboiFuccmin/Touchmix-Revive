@@ -1,0 +1,27 @@
+20:22:21 VERIFY recorder on QSC TouchMix
+20:22:21 STEP 1 record rtz
+20:22:23 FAIL record rtz: position now -
+20:22:23 STEP 2 record play
+20:22:27 POSITIONS +1.0s:0.0097 +2.1s:0.0193 +3.1s:0.0290
+20:22:27 PASS record play: position moving at 0.010 of the session per second
+20:22:27 STEP 3 record ff
+20:22:35 POSITIONS +0.2s:0.0381 +2.6s:0.0486 +3.7s:0.0562 +4.7s:0.0683 +5.7s:0.0875 +6.8s:0.1125
+20:22:35 PASS record ff: moved 0.038 -> 0.113, 1.6x plain playing
+20:22:35 STEP 4 record rew
+20:22:43 POSITIONS +2.6s:0.1216 +3.6s:0.1141 +4.6s:0.1024 +5.6s:0.0835 +6.8s:0.0580
+20:22:44 PASS record rew: moved back 0.113 -> 0.058
+20:22:44 STEP 5 record stop
+20:22:46 PASS record stop: position steady at 0.058
+20:22:46 STEP 6 record locate 0.5 + goto
+20:22:49 POSITIONS +0.5s:0.5000
+20:22:49 PASS record locate 0.5 + goto: position after Go To: 0.500
+20:22:49 STEP 7 record set
+20:22:56 POSITIONS +0.1s:0.0000 +3.7s:0.0097 +4.9s:0.0189 +5.7s:0.0000
+20:22:56 PASS record set: played to 0.019, Go To came back to 0.000
+20:22:56 RESULT  FAIL     record rtz         position now -
+20:22:56 RESULT  PASS     record play        position moving at 0.010 of the session per second
+20:22:56 RESULT  PASS     record ff          moved 0.038 -> 0.113, 1.6x plain playing
+20:22:56 RESULT  PASS     record rew         moved back 0.113 -> 0.058
+20:22:56 RESULT  PASS     record stop        position steady at 0.058
+20:22:56 RESULT  PASS     record locate 0.5 + goto position after Go To: 0.500
+20:22:56 RESULT  PASS     record set         played to 0.019, Go To came back to 0.000
