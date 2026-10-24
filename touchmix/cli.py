@@ -804,7 +804,6 @@ def cmd_map_verify(args):
     port = args.port
     watch = PositionWatch()
     path = args.out or 'verify-recorder-%s.log' % time.strftime('%Y%m%d-%H%M%S')
-    out = make_writer(path, echo=True)
     state = {}
 
     def connect():
@@ -826,6 +825,7 @@ def cmd_map_verify(args):
     if armed:
         sys.exit('Tracks are armed (%s): run "record disarm all" first, so nothing gets recorded.' % ', '.join(armed))
     warn_no_access(tm)
+    out = make_writer(path, echo=True)          # only once the checks pass: no empty logs
     out('%s VERIFY recorder on %s' % (time.strftime('%H:%M:%S'), tm.mixer_name))
     print('Watch the Record/Play screen. Each step runs by itself and checks the play position')
     print('the mixer reports.')

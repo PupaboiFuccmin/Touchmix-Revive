@@ -601,8 +601,10 @@ class Client(unittest.TestCase):
         self.mixer.values[186] = 0                   # MP3 mode
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit) as e:
-                main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'map', 'verify', 'recorder', '--auto'])
+                main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'map', 'verify', 'recorder', '--auto',
+                      '--out', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'never-written.log')])
         self.assertIn('MP3 mode', str(e.exception))
+        self.assertFalse(os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'never-written.log')))
 
     def test_cli_mute_verify(self):
         out = io.StringIO()
