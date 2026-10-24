@@ -963,7 +963,10 @@ def _fmt(v):
 def cmd_map_tour(args):
     """Walk through actions on the mixer's own screen, logging everything it reports."""
     # sections for another device (app-*) run only when named
-    wanted = [s.strip() for s in args.sections.split(',')] if args.sections else \n        [s for s in M.TOUR if not s.startswith('app-')]
+    if args.sections:
+        wanted = [s.strip() for s in args.sections.split(',')]
+    else:
+        wanted = [s for s in M.TOUR if not s.startswith('app-')]
     unknown = [s for s in wanted if s not in M.TOUR]
     if unknown:
         sys.exit('unknown section %s (choose from %s)' % (', '.join(unknown), ', '.join(M.TOUR)))
