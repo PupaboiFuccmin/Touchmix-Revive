@@ -106,6 +106,10 @@ u8  data[len]
   6 trailer bytes (probably a checksum ❓).
 * Anything else: a chunk of file data at that offset. Chunks are 1012 bytes.
 
+Only the mixer sends files. The official app's code receives type 3 and has
+no code to send a file or request one (see RESEARCH.md, "Inside the official
+app").
+
 **`.dscomp` is plain zlib** (`78 9c`). After connecting, the mixer sends:
 
 | File | Size (inflated) | Contents |
