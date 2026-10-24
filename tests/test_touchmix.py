@@ -612,6 +612,28 @@ class Client(unittest.TestCase):
         self.assertIn('MP3 mode', str(e.exception))
         self.assertFalse(os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'never-written.log')))
 
+    def test_map_tour_pc_actions(self):
+        """A tour step can rename channel 16 on the PC before the prompt."""
+        import tempfile
+        from touchmix import mapping as M
+        path = os.path.join(tempfile.mkdtemp(), 'tour.log')
+        steps = M.TOUR['app-scenes']
+        self.assertEqual(len(steps), 8)
+        real_stdin = sys.stdin
+        sys.stdin = io.StringIO('\n' * len(steps))
+        try:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'map', 'tour', 'app-scenes',
+                           '--out', path])
+        finally:
+            sys.stdin = real_stdin
+        self.assertEqual(rc, 0)
+        with open(path, encoding='utf-8') as f:
+            log = f.read()
+        self.assertIn('PC 1 PC renamed channel 16 to SCNB', log)
+        self.assertIn('READ 2 0x00e8 Global > FileMan > Type', log)
+        self.assertIn("READ 8 0x05ba In 16 > Control > Name", log)
+
     def test_cli_mute_verify(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

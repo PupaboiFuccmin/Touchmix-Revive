@@ -171,9 +171,10 @@ def script_mutes(table, target=None):
 
 # ---------------------------------------------------------------- tour
 # Steps for `map tour`: done on the mixer's own screen while the PC logs what the
-# mixer reports. (prompt, repeat[, watch]): repeat steps cycle through a
-# setting's options and ask for each label; watch lists parameters to read back
-# from the mixer after each answer (a reconnect), for settings it doesn't report. Screen paths are from the TouchMix-8/16 user guide.
+# mixer reports. (prompt, repeat[, watch[, action]]): repeat steps cycle through
+# a setting's options and ask for each label; watch lists parameters to read
+# back from the mixer after each answer (a reconnect), for settings it doesn't
+# report; action(tm) runs on the PC before the prompt (renaming channel 16, say). Screen paths are from the TouchMix-8/16 user guide.
 # Channel 16 is used throughout, so leave it unused. Nothing here deletes
 # anything or powers the mixer down. Saving a channel preset froze the mixer's
 # screen once (2026-10-21), so the tour no longer does it.
@@ -196,7 +197,43 @@ CH16 = 'Channel 16 (HOME > Inputs 9-16 > touch channel 16\'s name button)'
 # read back after each answer, because the mixer may not report these changes
 FX_WATCH = ['FX 1 > Editor > FX type', 'FX 1 > Control > Preset']
 
+# for scene and preset recalls: everything FileMan, plus channel 16's name,
+# which the steps set so a real recall is visible
+SCENE_WATCH = ['Global > FileMan > %s' % n for n in (
+    'Type', 'Location', 'Number', 'Category', 'Subcategory', 'SubIndex', 'Channel', 'Effect', 'Name',
+    'Session', 'Recall', 'Save', 'Save As', 'Omit Levels', 'Omit Outputs', 'Omit Routing', 'With Name')] + \
+    ['Global > FileMan > Scene Uuid%d' % i for i in range(8)] + ['In 16 > Control > Name']
+
+
+def rename16(name):
+    """A PC-side tour action: rename channel 16 so a recall shows up in its name."""
+    def action(tm):
+        tm.rename(16, name)
+        return 'PC renamed channel 16 to %s' % name
+    return action
+
 TOUR = collections.OrderedDict([
+    # the app, on another device (iPhone): the mixer passes the app's writes on
+    # to this PC, and read-backs show what the recall changed
+    ('app-scenes', [
+        ('On the iPhone: open the TouchMix app and connect to the mixer. If the mixer\n'
+         '     asks to allow the new device, allow it (All). Enter when the app shows the mix.',
+         False, None, rename16('SCNB')),
+        ('In the app: open the scenes list (Menu > Scenes, or the Scenes button).\n'
+         '     Just open it, change nothing. Enter.', False, SCENE_WATCH),
+        ('In the app: select the scene SCNA, tap Recall, and CONFIRM (Yes / OK).\n'
+         '     Channel 16 should go back to being called SCNA. Type what happened, Enter.',
+         False, SCENE_WATCH),
+        ('In the app: recall the scene SCNA again, the same way (the PC set channel 16\n'
+         '     to SCNB again first). Type what happened, Enter.', False, SCENE_WATCH, rename16('SCNB')),
+        ('In the app: recall the scene usr, and confirm. Type what happened, Enter.', False, SCENE_WATCH),
+        ('In the app: open channel 16 and recall any channel preset on it (the preset\n'
+         '     name at the top of the channel), and confirm. Type which preset, Enter.', False, SCENE_WATCH),
+        ('In the app: save the current mix as a NEW scene called TEST3 (Save As) and\n'
+         '     confirm. Enter.', False, SCENE_WATCH),
+        ('Done with the app. The PC puts channel 16\'s name back. Enter.', False, SCENE_WATCH,
+         rename16('In 16')),
+    ]),
     ('scenes', [
         ('Open the scenes screen: press MENU > touch "Scenes". Just look, change nothing.', False),
         ('Save the current mix as a new scene: touch "Save As", type TEST2 on the keyboard,\n'

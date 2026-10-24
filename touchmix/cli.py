@@ -962,11 +962,12 @@ def _fmt(v):
 
 def cmd_map_tour(args):
     """Walk through actions on the mixer's own screen, logging everything it reports."""
-    wanted = [s.strip() for s in args.sections.split(',')] if args.sections else list(M.TOUR)
+    # sections for another device (app-*) run only when named
+    wanted = [s.strip() for s in args.sections.split(',')] if args.sections else \n        [s for s in M.TOUR if not s.startswith('app-')]
     unknown = [s for s in wanted if s not in M.TOUR]
     if unknown:
         sys.exit('unknown section %s (choose from %s)' % (', '.join(unknown), ', '.join(M.TOUR)))
-    steps = [(sec, tuple(s) + (None,) * (3 - len(s))) for sec in wanted for s in M.TOUR[sec]]
+    steps = [(sec, tuple(s) + (None,) * (4 - len(s))) for sec in wanted for s in M.TOUR[sec]]
     path = args.out or 'tour-%s-%s.log' % ('-'.join(wanted) if args.sections else 'all', time.strftime('%Y%m%d-%H%M%S'))
     host = pick_host(args)
     polls = 'meters' in wanted
@@ -995,11 +996,15 @@ def cmd_map_tour(args):
     print('Logging to %s. Ctrl+C stops at any point (what you did so far is saved).\n' % path)
     section = None
     try:
-        for i, (sec, (prompt, repeat, watch)) in enumerate(steps, 1):
+        for i, (sec, (prompt, repeat, watch, action)) in enumerate(steps, 1):
             if sec != section:
                 section = sec
                 print('\n== %s ==' % sec)
                 out('%s SECTION %s' % (time.strftime('%H:%M:%S'), sec))
+            if action:
+                done = action(tm)
+                out('%s PC %d %s' % (time.strftime('%H:%M:%S'), i, done))
+                print('\n     (%s)' % done)
             out('%s STEP %d %s' % (time.strftime('%H:%M:%S'), i, prompt))
             print('\n%d/%d  %s' % (i, len(steps), prompt))
             if repeat:
