@@ -193,6 +193,13 @@ renamed SCNB from the PC. A working recall would have brought "SCNA" back.
 | same, `Recall` = 1 | nothing |
 | same, plus `FileMan > Type` = 0, `Location` = 1 (user), `Number` = position in the file index (n/1024), `Recall` = 0 or 1 | nothing; channel 16 stayed "SCNB" |
 
+**Why it failed (from the app's code, 2026-10-24):** a confirmed recall is not a
+parameter write at all. The app sends a separate *action* message, type 8.3,
+with action code 3 and the scene packed into its fields (PROTOCOL.md, "8.3
+action"). The FileMan parameter writes only drive the dialog. Next step: send
+an 8.3 recall from the PC with the mixer in front of you, on a scene you don't
+mind loading.
+
 What the app sends for a *confirmed* recall has never been captured: its
 confirm button didn't work. Its unconfirmed `Save As` / `Recall` writes
 carried tag `9229` where ours send 0, which may or may not matter. Next step:
@@ -387,6 +394,19 @@ functions that pack a file for sending (`ControlMessage::packFileToData`,
 a file or a directory listing. The only place `.wav` appears is the file filter
 for the USB player (`.wav .bwf`).
 
+The file code itself is generic: given any path, the packer compresses the
+file and sends it from `/usr/share/ds2i/tmp/`. So the firmware *could* send any
+file, but only when its own code decides to; there is no request message for
+it. The app's `rxFile` only acts on `config.xml`, `config.session.xml`,
+`fileIndex.xml`, `.settings.dqx` and `mp3list.xml`.
+
+**No borrowed file-transfer library either.** The app is built on JUCE, which
+ships HTTP (`juce::URL`, `WebInputStream`), raw sockets and an
+`InterprocessConnection` class. They are compiled in, but no QSC code calls
+any of them. QSC's link uses its own socket code (`SocketMan`) and JUCE's
+bundled zlib for `.dscomp`. The only other services on the mixer are the ones
+the port scan found: SSH, Telnet and netperf (PROTOCOL.md).
+
 So the app cannot fetch recordings, and nothing it sends can make the mixer
 send them. The mixer's own firmware could still have a path the app never
 uses, but there is no hint of one. Recordings come off the USB drive, and
@@ -429,7 +449,7 @@ Names that line up with the protocol (see PROTOCOL.md):
 | `StringParmMessage(int, const char*)` | text parameter writes (9.1 is the mixer's side) |
 | `MeterRequestMessage`, `MeterResponseMessage`, `clientControl::requestMeters`, `MeterMan::formMeterId(u8, u8, int)` / `decodeMeterId` | 6.1 / 7.1 poll |
 | `clientControl::rxFile`, `ControlMessage::getFileFromData` | 3.4 file transfer (receive only) |
-| `ActionMessage(u16, u32, float, const char*)`, `clientControl::handleActionMessage` | not seen in captures yet |
+| `ActionMessage(u16, u32, float, const char*)`, `clientControl::handleActionMessage` | 8.3 action: scene/preset save, recall, delete, copy (never captured) |
 | `clientControl::handleSetAuthorization`, `rxDeviceAuthorizations` | per-client access |
 | `FileActionClient::transmitFileAction(int, int, const char*)`, `fileMan::recall*` | scene and preset recall |
 | `clientControl::runProductionTestCommand`, `loadProductionTestPreset`, `parameterEditFromProductionTest`, `simulateHardwareMessage` | a factory-test interface |
@@ -438,9 +458,14 @@ The library also names the mixer's settings files under `/usr/share/ds2i/`
 (network, language, demo mode and so on) and the preset file extensions
 (`.scene.dqx`, `.input.dqx`, `.comp.dqx`, `.routing.dqx`, ...).
 
-Still to read in the code: how `transmitFileAction` encodes a recall (the
-missing piece for scene recall), what `ActionMessage` carries, and every meter
-ID `formMeterId` can build.
+Scene and preset actions turned out to be `ActionMessage`s (type 8.3), now in
+PROTOCOL.md. The source paths left in the library show QSC's internal names:
+the platform is "ds2i", the project "Sonora", and this is the `tm16-v3`
+branch.
+
+Still to read in the code: the exact `text` fields of a file action, what the
+mixer-to-app action codes mean, what `transmitFileAction` is used for, and
+every meter ID `formMeterId` can build.
 
 ## Next steps
 

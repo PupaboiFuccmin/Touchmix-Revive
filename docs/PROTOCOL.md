@@ -70,7 +70,25 @@ u8  payload[length-6]
 | 5.1 | param-set | both | **parameter changes**: what you send to control the mixer |
 | 6.1 | poll-req | A→M | periodic request, sequence-numbered |
 | 7.1 | poll-resp | M→A | reply to 6.1 with the same sequence number |
+| 8.3 | action | A→M (and M→A) | file actions (scene/preset save, recall, delete, copy) and a few others; never captured yet, see below |
 | 9.1 | text | M→A | a text parameter's new value, e.g. the MP3 title |
+
+**The second field is a set of flags, not a subtype.** In the official app's
+packer (`ControlMessage::packToData`, see RESEARCH.md, "Inside the official
+app") it says which fields follow the header, in this order:
+
+| Flag | Fields | Used by |
+|-----:|--------|---------|
+| `2` | `u16 id`, `f32 value` | 4.2 single edit |
+| `1` | `u32 n`, `u16 len`, `u8 data[len]` | 5.1, 6.1, 7.1, 9.1 |
+| `4` | file chunk (offset, length, data) | 3.4 |
+
+So 1.3 and 8.3 carry both groups: `u16, f32` then `u32, u16 len, data`.
+
+The app's names for the types: 1 `HelloMessage`, 3 `FileTransferMessage`,
+4 `EditMessage` (and `ForceSingleEditMessage`), 5 `BlockEditMessage`,
+6 `MeterRequestMessage`, 7 `MeterResponseMessage`, 8 `ActionMessage`,
+9 `StringParmMessage`.
 
 ### 1.3 hello ✅
 
@@ -108,7 +126,13 @@ u8  data[len]
 
 Only the mixer sends files. The official app's code receives type 3 and has
 no code to send a file or request one (see RESEARCH.md, "Inside the official
-app").
+app"). The packer can send any file: it zlib-compresses it to `.dscomp`
+(`DSCompressForTransfer`) and sends it from `/usr/share/ds2i/tmp/`. A
+receiver writes each file into its documents folder and inflates `.dscomp`.
+
+The app's `rxFile` acts on five names: `config.xml` and `config.session.xml`
+(rebuild the whole UI), `fileIndex.xml`, `<client>.settings.dqx` (access
+rights) and `mp3list.xml` (the USB player's song list).
 
 **`.dscomp` is plain zlib** (`78 9c`). After connecting, the mixer sends:
 
@@ -155,6 +179,46 @@ repeat count:
 * **Keep messages small.** One message with 196 entries (every GEQ slider on
   Main and Aux 1–6) made the mixer stop answering and reboot. Messages of 16
   entries have never caused trouble. The client splits larger writes.
+
+### 8.3 action ❓ (from the app's code, never captured)
+
+```
+u16 code
+f32 value
+u32 n
+u16 len
+char text[len]     (no terminator)
+```
+
+**Scene and preset recall uses this message, not parameter writes.** When a
+FileMan button is confirmed, the app's `FileActionClient::doAction` sends an
+action whose code depends on which FileMan parameter type was pressed:
+
+| FileMan parameter (type in `params.csv`) | Action code |
+|------------------------------------------|------------:|
+| Save (116) | 5 |
+| Save As (117) | 2 (5 when the name already exists) |
+| Delete (118) | 1 |
+| **Recall (119)** | **3** |
+| (type 120, not in our config) | 4 |
+| Copy To User / Copy To External (169) | 6 |
+
+`value` is 0. `n` packs the file being acted on:
+`(location << 24) | (type << 16) | number` (`FileActionParameter::fileSpecifierToInt`).
+`text` is five comma-separated fields built by
+`FileActionParameter::encodeString`: probably
+`<uuid>,<number>,<?>,<flags>,<name>` ❓. `flags` collects the
+Omit Levels / Omit Outputs / Omit Routing / Omit Tuning / With Name /
+With Phantom switches as bits 1, 2, 4, 0x10, 0x20 and 0x40 (which switch is
+which bit is not yet worked out ❓). Names are filtered to letters, digits,
+space and the punctuation `-_+=!$%().~` (plus the backtick), and an empty name becomes `New`.
+
+The app also handles some action codes arriving from the mixer: 10, 14, 15,
+18, 28, 29, 31, 34, 43 and 45. Code 15 sets this client's authorization
+level; the others show alerts, clear clips and so on (not decoded).
+
+Untested. Field order and the exact `text` need checking against the mixer
+before a recall from the PC is attempted.
 
 ### 9.1 text ✅
 
