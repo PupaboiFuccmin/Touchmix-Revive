@@ -70,7 +70,7 @@ u8  payload[length-6]
 | 5.1 | param-set | both | **parameter changes**: what you send to control the mixer |
 | 6.1 | poll-req | A→M | periodic request, sequence-numbered |
 | 7.1 | poll-resp | M→A | reply to 6.1 with the same sequence number |
-| 8.3 | action | A→M (and M→A) | file actions (scene/preset save, recall, delete, copy) and a few others; never captured yet, see below |
+| 8.3 | action | A→M (and M→A) | file actions (scene/preset save, recall, delete, copy) and a few others; scene recall confirmed, see below |
 | 9.1 | text | M→A | a text parameter's new value, e.g. the MP3 title |
 
 **The second field is a set of flags, not a subtype.** In the official app's
@@ -180,7 +180,7 @@ repeat count:
   Main and Aux 1–6) made the mixer stop answering and reboot. Messages of 16
   entries have never caused trouble. The client splits larger writes.
 
-### 8.3 action ❓ (from the app's code, never captured)
+### 8.3 action (scene recall ✅; the other actions from the app's code only)
 
 ```
 u16 code
@@ -204,7 +204,9 @@ action whose code depends on which FileMan parameter type was pressed:
 | Copy To User / Copy To External (169) | 6 |
 
 `value` is 0. `n` packs the file being acted on:
-`(location << 24) | (type << 16) | number` (`FileActionParameter::fileSpecifierToInt`).
+`(type << 24) | (location << 16) | number` (`FileActionParameter::fileSpecifierToInt`).
+Scenes are type 0; location 0 is factory, 1 user (the `Collection` attributes
+in `fileIndex.xml`), and `number` is the file's position in its collection.
 `text` is five comma-separated fields built by
 `FileActionParameter::encodeString`: probably
 `<uuid>,<number>,<?>,<flags>,<name>` ❓. `flags` collects the
@@ -217,8 +219,22 @@ The app also handles some action codes arriving from the mixer: 10, 14, 15,
 18, 28, 29, 31, 34, 43 and 45. Code 15 sets this client's authorization
 level; the others show alerts, clear clips and so on (not decoded).
 
-Untested. Field order and the exact `text` need checking against the mixer
-before a recall from the PC is attempted.
+**Confirmed on the mixer (2026-10-27,** `mappings/recall-8-3-*.log`**):** this
+message recalled user scene SCNA (number 0) on the first try. The mixer
+answered with `all-config.xml.dscomp`, exactly as for a recall made on its own
+screen, and channel 16's name returned to the saved one:
+
+```
+08 00 03 00 3c 00                header: type 8, flags 3, length 60
+03 00  00 00 00 00               code 3 (recall), value 0.0
+00 00 01 00                      n = 0x00010000: type 0, location 1, number 0
+2a 00                            text length 42
+4a04df9c8b2049f4b1776ba9cf75d172,0,,0,SCNA
+```
+
+The text was `<uuid>,<number>,,<flags=0>,<name>`; which of its fields the
+mixer actually checks is not known. Preset recall, save, delete and copy are
+still untested; Delete stays behind the `allow_risky` guard.
 
 ### 9.1 text ✅
 

@@ -132,6 +132,8 @@ python3 -m touchmix fx 1 type lush             # FX processor: none, chorus, del
 python3 -m touchmix fx 1 show                  # the processor's settings, in real units
 python3 -m touchmix fx 1 set "Rev Time" 2.5    # change one
 python3 -m touchmix mute mute3 on              # mute groups 1-8
+python3 -m touchmix scene list                 # factory and user scenes (* = the current one)
+python3 -m touchmix scene recall studio        # load a scene: the whole mix changes at once
 python3 -m touchmix find "aux 1 > comp"        # search parameter names (offline)
 python3 -m touchmix set "In 4 > Control > Phase" 1   # any parameter, raw 0..1 value
 ```
@@ -226,10 +228,13 @@ which covers everything you need to run a mix:
 * **FX 1–4 returns, 2-track playback, talkback, DCA 1–8:** faders, mutes, EQ,
   HPF, width, balance, trim
 
-**Not mapped yet:** the effect engines' own settings (reverb time, delay time
-and so on), mode switches such as compressor mode and EQ band type, scene
-recall, user buttons, the wizards, and the meters and RTA. The USB recorder
-(arm, record, play, stop) and the MP3 player work; locate is untested. [`docs/MAPPING.md`](docs/MAPPING.md) explains how to map more.
+Also working: FX types and settings, EQ band type, mute groups, names,
+scene recall, Main and input meters, the USB recorder (transport, locate) and
+the MP3 player.
+
+**Not mapped yet:** channel-preset recall and saving scenes from the PC, user
+button assignment, the wizards, talkback and the signal generator, and the
+RTA. [`docs/MAPPING.md`](docs/MAPPING.md) explains how to map more.
 
 ## Troubleshooting
 

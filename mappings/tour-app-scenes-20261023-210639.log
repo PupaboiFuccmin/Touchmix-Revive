@@ -1,0 +1,273 @@
+21:06:40 MSG 2.2 len=6 b49c01000000
+21:06:40 0x0696 0.0000                raw=00000000 tag=0000 Aux 1 > Control > Link
+21:06:40 0x0699 1.0000                raw=3f800000 tag=0000 Aux 1 > Comp > Mode
+21:06:40 0x0751 0.0000                raw=00000000 tag=0000 Aux 2 > Control > Link
+21:06:40 0x0754 1.0000                raw=3f800000 tag=0000 Aux 2 > Comp > Mode
+21:06:40 0x080c 0.0000                raw=00000000 tag=0000 Aux 3 > Control > Link
+21:06:40 0x080f 1.0000                raw=3f800000 tag=0000 Aux 3 > Comp > Mode
+21:06:40 0x08c7 0.0000                raw=00000000 tag=0000 Aux 4 > Control > Link
+21:06:40 0x08ca 1.0000                raw=3f800000 tag=0000 Aux 4 > Comp > Mode
+21:06:40 0x0982 0.0000                raw=00000000 tag=0000 Aux 5 > Control > Link
+21:06:40 0x0985 1.0000                raw=3f800000 tag=0000 Aux 5 > Comp > Mode
+21:06:40 0x0a3d 0.0000                raw=00000000 tag=0000 Aux 6 > Control > Link
+21:06:40 0x0a40 1.0000                raw=3f800000 tag=0000 Aux 6 > Comp > Mode
+21:06:40 0x000e 1.0000                raw=3f800000 tag=0000 Main > Comp > Mode
+21:06:40 0x0afb 1.0000                raw=3f800000 tag=0000 Aux 7/8 > Comp > Mode
+21:06:40 0x0b43 1.0000                raw=3f800000 tag=0000 Aux 9/10 > Comp > Mode
+21:06:41 FILE start NH8-config.xml.dscomp
+21:06:41 FILE end /usr/share/ds2i/tmp/NH8-config.xml.dscomp
+21:06:41 CONNECTED QSC TouchMix
+21:06:41 SECTION app-scenes
+21:06:41 PC 1 PC renamed channel 16 to SCNB
+21:06:41 STEP 1 On the tablet (or phone): open the TouchMix app and connect to the mixer. If the mixer
+     asks to allow the new device, allow it (All). Enter when the app shows the mix.
+21:06:41 FILE start fileIndex.xml.dscomp
+21:06:42 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+21:06:42 FILE start REVIVE-MYPC.settings.dqx.dscomp
+21:06:42 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
+21:06:49 END 1
+21:06:49 STEP 2 In the app: open the scenes list (Menu > Scenes, or the Scenes button).
+     Just open it, change nothing. Enter.
+21:06:58 READ 2 0x00e8 Global > FileMan > Type value=0 text=''
+21:06:58 READ 2 0x00e9 Global > FileMan > Location value=1 text=''
+21:06:58 READ 2 0x00ea Global > FileMan > Number value=0 text=''
+21:06:58 READ 2 0x00eb Global > FileMan > Category value=0 text=''
+21:06:58 READ 2 0x00ec Global > FileMan > Subcategory value=0 text=''
+21:06:58 READ 2 0x00ed Global > FileMan > SubIndex value=0 text=''
+21:06:58 READ 2 0x00ef Global > FileMan > Channel value=0 text=''
+21:06:58 READ 2 0x00f6 Global > FileMan > Effect value=0 text=''
+21:06:58 READ 2 0x00ff Global > FileMan > Name value=1 text='SCNA'
+21:06:58 READ 2 0x0100 Global > FileMan > Session value=0 text='DEFAULT'
+21:06:58 READ 2 0x00fb Global > FileMan > Recall value=0 text=''
+21:06:58 READ 2 0x00f8 Global > FileMan > Save value=0 text=''
+21:06:58 READ 2 0x00f9 Global > FileMan > Save As value=0 text=''
+21:06:58 READ 2 0x00f0 Global > FileMan > Omit Levels value=0 text=''
+21:06:58 READ 2 0x00f1 Global > FileMan > Omit Outputs value=0 text=''
+21:06:58 READ 2 0x00f2 Global > FileMan > Omit Routing value=0 text=''
+21:06:58 READ 2 0x00f4 Global > FileMan > With Name value=0 text=''
+21:06:58 READ 2 0x0101 Global > FileMan > Scene Uuid0 value=1098 text=''
+21:06:58 READ 2 0x0102 Global > FileMan > Scene Uuid1 value=40159 text=''
+21:06:58 READ 2 0x0103 Global > FileMan > Scene Uuid2 value=8331 text=''
+21:06:58 READ 2 0x0104 Global > FileMan > Scene Uuid3 value=62537 text=''
+21:06:58 READ 2 0x0105 Global > FileMan > Scene Uuid4 value=30641 text=''
+21:06:58 READ 2 0x0106 Global > FileMan > Scene Uuid5 value=43371 text=''
+21:06:58 READ 2 0x0107 Global > FileMan > Scene Uuid6 value=30159 text=''
+21:06:58 READ 2 0x0108 Global > FileMan > Scene Uuid7 value=29393 text=''
+21:06:58 READ 2 0x05ba In 16 > Control > Name value=0 text='SCNB'
+21:06:58 FILE start fileIndex.xml.dscomp
+21:06:58 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+21:06:58 END 2
+21:06:58 STEP 3 In the app: select the scene SCNA, tap Recall, and CONFIRM (Yes / OK; with no
+     confirm button, try Tab a few times then Enter on a keyboard).
+     Channel 16 should go back to being called SCNA. Type what happened, Enter.
+21:06:58 FILE start REVIVE-MYPC.settings.dqx.dscomp
+21:06:58 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
+21:07:03 0x00fb 0.0000                raw=00000000 tag=8e7d Global > FileMan > Recall
+21:07:33 0x00ce 0.9900                raw=3f7d70a4 tag=0000 Global > Misc Input > Wireless Strength
+21:07:49 0x00ce 1.0000                raw=3f800000 tag=0000 Global > Misc Input > Wireless Strength
+21:08:13 0x00fb 0.0000                raw=00000000 tag=8e7d Global > FileMan > Recall
+21:08:50 0x00fb 0.0000                raw=00000000 tag=8e7d Global > FileMan > Recall
+21:09:10 0x0057 0.0000                raw=00000000 tag=a2ed Main > Anti FB > Rta Channel Select
+21:09:10 0x0f88 0.7782                raw=3f4734ec tag=0000 Rta Local > Zoom > Selectivity
+21:09:16 0x0f88 1.0000                raw=3f800000 tag=0000 Rta Local > Zoom > Selectivity
+21:09:16 0x0058 0.0000                raw=00000000 tag=0000 Main > Anti FB > State
+21:09:16 0x0057 1.0000                raw=3f800000 tag=0000 Main > Anti FB > Rta Channel Select
+21:09:32 LABEL 3 no luck
+21:09:33 READ 3 0x00e8 Global > FileMan > Type value=0 text=''
+21:09:33 READ 3 0x00e9 Global > FileMan > Location value=1 text=''
+21:09:33 READ 3 0x00ea Global > FileMan > Number value=0 text=''
+21:09:33 READ 3 0x00eb Global > FileMan > Category value=0 text=''
+21:09:33 READ 3 0x00ec Global > FileMan > Subcategory value=0 text=''
+21:09:33 READ 3 0x00ed Global > FileMan > SubIndex value=0 text=''
+21:09:33 READ 3 0x00ef Global > FileMan > Channel value=0 text=''
+21:09:33 READ 3 0x00f6 Global > FileMan > Effect value=0 text=''
+21:09:33 READ 3 0x00ff Global > FileMan > Name value=1 text='SCNA'
+21:09:33 READ 3 0x0100 Global > FileMan > Session value=0 text='DEFAULT'
+21:09:33 READ 3 0x00fb Global > FileMan > Recall value=0 text=''
+21:09:33 READ 3 0x00f8 Global > FileMan > Save value=0 text=''
+21:09:33 READ 3 0x00f9 Global > FileMan > Save As value=0 text=''
+21:09:33 READ 3 0x00f0 Global > FileMan > Omit Levels value=0 text=''
+21:09:33 READ 3 0x00f1 Global > FileMan > Omit Outputs value=0 text=''
+21:09:33 READ 3 0x00f2 Global > FileMan > Omit Routing value=0 text=''
+21:09:33 READ 3 0x00f4 Global > FileMan > With Name value=0 text=''
+21:09:33 READ 3 0x0101 Global > FileMan > Scene Uuid0 value=1098 text=''
+21:09:33 READ 3 0x0102 Global > FileMan > Scene Uuid1 value=40159 text=''
+21:09:33 READ 3 0x0103 Global > FileMan > Scene Uuid2 value=8331 text=''
+21:09:33 READ 3 0x0104 Global > FileMan > Scene Uuid3 value=62537 text=''
+21:09:33 READ 3 0x0105 Global > FileMan > Scene Uuid4 value=30641 text=''
+21:09:33 READ 3 0x0106 Global > FileMan > Scene Uuid5 value=43371 text=''
+21:09:33 READ 3 0x0107 Global > FileMan > Scene Uuid6 value=30159 text=''
+21:09:33 READ 3 0x0108 Global > FileMan > Scene Uuid7 value=29393 text=''
+21:09:33 READ 3 0x05ba In 16 > Control > Name value=0 text='SCNB'
+21:09:33 FILE start fileIndex.xml.dscomp
+21:09:33 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+21:09:33 END 3
+21:09:33 PC 4 PC renamed channel 16 to SCNB
+21:09:33 STEP 4 In the app: recall the scene SCNA again, the same way (the PC set channel 16
+     to SCNB again first). Type what happened, Enter.
+21:09:33 FILE start REVIVE-MYPC.settings.dqx.dscomp
+21:09:33 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
+21:09:51 LABEL 4 I spammed all keyboard buttons, nothingk
+21:09:53 READ 4 0x00e8 Global > FileMan > Type value=0 text=''
+21:09:53 READ 4 0x00e9 Global > FileMan > Location value=1 text=''
+21:09:53 READ 4 0x00ea Global > FileMan > Number value=0 text=''
+21:09:53 READ 4 0x00eb Global > FileMan > Category value=0 text=''
+21:09:53 READ 4 0x00ec Global > FileMan > Subcategory value=0 text=''
+21:09:53 READ 4 0x00ed Global > FileMan > SubIndex value=0 text=''
+21:09:53 READ 4 0x00ef Global > FileMan > Channel value=0 text=''
+21:09:53 READ 4 0x00f6 Global > FileMan > Effect value=0 text=''
+21:09:53 READ 4 0x00ff Global > FileMan > Name value=1 text='SCNA'
+21:09:53 READ 4 0x0100 Global > FileMan > Session value=0 text='DEFAULT'
+21:09:53 READ 4 0x00fb Global > FileMan > Recall value=0 text=''
+21:09:53 READ 4 0x00f8 Global > FileMan > Save value=0 text=''
+21:09:53 READ 4 0x00f9 Global > FileMan > Save As value=0 text=''
+21:09:53 READ 4 0x00f0 Global > FileMan > Omit Levels value=0 text=''
+21:09:53 READ 4 0x00f1 Global > FileMan > Omit Outputs value=0 text=''
+21:09:53 READ 4 0x00f2 Global > FileMan > Omit Routing value=0 text=''
+21:09:53 READ 4 0x00f4 Global > FileMan > With Name value=0 text=''
+21:09:53 READ 4 0x0101 Global > FileMan > Scene Uuid0 value=1098 text=''
+21:09:53 READ 4 0x0102 Global > FileMan > Scene Uuid1 value=40159 text=''
+21:09:53 READ 4 0x0103 Global > FileMan > Scene Uuid2 value=8331 text=''
+21:09:53 READ 4 0x0104 Global > FileMan > Scene Uuid3 value=62537 text=''
+21:09:53 READ 4 0x0105 Global > FileMan > Scene Uuid4 value=30641 text=''
+21:09:53 READ 4 0x0106 Global > FileMan > Scene Uuid5 value=43371 text=''
+21:09:53 READ 4 0x0107 Global > FileMan > Scene Uuid6 value=30159 text=''
+21:09:53 READ 4 0x0108 Global > FileMan > Scene Uuid7 value=29393 text=''
+21:09:53 READ 4 0x05ba In 16 > Control > Name value=0 text='SCNB'
+21:09:53 FILE start fileIndex.xml.dscomp
+21:09:53 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+21:09:53 FILE start REVIVE-MYPC.settings.dqx.dscomp
+21:09:53 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
+21:09:53 END 4
+21:09:53 STEP 5 In the app: recall the scene usr, and confirm. Type what happened, Enter.
+21:10:39 LABEL 5 cant recall
+21:10:40 READ 5 0x00e8 Global > FileMan > Type value=0 text=''
+21:10:40 READ 5 0x00e9 Global > FileMan > Location value=1 text=''
+21:10:40 READ 5 0x00ea Global > FileMan > Number value=0 text=''
+21:10:40 READ 5 0x00eb Global > FileMan > Category value=0 text=''
+21:10:40 READ 5 0x00ec Global > FileMan > Subcategory value=0 text=''
+21:10:40 READ 5 0x00ed Global > FileMan > SubIndex value=0 text=''
+21:10:40 READ 5 0x00ef Global > FileMan > Channel value=0 text=''
+21:10:40 READ 5 0x00f6 Global > FileMan > Effect value=0 text=''
+21:10:40 READ 5 0x00ff Global > FileMan > Name value=1 text='SCNA'
+21:10:40 READ 5 0x0100 Global > FileMan > Session value=0 text='DEFAULT'
+21:10:40 READ 5 0x00fb Global > FileMan > Recall value=0 text=''
+21:10:40 READ 5 0x00f8 Global > FileMan > Save value=0 text=''
+21:10:40 READ 5 0x00f9 Global > FileMan > Save As value=0 text=''
+21:10:40 READ 5 0x00f0 Global > FileMan > Omit Levels value=0 text=''
+21:10:40 READ 5 0x00f1 Global > FileMan > Omit Outputs value=0 text=''
+21:10:40 READ 5 0x00f2 Global > FileMan > Omit Routing value=0 text=''
+21:10:40 READ 5 0x00f4 Global > FileMan > With Name value=0 text=''
+21:10:40 READ 5 0x0101 Global > FileMan > Scene Uuid0 value=1098 text=''
+21:10:40 READ 5 0x0102 Global > FileMan > Scene Uuid1 value=40159 text=''
+21:10:40 READ 5 0x0103 Global > FileMan > Scene Uuid2 value=8331 text=''
+21:10:40 READ 5 0x0104 Global > FileMan > Scene Uuid3 value=62537 text=''
+21:10:40 READ 5 0x0105 Global > FileMan > Scene Uuid4 value=30641 text=''
+21:10:40 READ 5 0x0106 Global > FileMan > Scene Uuid5 value=43371 text=''
+21:10:40 READ 5 0x0107 Global > FileMan > Scene Uuid6 value=30159 text=''
+21:10:40 READ 5 0x0108 Global > FileMan > Scene Uuid7 value=29393 text=''
+21:10:40 READ 5 0x05ba In 16 > Control > Name value=0 text='SCNB'
+21:10:41 FILE start fileIndex.xml.dscomp
+21:10:41 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+21:10:41 END 5
+21:10:41 STEP 6 In the app: open channel 16 and recall any channel preset on it (the preset
+     name at the top of the channel), and confirm. Type which preset, Enter.
+21:10:41 FILE start REVIVE-MYPC.settings.dqx.dscomp
+21:10:41 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
+21:10:42 READ 6 0x00e8 Global > FileMan > Type value=0 text=''
+21:10:42 READ 6 0x00e9 Global > FileMan > Location value=1 text=''
+21:10:42 READ 6 0x00ea Global > FileMan > Number value=0 text=''
+21:10:42 READ 6 0x00eb Global > FileMan > Category value=0 text=''
+21:10:42 READ 6 0x00ec Global > FileMan > Subcategory value=0 text=''
+21:10:42 READ 6 0x00ed Global > FileMan > SubIndex value=0 text=''
+21:10:42 READ 6 0x00ef Global > FileMan > Channel value=0 text=''
+21:10:42 READ 6 0x00f6 Global > FileMan > Effect value=0 text=''
+21:10:42 READ 6 0x00ff Global > FileMan > Name value=1 text='SCNA'
+21:10:42 READ 6 0x0100 Global > FileMan > Session value=0 text='DEFAULT'
+21:10:42 READ 6 0x00fb Global > FileMan > Recall value=0 text=''
+21:10:42 READ 6 0x00f8 Global > FileMan > Save value=0 text=''
+21:10:42 READ 6 0x00f9 Global > FileMan > Save As value=0 text=''
+21:10:42 READ 6 0x00f0 Global > FileMan > Omit Levels value=0 text=''
+21:10:42 READ 6 0x00f1 Global > FileMan > Omit Outputs value=0 text=''
+21:10:42 READ 6 0x00f2 Global > FileMan > Omit Routing value=0 text=''
+21:10:42 READ 6 0x00f4 Global > FileMan > With Name value=0 text=''
+21:10:42 READ 6 0x0101 Global > FileMan > Scene Uuid0 value=1098 text=''
+21:10:42 READ 6 0x0102 Global > FileMan > Scene Uuid1 value=40159 text=''
+21:10:42 READ 6 0x0103 Global > FileMan > Scene Uuid2 value=8331 text=''
+21:10:42 READ 6 0x0104 Global > FileMan > Scene Uuid3 value=62537 text=''
+21:10:42 READ 6 0x0105 Global > FileMan > Scene Uuid4 value=30641 text=''
+21:10:42 READ 6 0x0106 Global > FileMan > Scene Uuid5 value=43371 text=''
+21:10:42 READ 6 0x0107 Global > FileMan > Scene Uuid6 value=30159 text=''
+21:10:42 READ 6 0x0108 Global > FileMan > Scene Uuid7 value=29393 text=''
+21:10:42 READ 6 0x05ba In 16 > Control > Name value=0 text='SCNB'
+21:10:43 FILE start fileIndex.xml.dscomp
+21:10:43 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+21:10:43 FILE start REVIVE-MYPC.settings.dqx.dscomp
+21:10:43 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
+21:10:43 END 6
+21:10:43 STEP 7 In the app: save the current mix as a NEW scene called TEST3 (Save As) and
+     confirm. Enter.
+21:10:44 READ 7 0x00e8 Global > FileMan > Type value=0 text=''
+21:10:44 READ 7 0x00e9 Global > FileMan > Location value=1 text=''
+21:10:44 READ 7 0x00ea Global > FileMan > Number value=0 text=''
+21:10:44 READ 7 0x00eb Global > FileMan > Category value=0 text=''
+21:10:44 READ 7 0x00ec Global > FileMan > Subcategory value=0 text=''
+21:10:44 READ 7 0x00ed Global > FileMan > SubIndex value=0 text=''
+21:10:44 READ 7 0x00ef Global > FileMan > Channel value=0 text=''
+21:10:44 READ 7 0x00f6 Global > FileMan > Effect value=0 text=''
+21:10:44 READ 7 0x00ff Global > FileMan > Name value=1 text='SCNA'
+21:10:44 READ 7 0x0100 Global > FileMan > Session value=0 text='DEFAULT'
+21:10:44 READ 7 0x00fb Global > FileMan > Recall value=0 text=''
+21:10:44 READ 7 0x00f8 Global > FileMan > Save value=0 text=''
+21:10:44 READ 7 0x00f9 Global > FileMan > Save As value=0 text=''
+21:10:44 READ 7 0x00f0 Global > FileMan > Omit Levels value=0 text=''
+21:10:44 READ 7 0x00f1 Global > FileMan > Omit Outputs value=0 text=''
+21:10:44 READ 7 0x00f2 Global > FileMan > Omit Routing value=0 text=''
+21:10:44 READ 7 0x00f4 Global > FileMan > With Name value=0 text=''
+21:10:44 READ 7 0x0101 Global > FileMan > Scene Uuid0 value=1098 text=''
+21:10:44 READ 7 0x0102 Global > FileMan > Scene Uuid1 value=40159 text=''
+21:10:44 READ 7 0x0103 Global > FileMan > Scene Uuid2 value=8331 text=''
+21:10:44 READ 7 0x0104 Global > FileMan > Scene Uuid3 value=62537 text=''
+21:10:44 READ 7 0x0105 Global > FileMan > Scene Uuid4 value=30641 text=''
+21:10:44 READ 7 0x0106 Global > FileMan > Scene Uuid5 value=43371 text=''
+21:10:44 READ 7 0x0107 Global > FileMan > Scene Uuid6 value=30159 text=''
+21:10:44 READ 7 0x0108 Global > FileMan > Scene Uuid7 value=29393 text=''
+21:10:44 READ 7 0x05ba In 16 > Control > Name value=0 text='SCNB'
+21:10:44 FILE start fileIndex.xml.dscomp
+21:10:44 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+21:10:44 FILE start REVIVE-MYPC.settings.dqx.dscomp
+21:10:44 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
+21:10:44 END 7
+21:10:44 PC 8 PC renamed channel 16 to In 16
+21:10:44 STEP 8 Done with the app. The PC puts channel 16's name back. Enter.
+21:10:46 READ 8 0x00e8 Global > FileMan > Type value=0 text=''
+21:10:46 READ 8 0x00e9 Global > FileMan > Location value=1 text=''
+21:10:46 READ 8 0x00ea Global > FileMan > Number value=0 text=''
+21:10:46 READ 8 0x00eb Global > FileMan > Category value=0 text=''
+21:10:46 READ 8 0x00ec Global > FileMan > Subcategory value=0 text=''
+21:10:46 READ 8 0x00ed Global > FileMan > SubIndex value=0 text=''
+21:10:46 READ 8 0x00ef Global > FileMan > Channel value=0 text=''
+21:10:46 READ 8 0x00f6 Global > FileMan > Effect value=0 text=''
+21:10:46 READ 8 0x00ff Global > FileMan > Name value=1 text='SCNA'
+21:10:46 READ 8 0x0100 Global > FileMan > Session value=0 text='DEFAULT'
+21:10:46 READ 8 0x00fb Global > FileMan > Recall value=0 text=''
+21:10:46 READ 8 0x00f8 Global > FileMan > Save value=0 text=''
+21:10:46 READ 8 0x00f9 Global > FileMan > Save As value=0 text=''
+21:10:46 READ 8 0x00f0 Global > FileMan > Omit Levels value=0 text=''
+21:10:46 READ 8 0x00f1 Global > FileMan > Omit Outputs value=0 text=''
+21:10:46 READ 8 0x00f2 Global > FileMan > Omit Routing value=0 text=''
+21:10:46 READ 8 0x00f4 Global > FileMan > With Name value=0 text=''
+21:10:46 READ 8 0x0101 Global > FileMan > Scene Uuid0 value=1098 text=''
+21:10:46 READ 8 0x0102 Global > FileMan > Scene Uuid1 value=40159 text=''
+21:10:46 READ 8 0x0103 Global > FileMan > Scene Uuid2 value=8331 text=''
+21:10:46 READ 8 0x0104 Global > FileMan > Scene Uuid3 value=62537 text=''
+21:10:46 READ 8 0x0105 Global > FileMan > Scene Uuid4 value=30641 text=''
+21:10:46 READ 8 0x0106 Global > FileMan > Scene Uuid5 value=43371 text=''
+21:10:46 READ 8 0x0107 Global > FileMan > Scene Uuid6 value=30159 text=''
+21:10:46 READ 8 0x0108 Global > FileMan > Scene Uuid7 value=29393 text=''
+21:10:46 READ 8 0x05ba In 16 > Control > Name value=0 text='In 16'
+21:10:46 FILE start fileIndex.xml.dscomp
+21:10:46 FILE end /usr/share/ds2i/tmp/fileIndex.xml.dscomp
+21:10:46 FILE start REVIVE-MYPC.settings.dqx.dscomp
+21:10:46 FILE end /usr/share/ds2i/user/settings/REVIVE-MYPC.settings.dqx.dscomp
+21:10:46 END 8

@@ -1,0 +1,19 @@
+CONNECTED QSC TouchMix access=None
+  < FILE fileIndex.xml.dscomp
+  < FILE REVIVE-MYPC.settings.dqx.dscomp
+scene {'name': 'SCNA', 'file': 'SCNA.scene.dqx', 'uuid': '4a04df9c8b2049f4b1776ba9cf75d172', 'location': 'user', 'location_code': 1, 'number': 0, 'current': True}
+TRY Recall pulse 1->0
+  files=[]  ch16='SCNB'
+TRY Recall = 0, tag 9229
+  files=[]  ch16='SCNB'
+TRY Recall pulse, tag 9229
+  files=[]  ch16='SCNB'
+TRY FileMan Name text = SCNA, Recall pulse
+  files=[]  ch16='SCNB'
+TRY Name = file name, Recall pulse
+  files=[]  ch16='SCNB'
+TRY Type/Location/Number + Name + pulse
+  files=[]  ch16='SCNB'
+TRY Type/Location/Number + pulse, tag 9229
+  files=[]  ch16='SCNB'
+NOTHING WORKED

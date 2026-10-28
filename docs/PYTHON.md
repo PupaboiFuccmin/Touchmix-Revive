@@ -77,6 +77,17 @@ title = tm.config_text[0x0118]   # 'Global > Control > Current Song', kept up to
 tm.fx_type(1, 'lush')         # chorus, delay, pitch, dense, lush, mono-delay, none
 ```
 
+**Scenes:**
+
+```python
+for s in tm.scenes():         # dicts: name, file, uuid, location ('factory'/'user'), number, current
+    print(s['name'], s['current'])
+tm.recall_scene('studio')     # by name, file name or UUID; True once the mixer confirms
+```
+
+A recall changes the whole mix at once. The mixer then sends its full
+configuration again, so `tm.config` is up to date when `recall_scene` returns.
+
 **Names and other text settings:**
 
 ```python

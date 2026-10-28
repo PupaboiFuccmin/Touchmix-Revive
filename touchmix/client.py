@@ -271,9 +271,9 @@ class TouchMix:
         self.set_many([('Global > Transport > Multi-track Enable', 0.0 if on else 1.0),
                        ('Global > Misc Input > Playback', int_to_norm(0 if on else 1))])
 
-    # Scenes. Listing works; recalling from the PC does not yet (UUID + Recall,
-    # with or without Type/Location/Number, did nothing on 2026-10-22). See
-    # docs/RESEARCH.md, "Scene recall from the PC".
+    # Scenes: listing from the file index, and recall with an 8.3 action
+    # message (confirmed 2026-10-27). FileMan parameter writes don't recall;
+    # see docs/RESEARCH.md, "Scene recall from the PC".
 
     SCENE_LOCATIONS = {'0': 'factory', '1': 'user', '3': 'usb'}
 
@@ -311,20 +311,14 @@ class TouchMix:
                 return s
         raise KeyError('no scene %r (see scene list)' % name)
 
-    def action_bytes(self, code, number, text='', value=0.0):
-        """The exact 8.3 action message `recall_scene` would send, without sending
-        it. For inspecting an UNTESTED command before running it."""
-        return P.encode_action(code, number, text, value)
-
     def recall_scene(self, name, timeout=6.0):
-        """UNTESTED. Recall a scene by sending an 8.3 action message (code 3), the
-        way the app does. Returns True if the mixer answered with a fresh config
-        (which is what a real recall triggers), False if nothing came back in time.
-        The message format is a best guess from the app's code; see
-        docs/PROTOCOL.md, "8.3 action"."""
+        """Recall a scene (name, file name or UUID; see scenes()) with an 8.3
+        action message, the way the app does. Returns True once the mixer sends
+        its fresh config (all-config), which it does after every recall; False
+        if nothing came back in time. See docs/PROTOCOL.md, "8.3 action"."""
         s = self.find_scene(name)
         number = P.file_specifier(s['location_code'], 0, s['number'])  # type 0 = scene
-        text = '%s,%d,,0,%s' % (s['uuid'], s['number'], s['name'])     # best-guess field order
+        text = '%s,%d,,0,%s' % (s['uuid'], s['number'], s['name'])     # uuid, number, ?, flags, name
         epoch = self._config_epoch
         self._send(P.encode_action(P.ACTION_RECALL, number, text))
         deadline = time.time() + timeout

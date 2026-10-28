@@ -265,8 +265,8 @@ class Client(unittest.TestCase):
             self.assertEqual(tm.config.get(543), '1')
 
     def test_scene_recall_message(self):
-        # UNTESTED protocol: check the client sends a well-formed 8.3 action
-        # message and that recall_scene reports success when the mixer answers.
+        # The 8.3 action message as the mixer accepted it on 2026-10-27, and
+        # recall_scene reporting success when the mixer answers.
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
             tm.wait_ready(5)
             self.assertTrue(tm.recall_scene('TEST'))
@@ -278,15 +278,18 @@ class Client(unittest.TestCase):
         text = action[12:12 + length].decode()
         self.assertEqual(text.split(',')[0], '790091c8bc2044e880d34b355d7bbd21')
 
-    def test_scene_recall_cli_needs_confirmation(self):
-        # Without --yes and with no "yes" typed, nothing is sent.
-        out, err = io.StringIO(), io.StringIO()
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), \
-                mock.patch('builtins.input', return_value='no'):
+    def test_file_specifier(self):
+        # the value that recalled user scene SCNA (number 0) on the mixer
+        self.assertEqual(P.file_specifier(1, 0, 0), 0x00010000)
+        self.assertEqual(P.file_specifier(1, 0, 3), 0x00010003)
+
+    def test_scene_recall_cli(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
             rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'TEST'])
-        self.assertEqual(rc, 1)
-        self.assertIn('UNTESTED', out.getvalue())
-        self.assertFalse(any(ty == P.ACTION for ty, _ in self.mixer.received))
+        self.assertEqual(rc, 0)
+        self.assertIn('Recalled', out.getvalue())
+        self.assertTrue(any(ty == P.ACTION for ty, _ in self.mixer.received))
 
     def test_access_rights(self):
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:

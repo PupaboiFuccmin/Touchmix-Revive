@@ -1,0 +1,37 @@
+CONNECTED QSC TouchMix can_write=True
+scene factory  #0 (Default)    5ef99f1a29a3fe853a6d2c4a7c51e85f
+scene factory  #1 Corporate Event 6cff5a29ebf046a5a7740404e313863c
+scene factory  #2 Jazz Group   280cb7820dae469581e9277ca9896a80
+scene factory  #3 Songwriter   0a1958347c1d4053b8648b852f1e15ad
+scene factory  #4 TM8 Country Band 5d569cde90b9491e8f5655a372b6fbd7
+scene factory  #5 TM8 Jazz Group 626785d5bc53461e9919431fb0190e97
+scene factory  #6 TM8 Rock Band 1 b33fb5ddfc0e41c2826a2149c0b6ca99
+scene factory  #7 TM8 Rock Band 2 d7e64e49a5824e9285c85d9dee32d57e
+scene factory  #8 TM16 Country Band bab13986cc3240aea792243ec7bea866
+scene factory  #9 TM16 Horn Band a37823afe4a347318e80252d6447b88b
+scene factory  #10 TM16 Praise Band aaa63c66b1f4407b99b8604da7da77e3
+scene factory  #11 TM16 Rock Band 14c82169b0054ecd861a56f87267c2b9
+scene user     #0 SCNA         4a04df9c8b2049f4b1776ba9cf75d172
+scene user     #1 studio       c590ebce47484a1a914d587222bec8d5
+scene user     #2 TEST         790091c8bc2044e880d34b355d7bbd21
+scene user     #3 usr          af18348e0817414895e398710bf6f0bb
+TRY type<<24 | location<<16 | number (the code): number=0x00010000 text='4a04df9c8b2049f4b1776ba9cf75d172,0,,0,SCNA'
+  > 080003003c00030000000000000001002a0034613034646639633862323034396634623137373662613963663735643137322c302c2c302c53434e41
+  < 0x0696 status 0.0000 tag=0000 
+  < 0x0699 status 1.0000 tag=0000 
+  < 0x0751 status 0.0000 tag=0000 
+  < 0x0754 status 1.0000 tag=0000 
+  < 0x080c status 0.0000 tag=0000 
+  < 0x080f status 1.0000 tag=0000 
+  < 0x08c7 status 0.0000 tag=0000 
+  < 0x08ca status 1.0000 tag=0000 
+  < 0x0982 status 0.0000 tag=0000 
+  < 0x0985 status 1.0000 tag=0000 
+  < 0x0a3d status 0.0000 tag=0000 
+  < 0x0a40 status 1.0000 tag=0000 
+  < 0x000e status 1.0000 tag=0000 
+  < 0x0afb status 1.0000 tag=0000 
+  < 0x0b43 status 1.0000 tag=0000 
+  < FILE all-config.xml.dscomp
+  files=['all-config.xml.dscomp'] ch16='SCNA'
+WORKED type<<24 | location<<16 | number (the code)

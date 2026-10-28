@@ -213,15 +213,16 @@ def rename16(name):
     return action
 
 TOUR = collections.OrderedDict([
-    # the app, on another device (iPhone): the mixer passes the app's writes on
+    # the app, on another device (tablet or phone): the mixer passes the app's writes on
     # to this PC, and read-backs show what the recall changed
     ('app-scenes', [
-        ('On the iPhone: open the TouchMix app and connect to the mixer. If the mixer\n'
+        ('On the tablet (or phone): open the TouchMix app and connect to the mixer. If the mixer\n'
          '     asks to allow the new device, allow it (All). Enter when the app shows the mix.',
          False, None, rename16('SCNB')),
         ('In the app: open the scenes list (Menu > Scenes, or the Scenes button).\n'
          '     Just open it, change nothing. Enter.', False, SCENE_WATCH),
-        ('In the app: select the scene SCNA, tap Recall, and CONFIRM (Yes / OK).\n'
+        ('In the app: select the scene SCNA, tap Recall, and CONFIRM (Yes / OK; with no\n'
+         '     confirm button, try Tab a few times then Enter on a keyboard).\n'
          '     Channel 16 should go back to being called SCNA. Type what happened, Enter.',
          False, SCENE_WATCH),
         ('In the app: recall the scene SCNA again, the same way (the PC set channel 16\n'

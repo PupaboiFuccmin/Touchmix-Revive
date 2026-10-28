@@ -16,7 +16,8 @@ TEXT = (9, 1)        # a text parameter's value, e.g. the current MP3 title
 TEXT_ALT = (9, 9)    # same layout; seen for Rta Local > Used by device (the mixer's name)
 
 # Action codes, from the app's FileActionClient::doAction (docs/PROTOCOL.md,
-# "8.3 action"). UNTESTED: read from the app's code, never seen on the wire.
+# "8.3 action"). Recall is confirmed on the mixer; the others are read from the
+# app's code only.
 ACTION_DELETE = 1
 ACTION_SAVE_AS = 2
 ACTION_RECALL = 3
@@ -103,17 +104,16 @@ def decode_text(payload):
 def file_specifier(location, ftype, number):
     """Pack a file reference the way the app's FileActionParameter::fileSpecifierToInt
     does: type in the top byte, location in the next, number in the low 16 bits.
-    UNTESTED: the byte order is read from the app's code, not confirmed."""
+    Confirmed on the mixer: a user scene (type 0, location 1) is 0x0001nnnn."""
     return ((ftype & 0xff) << 24) | ((location & 0xff) << 16) | (number & 0xffff)
 
 
 def encode_action(code, number, text='', value=0.0):
     """Type 8.3 to the mixer: a file action (e.g. recall a scene).
 
-    UNTESTED. The frame is certain (both field groups follow the header, like
-    the hello message), but `number`, `text` and which fields `text` must hold
-    are read from the app's code and have never been checked against a mixer.
-    See docs/PROTOCOL.md, "8.3 action"."""
+    u16 code, f32 value, then u32 number, u16 length and the text (like the
+    hello message). Confirmed for recall on 2026-10-27; see docs/PROTOCOL.md,
+    "8.3 action"."""
     data = text.encode('ascii')
     payload = struct.pack('<Hf', code, float(value)) + struct.pack('<IH', number, len(data)) + data
     return frame(ACTION, payload)

@@ -180,7 +180,7 @@ UUID, behind its broken confirm) did not recall anything.
 The tour stopped at step 6 (saving a channel preset) when the mixer's screen
 froze. The mixer restarted, and its control port changed again (to 45262).
 
-## Scene recall from the PC: not working yet
+## Scene recall from the PC
 
 `touchmix scene list` works: it reads the file index and marks the scene in
 `FileMan > Scene Uuid0`–`7`. Recalling did not work in any of these attempts
@@ -193,23 +193,45 @@ renamed SCNB from the PC. A working recall would have brought "SCNA" back.
 | same, `Recall` = 1 | nothing |
 | same, plus `FileMan > Type` = 0, `Location` = 1 (user), `Number` = position in the file index (n/1024), `Recall` = 0 or 1 | nothing; channel 16 stayed "SCNB" |
 
+Second round (2026-10-23, `mappings/recall-test-*.log`), each after setting
+the UUID to SCNA's and channel 16 to SCNB. The writes did reach the mixer
+(its final rename back to "In 16" showed on the mixer's screen), but none
+brought an `all-config`:
+
+| Attempt | Result |
+|---------|--------|
+| `Recall` pulsed 1 → 0 (like Set Locate) | nothing |
+| `Recall` = 0 with tag `9229` (the Android app's tag) | nothing |
+| `Recall` pulsed, tag `9229` | nothing |
+| `FileMan > Name` text = "SCNA", then pulse | nothing |
+| `FileMan > Name` text = "SCNA.scene.dqx", then pulse | nothing |
+| Type/Location/Number + Name + pulse | nothing |
+| Type/Location/Number + pulse, tag `9229` | nothing |
+
+So recall is probably not a plain parameter write from a client. It may be a
+different message type (a file request, say), or need an access right this
+client lacks. The iPhone app has no scenes page, so it can't show us.
+
+The Android app on a tablet, in a larger window
+(`tour-app-scenes-20261023-210639.log`): each tap on Recall sent
+`FileMan > Recall` = 0 with tag `8e7d` (it was `9229` on an earlier
+connection, so the tag is per app connection; our own 2.2 payload is always
+`b49c0100`, so it isn't that). The confirm button never appeared, a keyboard
+(Tab, Enter, Space) didn't reach it, and no FileMan value changed. Possibly
+the app waits for a reply that the mixer sends only to it.
+
 **Why it failed (from the app's code, 2026-10-24):** a confirmed recall is not a
 parameter write at all. The app sends a separate *action* message, type 8.3,
 with action code 3 and the scene packed into its fields (PROTOCOL.md, "8.3
 action"). The FileMan parameter writes only drive the dialog.
 
-`touchmix scene recall NAME` now builds and sends that 8.3 message. It is marked
-UNTESTED: it prints exactly what it will send and asks for confirmation first,
-because the field packing is a best guess from the app's code. Next step: run it
-with the mixer in front of you, on a scene you don't mind loading, and record
-what the mixer does (nothing / wrong scene / right scene) so the format can be
-pinned down.
-
-What the app sends for a *confirmed* recall has never been captured: its
-confirm button didn't work. Its unconfirmed `Save As` / `Recall` writes
-carried tag `9229` where ours send 0, which may or may not matter. Next step:
-capture a confirmed recall from the app (another device, or after an app
-update) with `monitor --raw` running and PCAPdroid, then retry.
+**Working (2026-10-27,** `mappings/recall-8-3-*.log`**):** `touchmix scene
+recall NAME` sends that 8.3 message. With channel 16 renamed SCNB, recalling
+SCNA brought the name SCNA back and the mixer sent `all-config` straight away,
+on the first try. The file reference packs type in the top byte and location
+in the next (`0x00010000` for user scene 0); the protocol notes first had those
+two swapped. The app's confirm button still doesn't work on our devices, but
+that no longer matters for the PC.
 
 ## Input EQ and dynamics buttons
 
@@ -477,12 +499,10 @@ every meter ID `formMeterId` can build.
 In order of risk:
 
 1. ~~Recorder transport~~ done (above).
-2. **Guided capture of one scene recall** (`map run scenes`, or `map run
-   free`): recall a scene in the app and record exactly which FileMan
-   parameters it writes, and in what order. Read-only on our side.
-3. **Same for a channel-preset recall and a USB export.** Read-only.
-4. **Replay a recorded recall** from the PC, on a scene you don't mind
-   loading.
+2. ~~Scene recall~~ done: an 8.3 action message (above).
+3. **Channel-preset recall and Save As** with 8.3 actions (codes 3 and 2,
+   with the preset's type and location). Test on a channel you don't mind
+   changing.
 5. **Poll requests (6.1).** The app sends three request shapes. Other
    selector values may return the meters and RTA, or other data. They are
    requests for data, but unknown request bodies could upset the mixer, so
