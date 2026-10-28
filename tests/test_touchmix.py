@@ -5,6 +5,7 @@ import struct
 import sys
 import time
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -262,6 +263,30 @@ class Client(unittest.TestCase):
             self.mixer.push_frame(self.mixer._config_file())
             time.sleep(0.3)
             self.assertEqual(tm.config.get(543), '1')
+
+    def test_scene_recall_message(self):
+        # UNTESTED protocol: check the client sends a well-formed 8.3 action
+        # message and that recall_scene reports success when the mixer answers.
+        with TouchMix('127.0.0.1', port=self.mixer.port) as tm:
+            tm.wait_ready(5)
+            self.assertTrue(tm.recall_scene('TEST'))
+        action = next(p for ty, p in self.mixer.received if ty == P.ACTION)
+        code, value = struct.unpack('<Hf', action[:6])
+        self.assertEqual(code, P.ACTION_RECALL)
+        self.assertEqual(value, 0.0)
+        number, length = struct.unpack('<IH', action[6:12])
+        text = action[12:12 + length].decode()
+        self.assertEqual(text.split(',')[0], '790091c8bc2044e880d34b355d7bbd21')
+
+    def test_scene_recall_cli_needs_confirmation(self):
+        # Without --yes and with no "yes" typed, nothing is sent.
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), \
+                mock.patch('builtins.input', return_value='no'):
+            rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'scene', 'recall', 'TEST'])
+        self.assertEqual(rc, 1)
+        self.assertIn('UNTESTED', out.getvalue())
+        self.assertFalse(any(ty == P.ACTION for ty, _ in self.mixer.received))
 
     def test_access_rights(self):
         with TouchMix('127.0.0.1', port=self.mixer.port) as tm:

@@ -75,6 +75,7 @@ class TouchMix:
         self._ready = threading.Event()
         self._access_known = threading.Event()
         self._index_known = threading.Event()
+        self._config_epoch = 0   # bumped each time the mixer sends a full config (e.g. after a recall)
         self._closed = threading.Event()
         self._file_buf = {}
         self._file_name = None
@@ -310,6 +311,29 @@ class TouchMix:
                 return s
         raise KeyError('no scene %r (see scene list)' % name)
 
+    def action_bytes(self, code, number, text='', value=0.0):
+        """The exact 8.3 action message `recall_scene` would send, without sending
+        it. For inspecting an UNTESTED command before running it."""
+        return P.encode_action(code, number, text, value)
+
+    def recall_scene(self, name, timeout=6.0):
+        """UNTESTED. Recall a scene by sending an 8.3 action message (code 3), the
+        way the app does. Returns True if the mixer answered with a fresh config
+        (which is what a real recall triggers), False if nothing came back in time.
+        The message format is a best guess from the app's code; see
+        docs/PROTOCOL.md, "8.3 action"."""
+        s = self.find_scene(name)
+        number = P.file_specifier(s['location_code'], 0, s['number'])  # type 0 = scene
+        text = '%s,%d,,0,%s' % (s['uuid'], s['number'], s['name'])     # best-guess field order
+        epoch = self._config_epoch
+        self._send(P.encode_action(P.ACTION_RECALL, number, text))
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            if self._config_epoch != epoch:
+                return True
+            time.sleep(0.1)
+        return False
+
     def fx_type(self, fx, kind):
         """Pick FX 1-4's processor: 'none', 'chorus', 'delay', 'pitch', 'dense',
         'lush' or 'mono-delay'. The mixer loads that processor's default preset."""
@@ -480,6 +504,7 @@ class TouchMix:
             self.files[name] = raw
             if CONFIG_FILE.match(name):
                 self._load_config(raw)
+                self._config_epoch += 1
                 self._ready.set()
             elif name.startswith('fileIndex'):
                 self._index_known.set()

@@ -193,6 +193,18 @@ renamed SCNB from the PC. A working recall would have brought "SCNA" back.
 | same, `Recall` = 1 | nothing |
 | same, plus `FileMan > Type` = 0, `Location` = 1 (user), `Number` = position in the file index (n/1024), `Recall` = 0 or 1 | nothing; channel 16 stayed "SCNB" |
 
+**Why it failed (from the app's code, 2026-10-24):** a confirmed recall is not a
+parameter write at all. The app sends a separate *action* message, type 8.3,
+with action code 3 and the scene packed into its fields (PROTOCOL.md, "8.3
+action"). The FileMan parameter writes only drive the dialog.
+
+`touchmix scene recall NAME` now builds and sends that 8.3 message. It is marked
+UNTESTED: it prints exactly what it will send and asks for confirmation first,
+because the field packing is a best guess from the app's code. Next step: run it
+with the mixer in front of you, on a scene you don't mind loading, and record
+what the mixer does (nothing / wrong scene / right scene) so the format can be
+pinned down.
+
 What the app sends for a *confirmed* recall has never been captured: its
 confirm button didn't work. Its unconfirmed `Save As` / `Recall` writes
 carried tag `9229` where ours send 0, which may or may not matter. Next step:
@@ -378,8 +390,31 @@ over the control connection. So far everything points to no:
 * The app never requests a listing; what it knows about files comes from
   `fileIndex.xml`, which covers scenes and presets but not recording sessions.
 
-A request could still hide behind a confirm button nobody has pressed in a
-capture yet. Until one shows up, recordings come off the USB drive, and
+**The app's code agrees** (TouchMix Control 3.0.22494 for Android, see
+"Inside the official app" below). In the app's native library, file data
+(message type 3) is only ever *received*: the receive loop hands type-3
+messages to `clientControl::rxFile`, and nothing in the app calls the
+functions that pack a file for sending (`ControlMessage::packFileToData`,
+`FileTransferMessage::setup`). There is no function for asking the mixer for
+a file or a directory listing. The only place `.wav` appears is the file filter
+for the USB player (`.wav .bwf`).
+
+The file code itself is generic: given any path, the packer compresses the
+file and sends it from `/usr/share/ds2i/tmp/`. So the firmware *could* send any
+file, but only when its own code decides to; there is no request message for
+it. The app's `rxFile` only acts on `config.xml`, `config.session.xml`,
+`fileIndex.xml`, `.settings.dqx` and `mp3list.xml`.
+
+**No borrowed file-transfer library either.** The app is built on JUCE, which
+ships HTTP (`juce::URL`, `WebInputStream`), raw sockets and an
+`InterprocessConnection` class. They are compiled in, but no QSC code calls
+any of them. QSC's link uses its own socket code (`SocketMan`) and JUCE's
+bundled zlib for `.dscomp`. The only other services on the mixer are the ones
+the port scan found: SSH, Telnet and netperf (PROTOCOL.md).
+
+So the app cannot fetch recordings, and nothing it sends can make the mixer
+send them. The mixer's own firmware could still have a path the app never
+uses, but there is no hint of one. Recordings come off the USB drive, and
 `touchmix collect` copies them off with channel names (see the README).
 
 **Recording format**, from a 9 s test recorded from the PC on 2026-10-22: mono
@@ -388,6 +423,54 @@ tag 1 (integer PCM), 32 bits, at the mixer's sample rate (44.1 kHz that day).
 Read as int32 the samples are plausible input noise (about −68 dBFS); read as
 float they are meaningless denormals. So despite QSC's "32-bit float", these
 are 32-bit integers, and DAWs read them without conversion.
+
+## Inside the official app
+
+From TouchMix Control **3.0.22494** for Android (`qscaudio.touchmix.app1`),
+pulled off the tablet with `adb` on 2026-10-23. The app's files themselves are
+QSC's and stay out of this repository; these are our notes on them.
+
+* **The Java side is a thin shell** (about 1,700 lines in 13 classes). It finds
+  mixers with mDNS (jmDNS, or Android's NSD), shows the screens, and passes
+  every event into a native library. It has no networking or protocol code.
+* **The screens are web pages.** They live in `assets/offline-assets.zip`
+  (TM16 and TM8 page sets) and talk to the native code through a JavaScript
+  bridge called `GuiLink`. The mixer has the same pages under
+  `/usr/share/ds2i/html/`.
+* **Everything else is `libTouchMix.so`** (arm64, 7.4 MB, C++ on JUCE). It is
+  stripped but still exports about 19,000 symbols with their C++ names, so
+  classes and functions are readable. It contains the mixer's own code too:
+  the server half of the link (`controlLink::serverThreadBody`), the file
+  manager, the DSP blocks (`GateProc`, `BiquadProc`, `PitchShifter`, the
+  reverbs) and the screen logic, so the app and the mixer appear to be built
+  from one code base.
+
+Names that line up with the protocol (see PROTOCOL.md):
+
+| In the app | What it matches |
+|------------|-----------------|
+| `controlLink`: `sendHelloMessage`, `parseHelloMessage`, `parseLinkAcceptedMessage`, `txMessage`, `processMessages` | 1.3 hello and the handshake |
+| `EditMessage(int, float)`, `ForceSingleEditMessage(int, float)`, `BlockEditMessage` | 5.1 param-set (single and block edits) |
+| `StringParmMessage(int, const char*)` | text parameter writes (9.1 is the mixer's side) |
+| `MeterRequestMessage`, `MeterResponseMessage`, `clientControl::requestMeters`, `MeterMan::formMeterId(u8, u8, int)` / `decodeMeterId` | 6.1 / 7.1 poll |
+| `clientControl::rxFile`, `ControlMessage::getFileFromData` | 3.4 file transfer (receive only) |
+| `ActionMessage(u16, u32, float, const char*)`, `clientControl::handleActionMessage` | 8.3 action: scene/preset save, recall, delete, copy (never captured) |
+| `clientControl::handleSetAuthorization`, `rxDeviceAuthorizations` | per-client access |
+| `FileActionClient::transmitFileAction(int, int, const char*)`, `fileMan::recall*` | scene and preset recall |
+| `clientControl::runProductionTestCommand`, `loadProductionTestPreset`, `parameterEditFromProductionTest`, `simulateHardwareMessage` | a factory-test interface |
+
+The library also names the mixer's settings files under `/usr/share/ds2i/`
+(network, language, demo mode and so on) and the preset file extensions
+(`.scene.dqx`, `.input.dqx`, `.comp.dqx`, `.routing.dqx`, ...).
+
+Scene and preset actions turned out to be `ActionMessage`s (type 8.3), now in
+PROTOCOL.md. The source paths left in the library show QSC's internal names:
+the platform is "ds2i", the project "Sonora", and this is the `tm16-v3`
+branch.
+
+Still to read in the code: the exact `text` fields of a file action, what the
+mixer-to-app action codes mean, what `transmitFileAction` is used for, and
+every meter ID `formMeterId` can build.
 
 ## Next steps
 

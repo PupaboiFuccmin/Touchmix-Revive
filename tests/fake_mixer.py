@@ -244,6 +244,13 @@ class FakeMixer:
                         pid, text = P.decode_text(payload)
                         if self.access and pid in self.texts:
                             self.texts[pid] = text
+                    elif msg_type == P.ACTION:
+                        # A recall makes the real mixer re-send its config. Only
+                        # echo it when this client may write, so the test can tell
+                        # the "no access" path from a real recall.
+                        code = struct.unpack('<H', payload[:2])[0]
+                        if self.access and code == P.ACTION_RECALL:
+                            c.sendall(self._config_file())
         except OSError:
             pass
         finally:
