@@ -21,6 +21,7 @@ app uses, and mapped what the mixer's controls mean in real units.
 | [`docs/PYTHON.md`](docs/PYTHON.md) | Using it from Python |
 | [`docs/MAPPING.md`](docs/MAPPING.md) | The mapping tools that measured every curve, and how to extend the map |
 | [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | The wire protocol, parameter layout, value scaling, and the capture log |
+| [`docs/COMMAND-MAP.md`](docs/COMMAND-MAP.md) | Roadmap of every command the stock protocol can drive: done, reachable, and still to decode |
 | [`touchmix/data/params.csv`](touchmix/data/params.csv) | All 5,694 parameter IDs with names, from the mixer's own config |
 | [`mappings/`](mappings) | The raw measurements behind every curve |
 | [`tools/tmcap.py`](tools/tmcap.py) | Decoder for PCAPdroid captures of the official app |
