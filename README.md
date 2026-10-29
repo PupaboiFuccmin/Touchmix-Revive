@@ -136,9 +136,24 @@ python3 -m touchmix scene list                 # factory and user scenes (* = th
 python3 -m touchmix scene recall studio        # load a scene: the whole mix changes at once
 python3 -m touchmix find "aux 1 > comp"        # search parameter names (offline)
 python3 -m touchmix set "In 4 > Control > Phase" 1   # any parameter, raw 0..1 value
+python3 -m touchmix diag                       # read-only: firmware, free mem, demo, USB, Wi-Fi status
+python3 -m touchmix power off                  # switch the mixer off (Powerdown); asks to confirm
+python3 -m touchmix siggen on --type 0 --freq 0.5   # talkback signal / function generator
+python3 -m touchmix pink on --level -20db      # pink-noise generator; LOUD, asks to confirm
+python3 -m touchmix pitch on --channel 15 --key 0   # global pitch-correct insert
+python3 -m touchmix rta source 1               # choose the analyzer (RTA) source
+python3 -m touchmix follow on --device 1       # the app's "follow mixer selection"
 ```
 
 Every command that changes something accepts `--verify`.
+
+The last group (`siggen`, `pink`, `pitch`, `rta`, `tuner`, `screen`, `follow`)
+drives features the official app does not expose. They are reachable over the
+same stock protocol — no root needed — but have **not been tried on a mixer
+yet**, and their value units aren't mapped: levels take `0..1` (or dB, assuming
+the fader law), and type / key choices take an integer index. Run
+`python3 -m touchmix map tour generators` on the mixer to learn the real labels.
+`power off` is confirmed working; `diag` only reads.
 
 **Protected settings.** The client refuses to write anything that could take
 the mixer off the network, lock clients out, power it down or delete scenes:

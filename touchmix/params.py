@@ -477,6 +477,12 @@ GLOBAL_CURVES = {
     ('Control', 'Phones / Cue Level'): Curve('fader', FADER_MIN_DB, 24, 'dB'),   # to +24, not +12
     ('Control', 'CR gain boost'): Curve('linear', -20, 20, 'dB'),
     ('Control', 'Phones gain boost'): Curve('linear', -20, 20, 'dB'),
+    # on/off flags only (confirmed: every switch probed flips at 0.5). The level
+    # and enum curves for the generators / pitch-correct insert are not probed
+    # yet, so they are left unmapped; see docs/RESEARCH.md "Generators, tuner...".
+    ('Control', 'Follow Mixer'): SWITCH,
+    ('Misc Output', 'Pink Enable'): SWITCH,
+    ('Pitch Correct Insert', 'Enable'): SWITCH,
 }
 
 MUTE_GROUP_CURVES = {('Control', 'Mute'): SWITCH}

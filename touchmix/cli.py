@@ -20,6 +20,10 @@ Examples:
   python -m touchmix eq 4 1 gain -3
   python -m touchmix set "In 4 > Control > Mute" 1
   python -m touchmix find "aux 1 > control"
+  python -m touchmix diag
+  python -m touchmix siggen on --type 0 --freq 0.5
+  python -m touchmix pink on --level -20db
+  python -m touchmix power off
   python -m touchmix map list
   python -m touchmix map probe Fader --channels 1-16
 """
@@ -639,6 +643,118 @@ def cmd_meters(args):
         tm.close()
 
 
+def cmd_siggen(args):
+    """Talkback signal / function generator (stock protocol; UNTESTED on a mixer)."""
+    pid = ParamTable().find('Talkback > Control', 'SigGen Enable').index
+    return apply_and_verify(args, lambda tm: tm.signal_generator(
+        on=args.state, level=args.level, func=args.type, freq=args.freq), pid)
+
+
+def cmd_pink(args):
+    """Pink-noise generator (stock protocol; UNTESTED). Loud, so confirm first."""
+    if args.state and not args.yes:
+        print('Pink noise plays at the level set, out of the mains -- it is LOUD. Turn amps down.')
+        if input('Type yes to turn pink noise on > ').strip().lower() != 'yes':
+            return 1
+    pid = ParamTable().find('Global > Misc Output', 'Pink Enable').index
+    return apply_and_verify(args, lambda tm: tm.pink_noise(
+        on=args.state, level=args.level, dry=args.dry), pid)
+
+
+def cmd_pitch(args):
+    """Global pitch-correct insert (stock protocol; UNTESTED on a mixer)."""
+    pid = ParamTable().find('Global > Pitch Correct Insert', 'Enable').index
+    return apply_and_verify(args, lambda tm: tm.pitch_correct(
+        on=args.state, channel=args.channel, key=args.key, rate=args.rate, mix=args.mix), pid)
+
+
+def cmd_rta(args):
+    """Choose the analyzer (RTA) source (stock protocol; UNTESTED on a mixer)."""
+    pid = ParamTable().find('Global > Misc Output', 'RTA3 source').index
+    return apply_and_verify(args, lambda tm: tm.rta_source(args.value), pid)
+
+
+def cmd_tuner(args):
+    """Instrument-tuner precision (stock protocol; UNTESTED on a mixer)."""
+    pid = ParamTable().find('Global > Misc Output', 'Tuning Precision').index
+    return apply_and_verify(args, lambda tm: tm.tuning_precision(args.value), pid)
+
+
+def cmd_screen(args):
+    """Front-panel brightness / language (stock protocol; UNTESTED on a mixer)."""
+    table = ParamTable()
+    if args.what == 'brightness':
+        pid = table.find('Global > Misc Input', 'Brightness').index
+        return apply_and_verify(args, lambda tm: tm.screen_brightness(float(args.value)), pid)
+    pid = table.find('Global > Misc Input', 'Language').index
+    return apply_and_verify(args, lambda tm: tm.language(int(args.value)), pid)
+
+
+def cmd_follow(args):
+    """The app's 'follow mixer selection' (stock protocol; UNTESTED on a mixer)."""
+    pid = ParamTable().find('Global > Control', 'Follow Mixer').index
+    return apply_and_verify(args, lambda tm: tm.follow_mixer(on=args.state, device=args.device), pid)
+
+
+def cmd_power(args):
+    """Power the mixer off (Powerdown). Confirmed to work from the PC."""
+    if args.action != 'off':
+        sys.exit('usage: power off')
+    if not args.yes:
+        print('This switches the MIXER OFF (Global > Misc Input > Powerdown).')
+        if input('Type yes to power the mixer down > ').strip().lower() != 'yes':
+            return 1
+    tm = open_mixer(args)
+    if warn_no_access(tm):
+        tm.close()
+        return 1
+    try:
+        tm.power_off()
+        time.sleep(0.3)         # let the frame reach the mixer before the socket closes
+    except (TouchMixError, OSError) as e:
+        print('powerdown sent; the mixer dropped the connection (%s), as expected' % e)
+        return 0
+    finally:
+        tm.close()
+    print('powerdown sent to %s' % tm.host)
+
+
+# Read-only service/status flags. All come from the config the mixer sends on
+# connect; nothing is written. Names that this firmware does not carry are
+# skipped.
+DIAG_FIELDS = [
+    ('Global > Control', 'Version', 'firmware version'),
+    ('Global > Control', 'Free Mem', 'free memory (kB?)'),
+    ('Global > Control', 'Demo Enabled', 'demo mode'),
+    ('Global > Control', 'Upgrade Display', 'upgrade screen flag'),
+    ('Global > Control', 'Ignored Version', 'update the mixer was told to skip'),
+    ('Global > Control', 'Contacted Server', 'reached QSC update server'),
+    ('Global > Misc Input', 'USB present', 'USB drive present'),
+    ('Global > Misc Input', 'Test screen', 'diagnostic test screen'),
+    ('Global > Misc Input', 'Wireless Strength', 'Wi-Fi signal'),
+    ('Global > Misc Input', 'Network connected', 'network up'),
+]
+
+
+def cmd_diag(args):
+    """Read-only: print the mixer's service and status flags (writes nothing)."""
+    tm = open_mixer(args)
+    try:
+        p = tm.params
+        print('Service / status on %s (read-only):\n' % tm.mixer_name)
+        for path, name, note in DIAG_FIELDS:
+            try:
+                pid = p.find(path, name).index
+            except KeyError:
+                continue
+            val = tm.config.get(pid)
+            text = tm.config_text.get(pid)
+            shown = text if text not in (None, '') else val
+            print('  %-20s %-16s (%s)' % (name, shown, note))
+    finally:
+        tm.close()
+
+
 def cmd_find(args):
     for p in ParamTable().search(args.text):
         print('%5d 0x%04x  %s' % (p.index, p.index, p.full_name))
@@ -1183,6 +1299,67 @@ def main(argv=None):
     f = sub.add_parser('find', help='search parameter names (offline)')
     f.add_argument('text')
     f.set_defaults(fn=cmd_find)
+
+    # Stock-protocol features the app does not expose as commands. All reachable
+    # without root; writes still need the mixer's per-client access grant. The
+    # value units for the continuous/enum ones are not probed yet (run
+    # "map tour generators"), so levels take 0..1 (or dB, fader law assumed) and
+    # enums an index. UNTESTED on a mixer except power.
+    gen = sub.add_parser('siggen', help='talkback signal/function generator (UNTESTED): siggen on --type 0 --freq 0.5')
+    gen.add_argument('state', nargs='?', type=on_off, help='on/off (optional; omit to only change level/type/freq)')
+    gen.add_argument('--level', help='SigGen level: 0..1, or dB (assumes the fader law, unverified)')
+    gen.add_argument('--type', type=int, help='FuncGen type index (labels not decoded; see map tour generators)')
+    gen.add_argument('--freq', type=float, help='FuncGen frequency as a raw 0..1 (curve not probed)')
+    gen.add_argument('--verify', action='store_true', help='reconnect and confirm the mixer stored it')
+    gen.set_defaults(fn=cmd_siggen)
+
+    pk = sub.add_parser('pink', help='pink-noise generator (UNTESTED). LOUD -- turn amps down: pink on --level -20db')
+    pk.add_argument('state', nargs='?', type=on_off, help='on/off')
+    pk.add_argument('--level', help='pink level: 0..1, or dB (fader law assumed)')
+    pk.add_argument('--dry', help='dry level: 0..1, or dB (fader law assumed)')
+    pk.add_argument('--yes', action='store_true', help='skip the loudness confirmation')
+    pk.add_argument('--verify', action='store_true', help='reconnect and confirm the mixer stored it')
+    pk.set_defaults(fn=cmd_pink)
+
+    pc = sub.add_parser('pitch', help='global pitch-correct insert (UNTESTED): pitch on --channel 15 --key 0')
+    pc.add_argument('state', nargs='?', type=on_off, help='on/off')
+    pc.add_argument('--channel', type=int, help='input channel index the insert processes (0 = first)')
+    pc.add_argument('--key', type=int, help='musical-key index (labels not decoded)')
+    pc.add_argument('--rate', type=float, help='correction rate, raw 0..1 (curve not probed)')
+    pc.add_argument('--mix', type=float, help='wet/dry mix, raw 0..1 (curve not probed)')
+    pc.add_argument('--verify', action='store_true', help='reconnect and confirm the mixer stored it')
+    pc.set_defaults(fn=cmd_pitch)
+
+    rt = sub.add_parser('rta', help='choose the analyzer (RTA) source: rta source N (UNTESTED)')
+    rt.add_argument('what', choices=['source'])
+    rt.add_argument('value', type=int, help='source index')
+    rt.add_argument('--verify', action='store_true', help='reconnect and confirm the mixer stored it')
+    rt.set_defaults(fn=cmd_rta)
+
+    tn = sub.add_parser('tuner', help='instrument-tuner precision: tuner N (index; UNTESTED)')
+    tn.add_argument('value', type=int)
+    tn.add_argument('--verify', action='store_true', help='reconnect and confirm the mixer stored it')
+    tn.set_defaults(fn=cmd_tuner)
+
+    scr = sub.add_parser('screen', help='front panel: screen brightness 0..1 | screen language N (UNTESTED)')
+    scr.add_argument('what', choices=['brightness', 'language'])
+    scr.add_argument('value', help='brightness 0..1, or language index')
+    scr.add_argument('--verify', action='store_true', help='reconnect and confirm the mixer stored it')
+    scr.set_defaults(fn=cmd_screen)
+
+    fol = sub.add_parser('follow', help="the app's 'follow mixer selection': follow on|off [--device N] (UNTESTED)")
+    fol.add_argument('state', nargs='?', type=on_off, help='on/off')
+    fol.add_argument('--device', type=int, help='following-device index')
+    fol.add_argument('--verify', action='store_true', help='reconnect and confirm the mixer stored it')
+    fol.set_defaults(fn=cmd_follow)
+
+    pw = sub.add_parser('power', help='power the mixer OFF (Powerdown); asks to confirm first')
+    pw.add_argument('action', choices=['off'])
+    pw.add_argument('--yes', action='store_true', help='do not ask to confirm')
+    pw.set_defaults(fn=cmd_power)
+
+    dg = sub.add_parser('diag', help='read-only: service/status flags (versions, free mem, demo, USB, Wi-Fi)')
+    dg.set_defaults(fn=cmd_diag)
 
     mp = sub.add_parser('map', help='mapping assistant: find IDs and curves (see "map list")')
     msub = mp.add_subparsers(dest='map_cmd', required=True)

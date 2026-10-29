@@ -345,6 +345,46 @@ class Client(unittest.TestCase):
         self.assertAlmostEqual(sent[0x260], 1.0, places=6)            # EQ band 3 Q = 4
         self.assertAlmostEqual(sent[0x5FE], 0.5, places=6)            # stereo trim 6 of 0..12 dB
 
+    def test_cli_stock_feature_commands(self):
+        """Signal generator, pink noise, pitch-correct, RTA, follow and power:
+        each reaches the mixer as the right parameter write (no root needed)."""
+        port = str(self.mixer.port)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'siggen', 'on',
+                                   '--type', '2', '--freq', '0.5', '--level', '-10db']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'pink', 'on', '--yes',
+                                   '--level', '-20db']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'pitch', 'on',
+                                   '--channel', '15', '--key', '3']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'rta', 'source', '4']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'follow', 'on', '--device', '1']), 0)
+            self.assertEqual(main(['--host', '127.0.0.1', '--port', port, 'power', 'off', '--yes']), 0)
+        sent = {pid: v for t, p in self.mixer.received if t == P.PARAM_SET
+                for pid, _, _, v in P.decode_param_set(p)}
+        self.assertEqual(sent[0x0D92], 1.0)                              # SigGen Enable
+        self.assertAlmostEqual(sent[0x0D93], 2 / 1024.0, places=6)       # FuncGen type index 2
+        self.assertAlmostEqual(sent[0x0D94], 0.5, places=6)             # FuncGen freq (raw 0..1)
+        self.assertAlmostEqual(sent[0x0D91], S.fader_db_to_norm(-10), places=6)   # SigGen level
+        self.assertEqual(sent[0x00E0], 1.0)                              # Pink Enable
+        self.assertAlmostEqual(sent[0x00E4], S.fader_db_to_norm(-20), places=6)   # Pink Level
+        self.assertEqual(sent[0x00D8], 1.0)                              # Pitch Correct Enable
+        self.assertAlmostEqual(sent[0x00DE], 15 / 1024.0, places=6)      # P.Corr Channel
+        self.assertAlmostEqual(sent[0x00D9], 3 / 1024.0, places=6)       # Key index
+        self.assertAlmostEqual(sent[0x00E7], 4 / 1024.0, places=6)       # RTA3 source
+        self.assertEqual(sent[0x0122], 1.0)                              # Follow Mixer
+        self.assertAlmostEqual(sent[0x0123], 1 / 1024.0, places=6)       # Following device
+        self.assertEqual(sent[0x00C5], 1.0)                              # Powerdown
+
+    def test_power_needs_confirmation(self):
+        """`power off` without --yes refuses on an empty answer, and sends nothing."""
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            with mock.patch('builtins.input', return_value=''):
+                rc = main(['--host', '127.0.0.1', '--port', str(self.mixer.port), 'power', 'off'])
+        self.assertEqual(rc, 1)
+        sent = [pid for t, p in self.mixer.received if t == P.PARAM_SET
+                for pid, _, _, _ in P.decode_param_set(p)]
+        self.assertNotIn(0x00C5, sent)
+
     def test_cli_record(self):
         port = str(self.mixer.port)
         out = io.StringIO()

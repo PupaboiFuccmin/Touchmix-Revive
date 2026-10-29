@@ -10,7 +10,7 @@ import zlib
 from . import privacy
 from . import protocol as P
 from .params import (ParamTable, strip_path, risky, fader_to_norm, pan_to_norm, eq_gain_to_norm, eq_freq_to_norm,
-                     send_name, curve_for, transport_to_norm, int_to_norm, fx_type_number, FX_SECTIONS)
+                     send_name, curve_for, transport_to_norm, int_to_norm, fx_type_number, FX_SECTIONS, clamp01)
 
 # The full mixer state. Sent on connect as NH<n>-config (NH4 on some
 # connections, NH8 on others), and again as all-config after every scene or
@@ -375,6 +375,99 @@ class TouchMix:
         if band not in (1, 4):
             raise ValueError('only bands 1 and 4 can be shelves')
         self.set(self.channel_param(channel, 'BndEnbl', 'EQ', band - 1), 0.0 if on else 1.0)
+
+    # Generators, tuner, pitch-correct and front-panel settings. All ordinary
+    # parameters reachable over the stock protocol (no root) once the mixer
+    # grants this client write access. Only on/off flags are confirmed; the
+    # continuous levels take a raw 0..1 (a dB string is read with the fader law,
+    # which is NOT yet probed for these), and the enums take an integer index
+    # whose labels are not decoded. Nothing here except power_off has been tried
+    # on a real mixer -- see docs/RESEARCH.md "Generators, tuner, pitch-correct".
+
+    def signal_generator(self, on=None, level=None, func=None, freq=None):
+        """Talkback signal / function generator (Talkback > Control). `level` is
+        the SigGen Fader (0..1 or a dB string, fader law assumed), `func` the
+        FuncGen type index, `freq` the FuncGen frequency as a raw 0..1."""
+        changes = []
+        if on is not None:
+            changes.append(('Talkback > Control > SigGen Enable', 1.0 if on else 0.0))
+        if level is not None:
+            changes.append(('Talkback > Control > SigGen Fader', fader_to_norm(level)))
+        if func is not None:
+            changes.append(('Talkback > Control > FuncGen type', int_to_norm(int(func))))
+        if freq is not None:
+            changes.append(('Talkback > Control > FuncGen freq', clamp01(freq)))
+        if changes:
+            self.set_many(changes)
+
+    def pink_noise(self, on=None, level=None, dry=None, source=None):
+        """Pink-noise generator (Global > Misc Output). LOUD. `level`/`dry` are
+        0..1 or a dB string (fader law assumed); `source` is Pink Source Select."""
+        changes = []
+        if on is not None:
+            changes.append(('Global > Misc Output > Pink Enable', 1.0 if on else 0.0))
+        if level is not None:
+            changes.append(('Global > Misc Output > Pink Level', fader_to_norm(level)))
+        if dry is not None:
+            changes.append(('Global > Misc Output > Dry Level', fader_to_norm(dry)))
+        if source is not None:
+            changes.append(('Global > Misc Output > Pink Source Select', int_to_norm(int(source))))
+        if changes:
+            self.set_many(changes)
+
+    def pitch_correct(self, on=None, channel=None, key=None, rate=None, mix=None):
+        """Global pitch-correct insert (Global > Pitch Correct Insert). `channel`
+        and `key` are indexes; `rate` and `mix` are raw 0..1 (curves not probed)."""
+        changes = []
+        if on is not None:
+            changes.append(('Global > Pitch Correct Insert > Enable', 1.0 if on else 0.0))
+        if channel is not None:
+            changes.append(('Global > Pitch Correct Insert > P.Corr Channel', int_to_norm(int(channel))))
+        if key is not None:
+            changes.append(('Global > Pitch Correct Insert > Key', int_to_norm(int(key))))
+        if rate is not None:
+            changes.append(('Global > Pitch Correct Insert > P.Corr. Rate', clamp01(rate)))
+        if mix is not None:
+            changes.append(('Global > Pitch Correct Insert > Mix', clamp01(mix)))
+        if changes:
+            self.set_many(changes)
+
+    def rta_source(self, n):
+        """Choose what the RTA (analyzer) listens to (Global > Misc Output > RTA3 source)."""
+        self.set('Global > Misc Output > RTA3 source', int_to_norm(int(n)))
+
+    def tuning_precision(self, n):
+        """Instrument-tuner precision (Global > Misc Output > Tuning Precision), an index."""
+        self.set('Global > Misc Output > Tuning Precision', int_to_norm(int(n)))
+
+    def screen_brightness(self, x):
+        """Front-panel screen brightness, raw 0..1 (Global > Misc Input > Brightness)."""
+        self.set('Global > Misc Input > Brightness', clamp01(x))
+
+    def language(self, n):
+        """Front-panel language (Global > Misc Input > Language), an index."""
+        self.set('Global > Misc Input > Language', int_to_norm(int(n)))
+
+    def follow_mixer(self, on=None, device=None):
+        """The app's 'follow mixer selection' (Global > Control). `device` is an index."""
+        changes = []
+        if on is not None:
+            changes.append(('Global > Control > Follow Mixer', 1.0 if on else 0.0))
+        if device is not None:
+            changes.append(('Global > Control > Following device', int_to_norm(int(device))))
+        if changes:
+            self.set_many(changes)
+
+    def power_off(self):
+        """Switch the mixer off (Global > Misc Input > Powerdown = 1). Powerdown
+        is a 'risky' parameter, so this lifts allow_risky for the one write.
+        Confirmed to work from the PC (2026-10). The connection drops as the
+        mixer powers down, so the caller should expect the socket to close."""
+        was, self.allow_risky = self.allow_risky, True
+        try:
+            self.set('Global > Misc Input > Powerdown', 1.0)
+        finally:
+            self.allow_risky = was
 
     # ------------------------------------------------------------ reading
 

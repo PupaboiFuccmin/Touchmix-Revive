@@ -314,6 +314,31 @@ TOUR = collections.OrderedDict([
         ('Touch any other transport buttons you see (rewind, fast forward, pause, ...),\n'
          '     one at a time, typing each name. Empty Enter when done.', True),
     ]),
+    ('generators', [
+        ('Press MENU > Talkback (or the Signal Generator screen) and turn the Signal\n'
+         '     Generator ON. If there is a waveform / type selector (Sine, Square, Pink,\n'
+         '     White...), touch each option one at a time and type its name after each.', True,
+         ['Talkback > Control > FuncGen type', 'Talkback > Control > FuncGen freq',
+          'Talkback > Control > SigGen Fader']),
+        ('Set the generator to a few known frequencies (e.g. 100 Hz, 1 kHz, 10 kHz),\n'
+         '     typing the Hz the screen shows after each.', True,
+         ['Talkback > Control > FuncGen freq']),
+        ('Turn the Signal Generator OFF.', False, ['Talkback > Control > SigGen Enable']),
+        ('Find Pink Noise (Room Wizard / RTA setup, or the Output setup) and turn it ON\n'
+         '     at a LOW level. Type the level the screen shows.', True,
+         ['Global > Misc Output > Pink Enable', 'Global > Misc Output > Pink Level',
+          'Global > Misc Output > Dry Level']),
+        ('If there is a pink-noise source / output selector, step through it,\n'
+         '     typing each option.', True,
+         ['Global > Misc Output > Pink Source Select', 'Global > Misc Output > Pink Source Type']),
+        ('Turn Pink Noise OFF.', False, ['Global > Misc Output > Pink Enable']),
+        ('If this firmware has Pitch Correct, open it, turn it on, assign it to a\n'
+         '     channel, and step through the Key list typing each key.', True,
+         ['Global > Pitch Correct Insert > Enable', 'Global > Pitch Correct Insert > Key',
+          'Global > Pitch Correct Insert > P.Corr Channel']),
+        ('Turn Pitch Correct OFF (if you turned it on).', False,
+         ['Global > Pitch Correct Insert > Enable']),
+    ]),
     ('meters', [
         ('Silence: nothing playing. Wait 10 seconds, then Enter.', False),
         ('Start a HELD note (a pad or organ, not a plucked sound) on your synth on\n'

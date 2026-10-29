@@ -13,7 +13,8 @@ Enabled and the MP3 player settings.
 ## Non-mixing parameters
 
 All of these are ordinary parameters (5.1 param-set), and `TouchMix.set()` can
-write them. Only the recorder has been tried (see below).
+write them. The recorder, MP3 player, scene recall and Powerdown have been
+tried on a mixer (see below); the rest are reachable but not yet exercised.
 
 | Area | Parameters (`params.csv` path) | Value now | Possible use |
 |------|--------------------------------|-----------|--------------|
@@ -28,6 +29,45 @@ write them. Only the recorder has been tried (see below).
 | Tuner | `Global > Misc Output > Tuning Precision`, `Global > Pitch Correct Insert` | | |
 | User buttons | `U1`–`U16 > Control`: Action, Selection, Detail, **Midi**; `> Setup`: Type, Spec 1–6, Value, Momentary, PresetName | U1 Action 7 | assign buttons, possibly MIDI out |
 | Mixer follow | `Global > Control`: Follow Mixer, Following device | | the app's "follow mixer selection" |
+
+## Generators, tuner, pitch-correct and front-panel settings
+
+These are all reachable over the stock protocol — no root, just the mixer's
+per-client write grant — and the client now has friendly commands for the ones
+the official app does not surface. **None have been run on a mixer yet except
+`power` (Powerdown, confirmed working from the PC, 2026-10).** The value *units*
+for the continuous and enum controls are not probed, so for now levels take a
+raw 0..1 (or a dB string, read with the fader law, which is **not verified** for
+these) and enum choices take an integer index. Run `map tour generators` on the
+mixer to learn the real labels and curves.
+
+| Command | Writes | Status |
+|---------|--------|--------|
+| `siggen on\|off [--level L] [--type N] [--freq F]` | `Talkback > Control`: SigGen Enable / Fader, FuncGen type / freq | ❓ untested |
+| `pink on\|off [--level L] [--dry D]` | `Global > Misc Output`: Pink Enable, Pink Level, Dry Level | ❓ untested; LOUD (asks to confirm) |
+| `pitch on\|off [--channel N] [--key N] [--rate R] [--mix M]` | `Global > Pitch Correct Insert`: Enable, P.Corr Channel, Key, Rate, Mix | ❓ untested |
+| `rta source N` | `Global > Misc Output > RTA3 source` | ❓ untested |
+| `tuner N` | `Global > Misc Output > Tuning Precision` | ❓ untested |
+| `screen brightness X` / `screen language N` | `Global > Misc Input`: Brightness, Language | ❓ untested |
+| `follow on\|off [--device N]` | `Global > Control`: Follow Mixer, Following device | ❓ untested |
+| `power off` | `Global > Misc Input > Powerdown` = 1 | ✅ works (asks to confirm) |
+| `diag` | nothing — reads the service / status flags | ✅ read-only |
+
+`TouchMix.signal_generator()`, `.pink_noise()`, `.pitch_correct()`,
+`.rta_source()`, `.tuning_precision()`, `.screen_brightness()`, `.language()`,
+`.follow_mixer()` and `.power_off()` do the same from Python.
+
+Powerdown, Demo Enabled, Ignored Version and Upgrade Display stay behind the
+client's `risky` guard (`set --force`), since they can switch the mixer off or
+change its update behaviour; `power off` lifts the guard for that one write,
+after asking you to confirm. `diag` only reads, and prints the firmware version,
+free memory, demo flag, USB-present and Wi-Fi status.
+
+Next, on the mixer: `map tour generators` captures the FuncGen waveform names,
+the pink-noise source list, the pitch-correct key list, and roughly what level
+and frequency each generator shows, so the commands can take real units (Hz, dB,
+key names) instead of raw 0..1 and bare indexes — the same way `map tour fx`
+decoded the FX processor list.
 
 ## USB recorder: working ✅
 
